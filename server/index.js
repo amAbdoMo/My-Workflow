@@ -6,7 +6,8 @@ const store = require("./store");
 const auth = require("./auth");
 const imap = require("./imap-service");
 
-const PORT = Number(process.env.PORT || 3001);
+// Hostinger's proxy expects port 3000 when it does not inject PORT.
+const PORT = Number(process.env.PORT || 3000);
 const APP_NAME_HEADER = "Wizard Schedule & Snippets API";
 
 const app = express();
