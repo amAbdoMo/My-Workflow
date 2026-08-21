@@ -2,7 +2,7 @@
   "name": "wizard-schedule-snippets",
   "version": "0.1.0",
   "private": true,
-  "productName": "Wizard Schedule & Snippets",
+  "productName": "WorkflowY",
   "description": "Desktop schedule tracker and WordPress snippet library.",
   "homepage": ".",
   "main": "launcher.js",

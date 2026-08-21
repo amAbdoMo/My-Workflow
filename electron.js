@@ -12,7 +12,7 @@ const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
-const APP_NAME = "Wizard Schedule & Snippets";
+const APP_NAME = "WorkflowY";
 const OPEN_SHORTCUT = "CommandOrControl+Shift+W";
 const START_HIDDEN = process.argv.includes("--hidden");
 const iconPath = path.join(__dirname, "public", "wizard-schedules-transparent.ico");

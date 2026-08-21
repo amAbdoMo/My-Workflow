@@ -1,10 +1,10 @@
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ShortcutName = "Wizard Schedule & Snippets.lnk"
+$ShortcutName = "WorkflowY.lnk"
 $DesktopShortcutPath = Join-Path ([Environment]::GetFolderPath("Desktop")) $ShortcutName
-$StartMenuDir = Join-Path ([Environment]::GetFolderPath("Programs")) "Wizard Schedule & Snippets"
+$StartMenuDir = Join-Path ([Environment]::GetFolderPath("Programs")) "WorkflowY"
 $StartMenuShortcutPath = Join-Path $StartMenuDir $ShortcutName
 $StartupShortcutPath = Join-Path ([Environment]::GetFolderPath("Startup")) $ShortcutName
-$AppPath = Join-Path $ProjectRoot "dist\Wizard Schedules\Wizard Schedule & Snippets.exe"
+$AppPath = Join-Path $ProjectRoot "dist\WorkflowY\WorkflowY.exe"
 $IconPath = Join-Path $ProjectRoot "public\wizard-schedules-transparent.ico"
 $AppDirectory = Split-Path -Parent $AppPath
 $AppUserModelId = "com.wizardschedule.snippets.transparent"
@@ -115,9 +115,9 @@ public static class ShortcutProperties
 "@
 
 $ShortcutDefinitions = @(
-  @{ Path = $DesktopShortcutPath; Arguments = ""; Description = "Open Wizard Schedule & Snippets" },
-  @{ Path = $StartMenuShortcutPath; Arguments = ""; Description = "Open Wizard Schedule & Snippets" },
-  @{ Path = $StartupShortcutPath; Arguments = "--hidden"; Description = "Preload Wizard Schedule & Snippets in the tray" }
+  @{ Path = $DesktopShortcutPath; Arguments = ""; Description = "Open WorkflowY" },
+  @{ Path = $StartMenuShortcutPath; Arguments = ""; Description = "Open WorkflowY" },
+  @{ Path = $StartupShortcutPath; Arguments = "--hidden"; Description = "Preload WorkflowY in the tray" }
 )
 
 foreach ($Definition in $ShortcutDefinitions) {

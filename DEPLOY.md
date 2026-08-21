@@ -1,4 +1,4 @@
-# Deploying Wizard Schedule & Snippets to workflow.abdom.me
+# Deploying WorkflowY to workflow.abdom.me
 
 ## What this is
 

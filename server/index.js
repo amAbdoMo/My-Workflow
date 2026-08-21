@@ -8,7 +8,7 @@ const imap = require("./imap-service");
 
 // Hostinger's proxy expects port 3000 when it does not inject PORT.
 const PORT = Number(process.env.PORT || 3000);
-const APP_NAME_HEADER = "Wizard Schedule & Snippets API";
+const APP_NAME_HEADER = "WorkflowY API";
 
 const app = express();
 app.disable("x-powered-by");

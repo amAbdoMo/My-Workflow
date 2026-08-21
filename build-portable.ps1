@@ -3,12 +3,12 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ElectronDist = Join-Path $ProjectRoot "node_modules\electron\dist"
 $OutputRoot = Join-Path $ProjectRoot "dist"
-$PortableDir = Join-Path $OutputRoot "Wizard Schedules"
-$LegacyPortableDir = Join-Path $OutputRoot "Wizard Schedule & Snippets"
+$PortableDir = Join-Path $OutputRoot "WorkflowY"
+$LegacyPortableDir = Join-Path $OutputRoot "Wizard Schedules"
 $ResourcesDir = Join-Path $PortableDir "resources"
 $AppDir = Join-Path $ResourcesDir "app"
 $PackagedBuildDir = Join-Path $AppDir "app-build"
-$ExePath = Join-Path $PortableDir "Wizard Schedule & Snippets.exe"
+$ExePath = Join-Path $PortableDir "WorkflowY.exe"
 $IconPath = Join-Path $ProjectRoot "public\wizard-schedules-transparent.ico"
 $RceditPath = Join-Path $ProjectRoot "node_modules\rcedit\bin\rcedit-x64.exe"
 
@@ -60,7 +60,7 @@ if ($NeedsRuntime) {
     }
   }
 
-  Rename-Item -LiteralPath (Join-Path $PortableDir "electron.exe") -NewName "Wizard Schedule & Snippets.exe"
+  Rename-Item -LiteralPath (Join-Path $PortableDir "electron.exe") -NewName "WorkflowY.exe"
 }
 
 New-Item -ItemType Directory -Path $AppDir -Force | Out-Null
@@ -145,7 +145,7 @@ Copy-RuntimeModule "imapflow" $ProjectRoot
 {
   "name": "wizard-schedules",
   "version": "0.1.0",
-  "productName": "Wizard Schedule & Snippets",
+  "productName": "WorkflowY",
   "main": "electron.js",
   "dependencies": {
     "imapflow": "^1.3.3"
@@ -156,9 +156,9 @@ Copy-RuntimeModule "imapflow" $ProjectRoot
 if ($NeedsRuntime -and (Test-Path -LiteralPath $RceditPath)) {
   & $RceditPath $ExePath `
     --set-icon $IconPath `
-    --set-version-string "FileDescription" "Wizard Schedule & Snippets" `
-    --set-version-string "ProductName" "Wizard Schedule & Snippets" `
-    --set-version-string "OriginalFilename" "Wizard Schedule & Snippets.exe" `
+    --set-version-string "FileDescription" "WorkflowY" `
+    --set-version-string "ProductName" "WorkflowY" `
+    --set-version-string "OriginalFilename" "WorkflowY.exe" `
     --set-file-version "0.1.0" `
     --set-product-version "0.1.0"
 } elseif ($NeedsRuntime) {

@@ -1,4 +1,4 @@
-// Wizard Schedule & Snippets — app-shell service worker.
+// WorkflowY — app-shell service worker.
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 

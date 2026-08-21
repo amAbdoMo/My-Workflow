@@ -4,7 +4,7 @@ import seedSnippets from "./seedSnippets.json";
 import generalSnippets from "./generalSnippets.json";
 import { createZip, snippetFileName } from "./zipTools";
 
-const APP_NAME = "Wizard Schedule & Snippets";
+const APP_NAME = "WorkflowY";
 const STORAGE_KEY = "wizard-schedules";
 const LEGACY_STORAGE_KEY = "deadline-os";
 const CLIENTS_KEY = "wizard-schedules-clients";
