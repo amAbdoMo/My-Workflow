@@ -3028,6 +3028,20 @@ html[data-web="1"] * {
    Appended last so these rules win over earlier breakpoints.
    ============================================================ */
 
+/* Brand: accent-colored Y in WorkflowY. */
+.name-accent {
+  color: var(--accent);
+}
+
+/* Topbar menu container is invisible on desktop; its children join the row. */
+.topbar-menu-button {
+  display: none;
+}
+
+.topbar-menu {
+  display: contents;
+}
+
 @media (max-width: 900px) {
   /* Modals: keep the header reachable and let tall bodies scroll. */
   .modal {
@@ -3112,26 +3126,51 @@ html[data-web="1"] * {
     gap: 14px;
   }
 
-  /* Compact action row: settings + theme inline, Clients/Add Project share the line. */
+  /* Hamburger + Add Project row; gear/theme/clients collapse into a dropdown. */
+  .topbar {
+    position: relative;
+  }
+
   .topbar-actions {
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 8px;
     align-items: center;
   }
 
-  .topbar-actions .icon-action {
+  .topbar-menu-button {
+    display: inline-flex;
     flex: 0 0 auto;
     width: 44px;
   }
 
-  .topbar-actions .theme-toggle {
-    flex: 0 0 auto;
+  .topbar-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% - 6px);
+    right: 0;
+    z-index: 30;
+    min-width: 200px;
+    padding: 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel-strong);
+    box-shadow: var(--shadow);
   }
 
-  .topbar-actions .secondary-action,
+  .topbar-menu.topbar-menu-open {
+    display: flex;
+  }
+
+  .topbar-menu .icon-action {
+    width: 100%;
+  }
+
   .topbar-actions .primary-action {
-    flex: 1 1 40%;
+    flex: 1 1 auto;
     padding: 0 10px;
     white-space: nowrap;
     text-align: center;

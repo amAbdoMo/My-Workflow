@@ -49,7 +49,7 @@ export default function LoginGate({ needsSetup, onAuthenticated }) {
       <form className="gate-card gate-card-enter" onSubmit={handleSubmit}>
         <img className="gate-logo" src="./wizard-schedules-transparent.ico" alt="" />
         <p className="gate-eyebrow">{mode === "setup" ? "First-time setup" : "Welcome back"}</p>
-        <h1 className="gate-title">{APP_NAME}</h1>
+        <h1 className="gate-title">Workflow<span className="name-accent">Y</span></h1>
         <p className="gate-sub">
           {mode === "setup"
             ? "Create your login. You will stay signed in for 30 days per device."
