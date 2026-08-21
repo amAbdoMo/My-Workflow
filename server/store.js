@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
-
-const DATA_DIR = process.env.WIZARD_DATA_DIR || path.join(__dirname, "data");
+const { DATA_DIR } = require("./data-dir");
 const STORE_FILE = path.join(DATA_DIR, "store.json");
 
 let cache = null;

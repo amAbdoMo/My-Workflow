@@ -3137,10 +3137,20 @@ html[data-web="1"] * {
     text-align: center;
   }
 
-  .brand-lockup img,
-  .gate-logo {
-    max-width: 120px;
-    height: auto;
+  /* Keep logo and title inline on phones, just smaller. */
+  .brand-lockup {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .brand-lockup img {
+    width: 48px;
+    height: 48px;
+  }
+
+  .brand-lockup h1 {
+    font-size: 1.35rem;
   }
 }
 
