@@ -1785,7 +1785,11 @@ export default function App() {
             type="button"
             aria-label="Menu"
             aria-expanded={topbarMenuOpen}
-            onClick={() => setTopbarMenuOpen((open) => !open)}
+            onClick={(event) => {
+              // Keep this click from reaching the outside-click closer below.
+              event.stopPropagation();
+              setTopbarMenuOpen((open) => !open);
+            }}
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
               <path d="M3 6h18M3 12h18M3 18h18" />
