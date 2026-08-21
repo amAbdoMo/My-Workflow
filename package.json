@@ -22,17 +22,18 @@
     "start": "node server/index.js",
     "electron": "electron .",
     "dev:electron": "cross-env ELECTRON_START_URL=http://localhost:3000 electron .",
-    "desktop": "npm run build && electron .",
-    "package:portable": "npm run build",
+    "desktop": "npm run build:desktop && electron .",
+    "package:portable": "npm run build:desktop",
     "install:shortcut": "powershell -ExecutionPolicy Bypass -File .\\create-desktop-shortcut.ps1",
-    "build": "npm run build:renderer && npm run build:portable",
+    "build": "react-scripts build",
     "build:renderer": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\scripts\\build-app.ps1",
     "build:portable": "powershell -NoProfile -ExecutionPolicy Bypass -File .\\build-portable.ps1",
     "import:snippets": "node scripts/import-snippets.js && node scripts/format-snippets.js",
     "format:snippets": "node scripts/format-snippets.js",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "server:dev": "node server/index.js"
+    "server:dev": "node server/index.js",
+    "build:desktop": "npm run build:renderer && npm run build:portable"
   },
   "eslintConfig": {
     "extends": [
