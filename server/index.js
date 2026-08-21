@@ -99,7 +99,54 @@ app.put("/api/data", (req, res) => {
   if (!auth.requireAuth(req, res)) return;
   const entries = Array.isArray(req.body?.entries) ? req.body.entries : [];
   if (!entries.length) return res.status(400).json({ error: "entries[] required" });
-  res.json({ results: store.mergeEntries(entries) });
+  const results = store.mergeEntries(entries);
+  // Nudge every other connected device to pull immediately (SSE).
+  const accepted = Object.values(results).some((r) => r && r.accepted !== false);
+  if (accepted) broadcastDataChanged();
+  res.json({ results });
+});
+
+// ---------- live updates (SSE) ----------
+
+const sseClients = new Set();
+
+function broadcastDataChanged() {
+  for (const res of sseClients) {
+    try {
+      res.write("event: data-changed\ndata: {}\n\n");
+    } catch {}
+  }
+}
+
+// EventSource cannot send an Authorization header, so the Electron desktop app
+// passes its bearer token as a query parameter; the web app relies on the cookie.
+app.get("/api/events", (req, res) => {
+  const queryToken = typeof req.query.token === "string" ? req.query.token : "";
+  const authorized = queryToken
+    ? auth.verifyToken(queryToken) !== null
+    : auth.verifyRequest(req);
+  if (!authorized) return res.status(401).json({ error: "Not signed in." });
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-store",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+  });
+  res.write(": connected\n\n");
+  sseClients.add(res);
+
+  // Comment ping keeps proxies from idling the connection out.
+  const heartbeat = setInterval(() => {
+    try {
+      res.write(": ping\n\n");
+    } catch {}
+  }, 25_000);
+
+  req.on("close", () => {
+    clearInterval(heartbeat);
+    sseClients.delete(res);
+  });
 });
 
 app.get("/api/data/export", (req, res) => {

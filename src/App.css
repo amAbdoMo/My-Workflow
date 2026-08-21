@@ -3022,3 +3022,141 @@ html[data-web="1"] * {
     flex: none;
   }
 }
+
+/* ============================================================
+   Responsive hardening — tablets, phones, installed PWAs.
+   Appended last so these rules win over earlier breakpoints.
+   ============================================================ */
+
+@media (max-width: 900px) {
+  /* Modals: keep the header reachable and let tall bodies scroll. */
+  .modal {
+    max-height: calc(100dvh - 36px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .modal-header {
+    position: sticky;
+    top: -24px;
+    margin: 0 -24px 16px;
+    padding: 18px 24px 12px;
+    background: var(--panel-strong);
+    z-index: 1;
+  }
+}
+
+@media (max-width: 560px) {
+  /* Tabs: horizontal swipe strip instead of a tall stacked column. */
+  .app-tabs {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    margin-bottom: 14px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .app-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    width: auto;
+    min-width: max-content;
+    white-space: nowrap;
+  }
+
+  /* Modals become near-fullscreen sheets. */
+  .modal-backdrop {
+    padding: 10px;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: calc(100dvh - 20px);
+    padding: 18px 16px;
+  }
+
+  .modal-header {
+    top: -18px;
+    margin: 0 -16px 14px;
+    padding: 14px 16px 10px;
+  }
+
+  /* Comfortable touch targets on phones. */
+  .primary-action,
+  .secondary-action,
+  .modal-actions button,
+  .project-actions button,
+  .icon-action,
+  .todo-delete-action,
+  .todo-edit-action,
+  .todo-save-action {
+    min-height: 44px;
+  }
+
+  /* Long emails, codes, and IDs must wrap instead of forcing sideways scroll. */
+  .project-card,
+  .todo-row,
+  .snippet-detail,
+  .email-log-row,
+  .email-dns-row,
+  .client-row {
+    overflow-wrap: anywhere;
+  }
+
+  .topbar {
+    gap: 14px;
+  }
+
+  .brand-lockup img,
+  .gate-logo {
+    max-width: 120px;
+    height: auto;
+  }
+}
+
+@media (max-width: 380px) {
+  .app-scroll {
+    padding: 16px 12px 16px;
+  }
+
+  .modal {
+    padding: 14px 12px;
+  }
+
+  .modal-header {
+    margin: 0 -12px 12px;
+    padding: 12px 12px 8px;
+  }
+}
+
+/* Touch devices: keep every interactive control comfortably tappable. */
+@media (pointer: coarse) {
+  .category-pill,
+  .client-row button,
+  .snippet-actions button,
+  .email-hero-actions button,
+  .theme-toggle {
+    min-height: 44px;
+  }
+}
+
+/* Very short landscape phones (e.g. 375x320 after browser chrome). */
+@media (max-height: 480px) and (orientation: landscape) {
+  .modal {
+    max-height: calc(100dvh - 16px);
+  }
+
+  .modal-backdrop {
+    padding: 8px;
+    align-items: stretch;
+  }
+
+  .modal {
+    margin: 0 auto;
+  }
+}

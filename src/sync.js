@@ -2,7 +2,7 @@
 // Local writes are intercepted, timestamped, and pushed (debounced); remote writes
 // newer than our local record are pulled in on load, on focus, and on an interval.
 
-import { apiFetch } from "./api";
+import { apiFetch, getApiBase, getAuthQuery } from "./api";
 
 const META_KEY = "wizard-sync-meta";
 
@@ -133,7 +133,10 @@ async function pullRemote() {
       changed = true;
     }
   }
-  if (changed) writeMeta(meta);
+  if (changed) {
+    writeMeta(meta);
+    notifyRemoteChange();
+  }
 }
 
 function notifyRemoteChange() {
@@ -232,4 +235,25 @@ export async function initSync() {
   window.addEventListener("beforeunload", () => {
     if (pending.size) pushPending().catch(() => {});
   });
+  openLiveChannel();
+}
+
+// ---------- live updates (SSE) ----------
+
+// The server announces data changes; we pull immediately instead of waiting for
+// the 20s interval. EventSource reconnects on its own when the stream drops.
+function openLiveChannel() {
+  if (typeof EventSource === "undefined") return;
+  try {
+    const source = new EventSource(`${getApiBase()}/api/events${getAuthQuery()}`);
+    source.addEventListener("data-changed", () => {
+      pullRemote().catch(() => {});
+    });
+    source.onerror = () => {
+      // Stream lost (network change, server restart): pull once on reopen.
+      source.addEventListener("open", () => pullRemote().catch(() => {}), { once: true });
+    };
+  } catch {
+    // Live channel unavailable: the interval + focus pulls still keep us fresh.
+  }
 }

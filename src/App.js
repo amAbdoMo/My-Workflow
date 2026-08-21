@@ -446,7 +446,8 @@ function convertMoney(value, fromCurrency, toCurrency, usdEgpRate) {
 function getInitialTheme() {
   const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
   if (saved === "light" || saved === "dark") return saved;
-  return window.matchMedia?.("(prefers-color-scheme: light)").matches ? "light" : "dark";
+  // Dark is the app's default look on every device unless the user picked light.
+  return "dark";
 }
 
 function StatusBadge({ daysLeft }) {
@@ -780,6 +781,72 @@ export default function App() {
     localStorage.setItem(THEME_KEY, theme);
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  // Follow theme changes that arrive from another synced device.
+  useEffect(() => {
+    const onRemoteSync = () => {
+      const saved = localStorage.getItem(THEME_KEY) || localStorage.getItem(LEGACY_THEME_KEY);
+      if (saved === "light" || saved === "dark") {
+        setTheme((current) => (current === saved ? current : saved));
+      }
+    };
+    window.addEventListener("wizard-remote-sync", onRemoteSync);
+    return () => window.removeEventListener("wizard-remote-sync", onRemoteSync);
+  }, []);
+
+  // Adopt data changes that arrive from another synced device (live sync).
+  // pullRemote only applies keys without in-flight local edits, so this can
+  // never clobber something the user is typing right now.
+  useEffect(() => {
+    const readJson = (key, fallback) => {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null || raw === "") return fallback;
+        const parsed = JSON.parse(raw);
+        return parsed === null || parsed === undefined ? fallback : parsed;
+      } catch {
+        return fallback;
+      }
+    };
+    const sameJson = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+    const onRemoteSync = () => {
+      const storedSites = readJson(STORAGE_KEY, null);
+      if (Array.isArray(storedSites)) setSites((cur) => (sameJson(cur, storedSites) ? cur : storedSites));
+
+      const storedNotes = readJson(PROJECT_NOTES_KEY, null);
+      if (storedNotes && typeof storedNotes === "object" && !Array.isArray(storedNotes)) {
+        setProjectNotes((cur) => (sameJson(cur, storedNotes) ? cur : storedNotes));
+      }
+
+      const storedTodos = readJson(TODO_ITEMS_KEY, null);
+      if (Array.isArray(storedTodos)) {
+        const normalized = normalizeTodoItems(storedTodos);
+        setTodoItems((cur) => (sameJson(cur, normalized) ? cur : normalized));
+      }
+
+      const storedClients = readJson(CLIENTS_KEY, null);
+      if (Array.isArray(storedClients)) setClients((cur) => (sameJson(cur, storedClients) ? cur : storedClients));
+
+      const storedSnippets = readJson(SNIPPETS_KEY, null);
+      if (Array.isArray(storedSnippets)) setSnippets((cur) => (sameJson(cur, storedSnippets) ? cur : storedSnippets));
+
+      setUnpaidCurrency((cur) => {
+        const stored = normalizeCurrency(localStorage.getItem(UNPAID_CURRENCY_KEY));
+        return cur === stored ? cur : stored;
+      });
+      setMoneyVisible((cur) => {
+        const stored = localStorage.getItem(MONEY_VISIBILITY_KEY) !== "hidden";
+        return cur === stored ? cur : stored;
+      });
+      setUsdEgpRate((cur) => {
+        const savedRate = Number(localStorage.getItem(USD_EGP_RATE_KEY));
+        const stored = Number.isFinite(savedRate) && savedRate > 0 ? savedRate : FALLBACK_USD_EGP_RATE;
+        return cur === stored ? cur : stored;
+      });
+    };
+    window.addEventListener("wizard-remote-sync", onRemoteSync);
+    return () => window.removeEventListener("wizard-remote-sync", onRemoteSync);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(UNPAID_CURRENCY_KEY, unpaidCurrency);

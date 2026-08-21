@@ -25,6 +25,12 @@ function getToken() {
   return isElectron() ? localStorage.getItem(TOKEN_KEY) : null;
 }
 
+// Exposed for EventSource, which cannot send an Authorization header.
+export function getAuthQuery() {
+  const token = getToken();
+  return token ? `?token=${encodeURIComponent(token)}` : "";
+}
+
 export function storeToken(token) {
   if (isElectron() && token) localStorage.setItem(TOKEN_KEY, token);
 }
