@@ -3112,6 +3112,31 @@ html[data-web="1"] * {
     gap: 14px;
   }
 
+  /* Compact action row: settings + theme inline, Clients/Add Project share the line. */
+  .topbar-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .topbar-actions .icon-action {
+    flex: 0 0 auto;
+    width: 44px;
+  }
+
+  .topbar-actions .theme-toggle {
+    flex: 0 0 auto;
+  }
+
+  .topbar-actions .secondary-action,
+  .topbar-actions .primary-action {
+    flex: 1 1 40%;
+    padding: 0 10px;
+    white-space: nowrap;
+    text-align: center;
+  }
+
   .brand-lockup img,
   .gate-logo {
     max-width: 120px;
