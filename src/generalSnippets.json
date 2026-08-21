@@ -1,0 +1,461 @@
+[
+  {
+    "id": "general-ar-marquee",
+    "title": "AR Marquee",
+    "category": "General",
+    "filename": "AR Marquee.txt",
+    "content": ".marquee {\n  display: flex;\n  overflow: hidden;\n  width: 100%;\n  white-space: nowrap;\n  direction: ltr;\n  align-items: center;\n  height: auto;\n}\n\n.marquee__group {\n  display: flex;\n  flex-shrink: 0;\n  min-width: 100%;\n  white-space: nowrap;\n  animation: scroll-ltr 13s linear infinite;\n}\n\n.marquee__group .elementor-heading-title {\n  display: inline-block;\n  white-space: nowrap;\n  direction: rtl;\n  font-size: 1.8rem;\n  margin-inline-end: 4rem;\n}\n\n@keyframes scroll-ltr {\n  0% {\n    transform: translateX(-100%);\n  }\n  100% {\n    transform: translateX(0%);\n  }\n}\n\n\n\n\n\n\n\n==========================================\n=======================================\n==================================\n\n.marquee {\n  display: flex;\n  overflow: hidden;\n  width: 100%;\n  white-space: nowrap;\n  direction: ltr;\n  align-items: center;\n  height: auto;\n}\n\n.marquee__group {\n  display: flex;\n  flex-shrink: 0;\n  min-width: 100%;\n  white-space: nowrap;\n  animation: scroll-ltr 13s linear infinite;\n}\n\n.marquee__group .elementor-heading-title {\n  display: inline-block;\n  white-space: nowrap;\n  direction: rtl;\n  font-size: 1.8rem;\n  margin-inline-end: 4rem;\n}\n\n@keyframes scroll-ltr {\n  0% {\n    transform: translateX(-100%);\n  }\n  100% {\n    transform: translateX(0%);\n  }\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-auto-close-elementor-pop-up",
+    "title": "Auto Close Elementor Pop-up",
+    "category": "General",
+    "filename": "Auto Close Elementor Pop-up.txt",
+    "content": "<script>\njQuery(document).ready(function($) {\n\n    $('.elementor-popup-modal a[href^=\"#\"]').on('click', function() {\n        elementorProFrontend.modules.popup.closePopup({}, event);\n    });\n});\n</script>\n\n\n\n\n\n\n------------------------updated version for mega menus--------------------\n\n<script>\njQuery(document).ready(function($) {\n    // Handle anchor links in popup\n    $(document).on('click', '.elementor-popup-modal a[href^=\"#\"]', function(e) {\n        e.preventDefault(); // Prevent default jump\n\n        var target = $(this).attr('href');\n\n        // Close popup first\n        if (typeof elementorProFrontend !== 'undefined') {\n            elementorProFrontend.modules.popup.closePopup({}, e);\n        }\n\n        // Wait for popup to close, then scroll to target\n        setTimeout(function() {\n            if (target && target !== '#' && $(target).length) {\n                $('html, body').animate({\n                    scrollTop: $(target).offset().top - 100 // 100px offset for fixed header\n                }, 800);\n            }\n        }, 400); // Wait for popup close animation\n    });\n\n    // Handle regular page links (non-anchor)\n    $(document).on('click', '.elementor-popup-modal a[href]:not([href^=\"#\"])', function(e) {\n        // Allow navigation to work normally\n        if (typeof elementorProFrontend !== 'undefined') {\n            elementorProFrontend.modules.popup.closePopup({}, e);\n        }\n    });\n});\n</script>\n\n\n\n\n------------------------updated version for #anchor in nested iconlist--------------------\n\n\n    <script>\n    jQuery(document).ready(function($) {\n\njQuery(document).ready(function($) {\n    // Replace 'YOUR_POPUP_ID' with your actual popup ID\n    $('a[href*=\"#about-us\"]').on('click', function(e) {\n        e.preventDefault();\n\n        var currentPage = window.location.pathname;\n        var homePage = '/en/home/';\n\n        if (currentPage !== homePage) {\n            // Redirect to home page with hash\n            window.location.href = 'https://test.shebla.net/#about-us';\n        } else {\n            // We're on home page, scroll to anchor\n            $('html, body').animate({\n                scrollTop: $('#about-us').offset().top - 100\n            }, 500);\n        }\n    });\n});\n    });\n    </script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-auto-typing",
+    "title": "Auto-Typing",
+    "category": "General",
+    "filename": "Auto-Typing.txt",
+    "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Typed.js Example</title>\n  <!-- Include Typed.js library -->\n  <script src=\"https://unpkg.com/typed.js@2.0.132/dist/typed.umd.js\"></script>\n  <!-- Style section -->\n  <style>\n    .autotyping {\n      font-family: 'Playfair Display', serif;\n      color: #FFF;\n      font-size: 2.2em;\n      font-weight: 800;\n    }\n    .autotyping > span {\n      color: #C8AC48;\n      font-size: 1.2em;\n      font-weight: 700;\n    }\n    /* Media queries for different screen sizes */\n    @media (min-width: 481px) and (max-width: 768px) {\n      .autotyping {\n        font-size: 2.0em;\n        font-weight: 800;\n      }\n      .autotyping > span {\n        font-size: 1.2em;\n        font-weight: 700;\n      }\n    }\n    @media (max-width: 480px) {\n      .autotyping {\n        font-size: 1.9em;\n        font-weight: 800;\n        text-align: center;\n      }\n      .autotyping > span {\n        font-size: 1.1em;\n        font-weight: 700;\n      }\n    }\n  </style>\n</head>\n<body>\n  <!-- Content section -->\n  <div class=\"autotyping\">\n    <span class=\"typing_text\"></span>\n  </div>\n  <!-- Script section -->\n  <script>\n    // Typing text animation script\n    var typed = new Typed(\".typing_text\", {\n      strings: [\n        \"حيــث افضــل المحــامين في الشــرق الاوســط\",\n        \"دراسة كافة القضايا\",\n\" دراســة كافة الأحكــام وقرارات اللجــان القضائيــة\",\n\"صيـاغـة وإعداد وتهيئـة كافـة أنواع العقـود\",\n\"إعـداد كافـة اللوائح\",\n\"تأسيس الشركـات\",\n\"تسجيـل الوكالات والعلامـات التجـارية\",\n\"تحصيـل الديـون\",\n      ],\n      typeSpeed: 50,\n      backSpeed: 5,\n      loop: true,\n      cursorChar: '|️'\n    });\n  </script>\n</body>\n</html>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-autoscroll-carousel-infinite-loop-logos",
+    "title": "Autoscroll Carousel Infinite Loop - Logos",
+    "category": "General",
+    "filename": "Autoscroll Carousel Infinite Loop - Logos.txt",
+    "content": ".elementor-testimonial__name {\n  margin-top: -30px;\n}\n\nselector .swiper-wrapper{\n  transition-timing-function: linear !important;\n}\n\n\n\n===================   HTML  =============================\n\n<img src=\"https://businessskills.sa/wp-content/uploads/2024/09/linuks.png\" width=\"400px\" height=\"185px\" </img>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-background-animation-code",
+    "title": "background animation code",
+    "category": "General",
+    "filename": "background animation code.txt",
+    "content": "<style>\n.particles-js-canvas-el {\n    width: 100%;\n    height: 100%;\n    position: absolute;\n    z-index: -1;\n    top: 0;\n    left:0;\n}\n</style>\n<script src=\"https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js\"></script>\n<script>\n//JS Code Here\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-change-heading-color-and-background-at-hover",
+    "title": "change heading color and background at hover",
+    "category": "General",
+    "filename": "change heading color and background at hover.txt",
+    "content": ".goup2{\n    transition: all 0.3s ease-in-out;\n}\n\n.goup2:hover  .goup{\n     transform: translateY(-10px);\n     background-color: #00FFB5 !important;\n}\n\n.goup2:hover .heading h2 {\n    color: #070B18 !important;\n}\n\n.goup2:hover .text2 {\n    color: #070B18 !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-change-the-whole-translated-font-of-a-specfic-lang",
+    "title": "Change the whole translated font of a specfic Lang",
+    "category": "General",
+    "filename": "Change the whole translated font of a specfic Lang.txt",
+    "content": ":lang(ar) body,\n:lang(ar) p,\n:lang(ar) h1,\n:lang(ar) h2,\n:lang(ar) h3,\n:lang(ar) h4,\n:lang(ar) h5,\n:lang(ar) h6,\n:lang(ar) p,\n:lang(ar) a,\n:lang(ar) span,\n:lang(ar) strong {\n    font-family: 'Almarai', sans-serif !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-cloudways-import-images-issue",
+    "title": "Cloudways import images issue",
+    "category": "General",
+    "filename": "Cloudways import images issue.txt",
+    "content": "Since the SSL on the source domain is the blocker, the quickest fix is to tell WordPress to skip SSL verification when fetching remote images:\nAdd this to your wp-config.php on the Cloudways site:\n\n\nphpadd_filter('https_ssl_verify', '__return_false');\nadd_filter('https_local_ssl_verify', '__return_false');\n\n\n\n\n\nOr better, add it via functions.php so it doesn't touch wp-config.php:\n\nphpadd_filter('https_ssl_verify', '__return_false');\nadd_filter('https_local_ssl_verify', '__return_false');\n\n\n\n\nThen try your Elementor import again — it should now be able to fetch images from the Hostinger site without SSL blocking it.\n\n⚠️ Remove this code after you're done importing. Leaving SSL verification disabled permanently is a security risk.",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-contact-us",
+    "title": "Contact us",
+    "category": "General",
+    "filename": "Contact us.json",
+    "content": "{\n  \"content\": [\n    {\n      \"id\": \"586d7122\",\n      \"settings\": {\n        \"flex_direction\": \"row\",\n        \"min_height\": {\n          \"unit\": \"px\",\n          \"size\": 100,\n          \"sizes\": []\n        },\n        \"flex_justify_content\": \"center\",\n        \"flex_align_items\": \"center\",\n        \"background_background\": \"classic\",\n        \"__globals__\": {\n          \"background_color\": \"globals/colors?id=secondary\"\n        }\n      },\n      \"elements\": [\n        {\n          \"id\": \"2140c69d\",\n          \"settings\": {\n            \"title\": \"CONTACT US\",\n            \"typography_typography\": \"custom\",\n            \"typography_font_family\": \"Poppins\",\n            \"typography_font_size\": {\n              \"unit\": \"px\",\n              \"size\": 50,\n              \"sizes\": []\n            },\n            \"typography_font_size_mobile\": {\n              \"unit\": \"px\",\n              \"size\": 32,\n              \"sizes\": []\n            },\n            \"typography_font_weight\": \"600\",\n            \"typography_letter_spacing\": {\n              \"unit\": \"px\",\n              \"size\": 8,\n              \"sizes\": []\n            },\n            \"title_color\": \"#FFFFFF\",\n            \"__globals__\": {\n              \"title_color\": \"\"\n            },\n            \"align_mobile\": \"center\"\n          },\n          \"elements\": [],\n          \"isInner\": false,\n          \"widgetType\": \"heading\",\n          \"elType\": \"widget\"\n        }\n      ],\n      \"isInner\": false,\n      \"elType\": \"container\"\n    },\n    {\n      \"id\": \"23855428\",\n      \"settings\": {\n        \"flex_direction\": \"column\",\n        \"boxed_width\": {\n          \"unit\": \"px\",\n          \"size\": 800,\n          \"sizes\": []\n        },\n        \"flex_justify_content\": \"center\",\n        \"flex_align_items\": \"center\",\n        \"padding\": {\n          \"unit\": \"px\",\n          \"top\": \"50\",\n          \"right\": \"0\",\n          \"bottom\": \"50\",\n          \"left\": \"0\",\n          \"isLinked\": false\n        },\n        \"padding_mobile\": {\n          \"unit\": \"px\",\n          \"top\": \"30\",\n          \"right\": \"10\",\n          \"bottom\": \"30\",\n          \"left\": \"10\",\n          \"isLinked\": false\n        },\n        \"animation\": \"fadeIn\"\n      },\n      \"elements\": [\n        {\n          \"id\": \"267032b7\",\n          \"settings\": {\n            \"content_width\": \"full\",\n            \"background_background\": \"classic\",\n            \"background_color\": \"#FFFFFF\",\n            \"border_radius\": {\n              \"unit\": \"px\",\n              \"top\": \"18\",\n              \"right\": \"18\",\n              \"bottom\": \"18\",\n              \"left\": \"18\",\n              \"isLinked\": true\n            },\n            \"box_shadow_box_shadow_type\": \"yes\",\n            \"box_shadow_box_shadow\": {\n              \"horizontal\": 0,\n              \"vertical\": 0,\n              \"blur\": 10,\n              \"spread\": 0,\n              \"color\": \"rgba(176.80000000000004, 176.80000000000004, 176.80000000000004, 0.5)\"\n            },\n            \"padding\": {\n              \"unit\": \"px\",\n              \"top\": \"30\",\n              \"right\": \"30\",\n              \"bottom\": \"30\",\n              \"left\": \"30\",\n              \"isLinked\": true\n            },\n            \"padding_mobile\": {\n              \"unit\": \"px\",\n              \"top\": \"25\",\n              \"right\": \"25\",\n              \"bottom\": \"25\",\n              \"left\": \"25\",\n              \"isLinked\": true\n            }\n          },\n          \"elements\": [\n            {\n              \"id\": \"1caf40eb\",\n              \"settings\": {\n                \"form_name\": \"New Form\",\n                \"form_fields\": [\n                  {\n                    \"custom_id\": \"name\",\n                    \"field_label\": \"Name\",\n                    \"placeholder\": \"Name\",\n                    \"dynamic\": {\n                      \"active\": true\n                    },\n                    \"_id\": \"d761496\"\n                  },\n                  {\n                    \"custom_id\": \"email\",\n                    \"field_type\": \"email\",\n                    \"required\": \"true\",\n                    \"field_label\": \"Email\",\n                    \"placeholder\": \"Email\",\n                    \"_id\": \"4650ac8\"\n                  },\n                  {\n                    \"custom_id\": \"message\",\n                    \"field_type\": \"textarea\",\n                    \"field_label\": \"Message\",\n                    \"placeholder\": \"Message\",\n                    \"_id\": \"8b8d9e3\"\n                  }\n                ],\n                \"step_next_label\": \"Next\",\n                \"step_previous_label\": \"Previous\",\n                \"button_text\": \"Send\",\n                \"email_content\": \"[all-fields]\",\n                \"email_content_2\": \"[all-fields]\",\n                \"success_message\": \"Your submission was successful.\",\n                \"error_message\": \"Your submission failed because of an error.\",\n                \"server_message\": \"Your submission failed because of a server error.\",\n                \"invalid_message\": \"Your submission failed because the form is invalid.\",\n                \"required_field_message\": \"This field is required.\",\n                \"row_gap\": {\n                  \"unit\": \"px\",\n                  \"size\": 20,\n                  \"sizes\": []\n                },\n                \"label_spacing\": {\n                  \"unit\": \"px\",\n                  \"size\": 7,\n                  \"sizes\": []\n                },\n                \"label_color\": \"#012B5D\",\n                \"label_typography_typography\": \"custom\",\n                \"label_typography_font_family\": \"Korto\",\n                \"label_typography_font_weight\": \"600\",\n                \"button_typography_typography\": \"custom\",\n                \"button_typography_font_family\": \"Korto\",\n                \"button_typography_font_size\": {\n                  \"unit\": \"px\",\n                  \"size\": 20,\n                  \"sizes\": []\n                },\n                \"button_typography_font_weight\": \"500\",\n                \"button_background_color\": \"#012B5D\",\n                \"button_background_hover_color\": \"#B93434\",\n                \"button_hover_color\": \"#FFFFFF\",\n                \"hover_transition_duration\": {\n                  \"unit\": \"s\",\n                  \"size\": 0.6,\n                  \"sizes\": []\n                },\n                \"button_hover_animation\": \"shrink\",\n                \"__globals__\": {\n                  \"label_color\": \"globals/colors?id=secondary\",\n                  \"button_background_color\": \"globals/colors?id=secondary\",\n                  \"button_background_hover_color\": \"globals/colors?id=text\",\n                  \"button_hover_color\": \"\"\n                },\n                \"show_labels\": \"\",\n                \"field_typography_typography\": \"custom\",\n                \"field_typography_font_family\": \"Korto\",\n                \"field_typography_font_weight\": \"400\",\n                \"message_typography_typography\": \"custom\",\n                \"message_typography_font_family\": \"Korto\",\n                \"message_typography_font_weight\": \"400\",\n                \"steps_typography_typography\": \"custom\",\n                \"steps_typography_font_family\": \"Korto\",\n                \"steps_typography_font_weight\": \"500\"\n              },\n              \"elements\": [],\n              \"isInner\": false,\n              \"widgetType\": \"form\",\n              \"elType\": \"widget\"\n            }\n          ],\n          \"isInner\": true,\n          \"elType\": \"container\"\n        },\n        {\n          \"id\": \"58716af3\",\n          \"settings\": {\n            \"content_width\": \"full\",\n            \"width\": {\n              \"unit\": \"%\",\n              \"size\": 100,\n              \"sizes\": []\n            },\n            \"boxed_width\": {\n              \"unit\": \"px\",\n              \"size\": 50,\n              \"sizes\": []\n            },\n            \"background_background\": \"classic\",\n            \"background_color\": \"#FFFFFF\",\n            \"border_radius\": {\n              \"unit\": \"px\",\n              \"top\": \"18\",\n              \"right\": \"18\",\n              \"bottom\": \"18\",\n              \"left\": \"18\",\n              \"isLinked\": true\n            },\n            \"box_shadow_box_shadow_type\": \"yes\",\n            \"box_shadow_box_shadow\": {\n              \"horizontal\": 0,\n              \"vertical\": 0,\n              \"blur\": 10,\n              \"spread\": 0,\n              \"color\": \"rgba(176.80000000000004, 176.80000000000004, 176.80000000000004, 0.5)\"\n            },\n            \"padding\": {\n              \"unit\": \"px\",\n              \"top\": \"30\",\n              \"right\": \"30\",\n              \"bottom\": \"30\",\n              \"left\": \"30\",\n              \"isLinked\": true\n            },\n            \"padding_mobile\": {\n              \"unit\": \"px\",\n              \"top\": \"25\",\n              \"right\": \"25\",\n              \"bottom\": \"25\",\n              \"left\": \"25\",\n              \"isLinked\": true\n            },\n            \"width_tablet\": {\n              \"unit\": \"%\",\n              \"size\": \"\",\n              \"sizes\": []\n            },\n            \"width_mobile\": {\n              \"unit\": \"%\",\n              \"size\": \"\",\n              \"sizes\": []\n            },\n            \"flex_justify_content\": \"center\",\n            \"flex_align_items\": \"center\"\n          },\n          \"elements\": [\n            {\n              \"id\": \"35e841d1\",\n              \"settings\": {\n                \"social_icon_list\": [\n                  {\n                    \"social_icon\": {\n                      \"value\": \"fas fa-envelope\",\n                      \"library\": \"fa-solid\"\n                    },\n                    \"_id\": \"d63a862\",\n                    \"link\": {\n                      \"url\": \"mailto:info@omega-medical.co\",\n                      \"is_external\": \"true\",\n                      \"nofollow\": \"\",\n                      \"custom_attributes\": \"\"\n                    }\n                  },\n                  {\n                    \"social_icon\": {\n                      \"value\": \"fas fa-phone-alt\",\n                      \"library\": \"fa-solid\"\n                    },\n                    \"_id\": \"8bb74bd\",\n                    \"link\": {\n                      \"url\": \"tel:+965 22204124\",\n                      \"is_external\": \"true\",\n                      \"nofollow\": \"\",\n                      \"custom_attributes\": \"\"\n                    }\n                  }\n                ],\n                \"icon_color\": \"custom\",\n                \"icon_secondary_color\": \"#FFFFFF\",\n                \"icon_size\": {\n                  \"unit\": \"px\",\n                  \"size\": 20,\n                  \"sizes\": []\n                },\n                \"icon_size_mobile\": {\n                  \"unit\": \"px\",\n                  \"size\": 18,\n                  \"sizes\": []\n                },\n                \"icon_spacing\": {\n                  \"unit\": \"px\",\n                  \"size\": 15,\n                  \"sizes\": []\n                },\n                \"icon_spacing_mobile\": {\n                  \"unit\": \"px\",\n                  \"size\": 15,\n                  \"sizes\": []\n                },\n                \"border_radius\": {\n                  \"unit\": \"px\",\n                  \"top\": \"50\",\n                  \"right\": \"50\",\n                  \"bottom\": \"50\",\n                  \"left\": \"50\",\n                  \"isLinked\": true\n                },\n                \"hover_primary_color\": \"#4C677A\",\n                \"hover_animation\": \"float\",\n                \"__globals__\": {\n                  \"icon_primary_color\": \"globals/colors?id=secondary\",\n                  \"hover_secondary_color\": \"\",\n                  \"hover_primary_color\": \"globals/colors?id=text\"\n                },\n                \"icon_primary_color\": \"#012B5D\",\n                \"hover_secondary_color\": \"#FFFFFF\"\n              },\n              \"elements\": [],\n              \"isInner\": false,\n              \"widgetType\": \"social-icons\",\n              \"elType\": \"widget\"\n            },\n            {\n              \"id\": \"9dab020\",\n              \"settings\": {\n                \"icon_list\": [\n                  {\n                    \"text\": \"OMEGA MEDICAL CO.  AL-HAMRA COMPLEX  SALEM AL-MUBARAK - SALMIYA\",\n                    \"selected_icon\": {\n                      \"value\": \"fas fa-map-marker-alt\",\n                      \"library\": \"fa-solid\"\n                    },\n                    \"_id\": \"bda7386\"\n                  }\n                ],\n                \"icon_align\": \"center\",\n                \"icon_size\": {\n                  \"unit\": \"px\",\n                  \"size\": 20,\n                  \"sizes\": []\n                },\n                \"icon_self_vertical_align_mobile\": \"center\",\n                \"icon_typography_typography\": \"custom\",\n                \"icon_typography_font_family\": \"Korto\",\n                \"icon_typography_font_size\": {\n                  \"unit\": \"px\",\n                  \"size\": 18,\n                  \"sizes\": []\n                },\n                \"icon_typography_font_size_mobile\": {\n                  \"unit\": \"px\",\n                  \"size\": 16,\n                  \"sizes\": []\n                },\n                \"icon_typography_font_weight\": \"400\",\n                \"__globals__\": {\n                  \"icon_color\": \"globals/colors?id=secondary\"\n                }\n              },\n              \"elements\": [],\n              \"isInner\": false,\n              \"widgetType\": \"icon-list\",\n              \"elType\": \"widget\"\n            }\n          ],\n          \"isInner\": true,\n          \"elType\": \"container\"\n        }\n      ],\n      \"isInner\": false,\n      \"elType\": \"container\"\n    }\n  ],\n  \"page_settings\": [],\n  \"version\": \"0.4\",\n  \"title\": \"contact us\",\n  \"type\": \"page\"\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-custom-link-elementor-tab",
+    "title": "Custom Link Elementor Tab",
+    "category": "General",
+    "filename": "Custom Link Elementor Tab.txt",
+    "content": "<script>\n/* Control the Elementor Tabs from the URL\n* Code from https://element.how/elementor-open-specific-tab-toggle-accordion/\n* Copyright 2023 Element.how\n* Updated 2023/12/05\n*/\nwindow.addEventListener('load', () => {\nsetTimeout(function () {\n\nlet scrollOffset = 100; /* scroll offset from the top of title */\n\nconst tabsAccordionToggleTitles = document.querySelectorAll('.e-n-accordion-item-title, .e-n-tab-title, .elementor-tab-title');\n\nconst clickTitleWithAnchor = (anchor) => {\ntabsAccordionToggleTitles.forEach(title => {\nif (title.querySelector(`#${anchor}`) != null || title.id === anchor || (title.closest('details') && title.closest('details').id === anchor)) {\nif (title.getAttribute('aria-expanded') !== 'true' && !title.classList.contains('elementor-active')) title.click();\nlet timing = 0;\nlet scrollTarget = title;\nif (getComputedStyle(title.closest('.elementor-element')).getPropertyValue('--n-tabs-direction') == 'row') scrollTarget = title.closest('.elementor-element');\nif (title.closest('.e-n-accordion, .elementor-accordion-item, .elementor-toggle-item')) {\ntiming = 400;\n}\nsetTimeout(function () {\njQuery('html, body').animate({\nscrollTop: jQuery(scrollTarget).offset().top - scrollOffset,\n}, 'slow');\n}, timing);\n}\n});\n};\n\ndocument.addEventListener('click', (event) => {\nif (event.target.closest('a') && event.target.closest('a').href.includes('#')) {\nconst anchor = extractAnchor(event.target.closest('a').href);\nif (anchor && isAnchorInTitles(anchor, tabsAccordionToggleTitles)) {\nevent.preventDefault();\nclickTitleWithAnchor(anchor);\n}\n}\n});\n\nconst currentAnchor = extractAnchor(window.location.href);\nif (currentAnchor) {\nclickTitleWithAnchor(currentAnchor);\n}\n\nfunction extractAnchor(url) {\nconst match = url.match(/#([^?]+)/);\nreturn match ? match[1] : null;\n};\n\nfunction isAnchorInTitles(anchor, titles) {\nreturn Array.from(titles).some(title => {\nreturn title.querySelector(`#${anchor}`) !== null || title.id === anchor || (title.closest('details') && title.closest('details').id === anchor);\n});\n};\n\n}, 300);\n});\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-delete-seraphinite-accelerator-logo-from-the-footer",
+    "title": "Delete Seraphinite accelerator logo from the footer",
+    "category": "General",
+    "filename": "Delete Seraphinite accelerator logo from the footer.accdb",
+    "content": "<script> document.addEventListener(\"DOMContentLoaded\", function() { var enlacesConImagen = document.querySelectorAll('a img\\[alt=\"Seraphinite Accelerator\"\\]'); enlacesConImagen.forEach(function(imagen) { var enlace = imagen.closest('a'); if (enlace) { enlace.style.display = \"none\"; } }); }); </script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-display-sale-on-product",
+    "title": "Display SALE on product",
+    "category": "General",
+    "filename": "Display SALE on product.txt",
+    "content": "add_action( 'woocommerce_before_shop_loop_item', 'softexpert_show_sale_label_shop_page', 8 );\n\nfunction softexpert_show_sale_label_shop_page() {\n   global $product;\n\n   if ( $product->is_on_sale() ) {\n      echo \"<span class='sale-price-off'>SALE</span>\";\n   }\n}\n\n\n\nCSS----------------\n\n\n.sale-price-off {\n\tpadding-left: 3px;\n\tfont-size: 14px;\n\tcolor: #fff;\n\tposition: absolute;\n\tz-index: 999;\n\tbackground-color: #000;\n\tclip-path: polygon(0% 0%, 100% 0, 98% 92%, 49% 100%, 0 92%);\n\tmin-height: 45px;\n\tdisplay: flex;\n\talign-items: center;\n\ttext-align: center;\n\twidth: 42px;\n\tline-height: 17px;\n\tfont-weight: 600;\n\tborder-top-left-radius: 8px;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-dropdown-items-non-selectable",
+    "title": "Dropdown Items non-selectable",
+    "category": "General",
+    "filename": "Dropdown Items non-selectable.txt",
+    "content": "<script>\ndocument.addEventListener('DOMContentLoaded', function () {\n    const dropdown = document.querySelector('.my-custom-dropdown select');\n    if (dropdown) {\n        // Disable specific options by value\n        const disabledValues = ['option1', 'option2']; // Replace with actual values\n\n        Array.from(dropdown.options).forEach(option => {\n            if (disabledValues.includes(option.value)) {\n                option.disabled = true;\n            }\n        });\n    }\n});\n</script>\n\n\n\n\n//Don't forget to add the CSS CLASS & VALUES//",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-dropdown-scrolling-bar",
+    "title": "Dropdown Scrolling Bar",
+    "category": "General",
+    "filename": "Dropdown Scrolling Bar.txt",
+    "content": ".prad-select-options {\n    max-height: 200px;\n    overflow-y: auto !important;\n    scrollbar-width: thin;\n    scrollbar-color: #1b1b1b #f1f1f1;\n}\n\n.prad-select-options::-webkit-scrollbar {\n  width: 8px;\n}\n.prad-select-options::-webkit-scrollbar-track {\n  background: #f1f1f1;\n}\n.prad-select-options::-webkit-scrollbar-thumb {\n  background-color: #f1f1f1;\n  border-radius: 4px;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-button-animation",
+    "title": "Elementor Button Animation",
+    "category": "General",
+    "filename": "Elementor Button Animation.txt",
+    "content": "selector{\n    --btn-width: 250px;\n    --btn-height: 50px;\n    --btn-background: #0e1538;\n    --left-gradient: #DB2469;\n    --right-gradient: #fff;\n}\nselector a {\n    position: relative;\n    width: var(--btn-width);\n    height: var(--btn-height);\n}\nselector a:before,\nselector a:after {\n    content: '';\n    position: absolute;\n    inset: 0;\n    transition: 0.5s;\n}\nselector a:nth-child(1):before,\nselector a:nth-child(1):after {\n    background: linear-gradient(45deg,var(--left-gradient),var(--btn-background),var(--btn-background),var(--right-gradient));\n}\nselector a:hover:before {\n    inset: -3px;\n}\nselector a:hover:after {\n    inset: -3px;\n    filter: blur(10px);\n}\nselector a span {\n    position: absolute;\n    top: 0;\n    left: 0;\n    width: 100%;\n    height: 100%;\n    background: var(--btn-background);\n    z-index: 10;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    overflow: hidden;\n}\n\n\n/*Glass Shine Effect*/\nselector a span::before {\n    content: '';\n    position: absolute;\n    top: 0;\n    left: -50%;\n    width: 100%;\n    height: 100%;\n    background: rgba(255,255,255,0.075);\n    transform: skew(160deg);\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-form-date-placeholder-black-on-mobile",
+    "title": "Elementor form date placeholder black on mobile",
+    "category": "General",
+    "filename": "Elementor form date placeholder black on mobile.accdb",
+    "content": "input[type=\"date\"]:before{\ncolor:rgba(53, 53, 53, 0.44);\ncontent:attr(placeholder);\n}\n\ninput[type=\"date\"].full:before {\ncolor:black;\ncontent:\"\"!important;\n}\n\ninput[type=\"time\"]:before{\ncolor:rgba(53, 53, 53, 0.44);\ncontent:attr(placeholder);\n}\n\ninput[type=\"time\"].full:before {\ncolor:black;\ncontent:\"\"!important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-icon-list-item-animation",
+    "title": "elementor icon list item animation",
+    "category": "General",
+    "filename": "elementor icon list item animation.txt",
+    "content": "li.elementor-icon-list-item:hover {\n    margin-left: 10px;\n}\n\nli.elementor-icon-list-item {\n\n    transition: all 0.3s ease-in-out;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-icon-list-underline-animation",
+    "title": "Elementor Icon list underline animation",
+    "category": "General",
+    "filename": "Elementor Icon list underline animation.txt",
+    "content": ".elementor-icon-list-text {\n    position: relative;\n    text-decoration: none;\n}\n\n.elementor-icon-list-text::after {\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 2px;\n    bottom: 0;\n    left: 0;\n    background-color: currentColor;\n    transition: width 0.3s ease;\n}\n\n.elementor-icon-list-item:hover .elementor-icon-list-text::after {\n    width: 100%;\n}\n\n\n\n\n\n\n-----------------------===Elementor Menu===------------------------------\n\n.elementor-nav-menu--main .elementor-item {\n    position: relative;\n}\n\n.elementor-nav-menu--main .elementor-item::after {\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 2px;\n    bottom: -5px;\n    left: 0;\n    background-color: currentColor;\n    transition: width 0.4s ease;\n}\n\n.elementor-nav-menu--main .elementor-item:hover::after,\n.elementor-nav-menu--main .elementor-item.elementor-item-active::after {\n    width: 100%;\n}\n\n\n\n\n/*underline from the center*/---------------------------------------------------\n.elementor-nav-menu--main .elementor-item {\n    position: relative;\n}\n\n.elementor-nav-menu--main .elementor-item::after {\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 3px;\n    bottom: -5px;\n    left: 50%;\n    background-color: #FF6B6B;\n    transition: all 0.4s ease;\n    transform: translateX(-50%);\n}\n\n.elementor-nav-menu--main .elementor-item:hover::after,\n.elementor-nav-menu--main .elementor-item.elementor-item-active::after {\n    width: 100%;\n}\n\n\n\n\n-----------------------===Elementor Iconlist With specific css class===------------------------------\n\n\n/* Gradient text for specific icon list only */\n.gradient-icon-list .elementor-icon-list-text {\n    background: linear-gradient(150deg, #ff3121 0%, #f79a09 100%);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n    background-clip: text;\n    position: relative;\n    text-decoration: none;\n    display: inline-block;\n}\n\n/* Underline effect */\n.gradient-icon-list .elementor-icon-list-text::after {\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 2px;\n    bottom: 0;\n    left: 0;\n    background: linear-gradient(150deg, #ff3121 0%, #f79a09 100%);\n    transition: width 0.3s ease;\n}\n\n/* Hover effect */\n.gradient-icon-list .elementor-icon-list-item:hover .elementor-icon-list-text::after {\n    width: 100%;\n}\n\n\n\n\n\n\n\n----------------------------------------- With CSS Class ----------------------------------------\n\n.footer-icon-list .elementor-icon-list-text {\n    position: relative;\n    text-decoration: none;\n}\n\n.footer-icon-list .elementor-icon-list-text::after {\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 2px;\n    bottom: -2px;\n    right: -13px;\n    background-color: currentColor;\n    transition: width 0.3s ease;\n}\n\n\n.footer-icon-list .elementor-icon-list-item:hover .elementor-icon-list-text::after {\n    width: 110%;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-sub-menu-border-design",
+    "title": "Elementor sub menu border design",
+    "category": "General",
+    "filename": "Elementor sub menu border design.txt",
+    "content": "a.elementor-sub-item {\n    border-left: solid 4px transparent !important;\n    border-right: solid 4px transparent !important;\n}\n\n\na.elementor-sub-item:hover {\n    border-left: solid 4px #1F95B0 !important;\n}\n\na.elementor-sub-item.elementor-item-active {\n    border-left: solid 4px #1F95B0 !important;\n}\n\n\n.elementor-25 .elementor-element.elementor-element-413be21 .elementor-nav-menu--dropdown {\n    left: -30px !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-sub-menu-design",
+    "title": "Elementor Sub Menu design",
+    "category": "General",
+    "filename": "Elementor Sub Menu design.txt",
+    "content": "a.elementor-sub-item {\n    border-left: solid 4px transparent !important;\n    border-right: solid 4px transparent !important;\n}\n\n\na.elementor-sub-item:hover {\n    border-left: solid 4px #1F95B0 !important;\n}\n\na.elementor-sub-item.elementor-item-active {\n    border-left: solid 4px #1F95B0 !important;\n}\n\n\n.elementor-25 .elementor-element.elementor-element-413be21 .elementor-nav-menu--dropdown {\n    left: -30px !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-tabs-closed-by-default",
+    "title": "Elementor Tabs Closed By Default",
+    "category": "General",
+    "filename": "Elementor Tabs Closed By Default.txt",
+    "content": "<script>\n    window.addEventListener('load', function () {\n        setTimeout(() => {\n            document.querySelectorAll('.e-n-tabs').forEach(e => {\n                let activeContent = e.querySelector('.e-con.e-active');\n                if (activeContent) {\n                    activeContent.style.display = 'none';\n                    activeContent.classList.remove('e-active');\n                }\n                e.querySelectorAll('.e-n-tab-title[aria-selected=\"true\"]').forEach(title =>\n                    title.setAttribute('aria-selected', 'false')\n                );\n            });\n        }, 10);\n    });\n\n    </script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-elementor-tabs-with-dropdown",
+    "title": "Elementor Tabs with dropdown",
+    "category": "General",
+    "filename": "Elementor Tabs with dropdown.accdb",
+    "content": "<<HTML>>\n\n\n\n<div class=\"00000000\">\n  <select id=\"elementor-tab-selector\">\n    <option value=\"tab-wellness\">Wellness</option>\n    <option value=\"tab-weight-loss\">Weight Loss</option>\n    <option value=\"tab-regeneration\">Regeneration</option>\n  </select>\n  <i class=\"0000000000000\"></i>\n</div>\n\n\n\n\n\n\n\n<< CSS for dropdown >>\n\n.select-dropdown {\n  position: relative;\n  display: inline-block;\n  width: 100%;\n  border-radius: 2px;\n  margin: 0 auto;\n}\n\n.select-dropdown select {\n  font-family: \"Figtree\", Sans-serif;\n  font-size: 14px;\n  color: #352B29;\n  padding: 8px 32px 8px 8px; /* Space for the icon */\n  border: none;\n  background-color: transparent;\n  -webkit-appearance: none;\n  -moz-appearance: none;\n  appearance: none;\n  width: 100%;\n  border: 1px solid #352B29;\n}\n\n.select-dropdown select:active, .select-dropdown select:focus {\n  outline: none;\n  box-shadow: none;\n}\n\n.select-dropdown .dropdown-icon {\n  content: \"\";\n  position: absolute;\n  top: 50%;\n  right: 12px;\n  transform: translateY(-50%);\n  pointer-events: none;\n  width: 0;\n  height: 0;\n  border-left: 6px solid transparent;\n  border-right: 6px solid transparent;\n  border-top: 6px solid #352B29; /* Color of the arrow */\n}\n\n\n\n\n<<JS>>\n\n\ndocument.addEventListener(\"DOMContentLoaded\", function () {\n    const dropdown = document.getElementById(\"elementor-tab-selector\");\n\n    dropdown.addEventListener(\"change\", function () {\n        const selectedTabId = this.value; // Get selected tab ID\n\n        // Find the corresponding tab by ID and click it\n        const tab = document.getElementById(selectedTabId);\n        if (tab) {\n            tab.click();\n        }\n    });\n});",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-expended-container-from-the-center",
+    "title": "Expended Container From The Center",
+    "category": "General",
+    "filename": "Expended Container From The Center.txt",
+    "content": "selector {\n    position: absolute;\n    top: 0;\n    left: 50%;\n    width: 0;\n    height: 90%;\n    background: rgba(0, 0, 0, 0.85);\n    opacity: 0;\n    transform: translateX(-50%);\n    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);\n    overflow: hidden;\n}\n\n.parent-project:hover selector {\n    width: 100%;\n    opacity: 1;\n}\n\n\n@media (min-width: 768px) {\n\n.project-cont {\n\n    position: absolute;\n    inset: 20px;\n    width: auto;\n    height: auto;\n    background: rgba(0, 0, 0, 0.85);\n    clip-path: inset(0 50% 0 50%);\n    transition: clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1);\n}\n\n.parent-project:hover .project-cont {\n    clip-path: inset(0 0% 0 0%);\n}\n\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-forminator-css",
+    "title": "Forminator CSS",
+    "category": "General",
+    "filename": "Forminator CSS.accdb",
+    "content": "------------ Make the RTL phone number correct -------------\n\n#forminator-module-667 input.forminator-field--phone {\ndirection: ltr !important; text-align:right !important;\n}\n\n-------667 you form id---------\n\n\n\n------------ Fix the select dropdown issue RTL language -------------\n\n.forminator-ui .forminator-select2 + .forminator-select .selection .select2-selection--single[role=\"combobox\"], .forminator-select .forminator-select-dropdown .select2-results .select2-results__options {\n\ttext-align: right;\n}\n\nspan.select2-selection.select2-selection--single {\n    direction: rtl;\n}\n\n\n\n------------ Make button full width and change error message color....etc-------------\n\n\n\n.forminator-button-submit {\n\nwidth:100%;\n}\n\nspan.forminator-error-message {\n    color: #ffffff !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-go-down-arrow-floating-animation",
+    "title": "Go Down Arrow Floating Animation",
+    "category": "General",
+    "filename": "Go Down Arrow Floating Animation.accdb",
+    "content": ".selector-arrow {\n  animation: floatUpDown 2s ease-in-out infinite;\n}\n\n@keyframes floatUpDown {\n  0% { transform: translateY(0); }\n  50% { transform: translateY(-10px); }\n  100% { transform: translateY(0); }\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-go-to-top-whatsapp-animation",
+    "title": "Go to top, whatsapp animation",
+    "category": "General",
+    "filename": "Go to top, whatsapp animation.txt",
+    "content": "selector {\n  animation: floatUp 1.5s ease-in-out infinite alternate;\n}\n\n@keyframes floatUp {\n  from {\n    transform: translateY(0);\n  }\n  to {\n    transform: translateY(-20px);\n  }\n}\n\n\n\n\n\n\n\n\n\nselector {\n  /*position: relative;*/\n  display: inline-block;\n}\n\nselector::before,\nselector::after {\n  content: \"\";\n  position: absolute;\n  top: 50%;\n  left: 50%;\n  width: 45px;\n  height: 45px;\n  background-color: rgba(37, 211, 102, 0.3);\n  border-radius: 50%;\n  transform: translate(-50%, -50%) scale(0.8);\n  opacity: 0;\n  animation: ripple 2.5s infinite cubic-bezier(0.65, 0, 0.34, 1);\n  z-index: -1;\n}\n\nselector::after {\n  animation-delay: 1.25s;\n}\n\n@keyframes ripple {\n  0% {\n    transform: translate(-50%, -50%) scale(0.8);\n    opacity: 0.8;\n  }\n  100% {\n    transform: translate(-50%, -50%) scale(1.8);\n    opacity: 0;\n  }\n}\n\n@media (max-width: 768px) {\n    selector::before,\nselector::after {\n      width: 40px;\n  height: 40px;\n    }\n}\n\n@media (min-width: 768px) {\n    selector::before,\nselector::after {\n      width: 70px;\n  height: 70px;\n    }\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-heading-image-underline-animation",
+    "title": "Heading & Image underline animation",
+    "category": "General",
+    "filename": "Heading & Image underline animation.txt",
+    "content": ".text-m, .text-r, .text-l {\n    position: relative;\n    display: inline-block;\n}\n\n.text-l::after,\n.text-m::after,\n.text-r::after{\n    content: '';\n    position: absolute;\n    width: 0;\n    height: 2px;\n    bottom: 0;\n    left: 0;\n    background-color: currentColor;\n    transition: width 0.3s ease;\n}\n\n:has(> [class*=\"image-\"]):hover [class*=\"text-\"]::after,\n[class*=\"text-\"]:hover::after {\n    width: 100%;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-hide-empty-elementor-accordions-with-dynamic-tags",
+    "title": "Hide empty elementor accordions with dynamic tags",
+    "category": "General",
+    "filename": "Hide empty elementor accordions with dynamic tags.txt",
+    "content": "",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-hide-go-to-top",
+    "title": "Hide Go To Top",
+    "category": "General",
+    "filename": "Hide Go To Top.txt",
+    "content": "-------------------------------JS-------------------------------\n\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>\n<script>\n\n//You can replace offset value from here\nvar offset = 300\n\n$(window).on('load scroll', function(){\n\n    if( $(window).scrollTop() > offset ){\n        $('body').addClass('show')\n    }else{\n        $('body').removeClass('show')\n    }\n})\n\n</script>\n\n\n-------------------------------CSS-------------------------------\n\n\nselector{\n    opacity: 0;\n    transition: all 0.3s ease-in-out;\n}\nbody.show selector{\n    opacity: 1;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-icon-list-rotate-icon-animation",
+    "title": "icon list rotate icon animation",
+    "category": "General",
+    "filename": "icon list rotate icon animation.txt",
+    "content": ".elementor-icon-list-item:hover .elementor-icon-list-icon {\n    transform: rotate(90deg);\n    margin-top: 3px;\n}\n\n.elementor-icon-list-icon {\n    transition: transform 0.3s ease;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-image-and-elmentor-icon-hover-animation",
+    "title": "Image and elmentor icon hover animation",
+    "category": "General",
+    "filename": "Image and elmentor icon hover animation.txt",
+    "content": ".kaaba-card {\n   transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1) !important;\n       overflow: hidden;\n\n}\n\n.kaaba-card:hover .kaaba {\n    transform: scale(1.1);\n    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);\n}\n\n.kaaba-card:hover {\n    transform: translateY(-8px) !important;\n    box-shadow: 0 20px 45px rgba(29, 99, 166, 0.15) !important;\n}\n\n\n\n\n-------------------------------------------------\n\n\n\n/* Premium Glass Card - Smooth Transition Version */\n.glass-card {\n    background: #ffffff !important;\n    border: 1px solid #D9E9F8 !important;\n    border-radius: 15px !important;\n    box-shadow: 0 10px 30px rgba(29, 99, 166, 0.08) !important;\n\n    /* 0.45s is the mid-point for a professional, snappy yet smooth feel */\n    transition: all 0.45s cubic-bezier(0.25, 1, 0.5, 1) !important;\n    overflow: hidden;\n}\n\n/* Interaction: Balanced Lift on Hover */\n.glass-card:hover {\n    transform: translateY(-8px) !important;\n    border: 1px solid #1D63A6 !important;\n    box-shadow: 0 20px 45px rgba(29, 99, 166, 0.15) !important;\n}\n\n/* Sync the icon scaling with the card lift */\n.glass-card:hover .elementor-icon {\n    transform: scale(1.1);\n    transition: transform 0.45s cubic-bezier(0.25, 1, 0.5, 1);\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-increase-memory-limits-php",
+    "title": "Increase Memory Limits PHP",
+    "category": "General",
+    "filename": "Increase Memory Limits PHP.txt",
+    "content": "define( 'WP_MEMORY_LIMIT', '512M' );\ndefine( 'WP_MAX_MEMORY_LIMIT', '512M' );\n\n@ini_set( 'upload_max_filesize' , '256M' );\n@ini_set( 'post_max_size', '256M');\n@ini_set( 'max_execution_time', '300' );\n@ini_set( 'max_input_time', '300' );",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-instapay-html",
+    "title": "InstaPay HTML",
+    "category": "General",
+    "filename": "InstaPay HTML.txt",
+    "content": "div style=border1px solid #ddd;padding15px;border-radius8px;background#fafafa;min-width100%;text-align center\n  h5 style=margin-top0;color#333📱 الدفع عبر انستابايh5\n\n  pstrong📧 البريد الإلكترونيstrong mohamedreda.gfx@instapayp\n  pstrong📱 رقم الهاتفstrong 01110655777p\n\n  p style=margin10px 0strongامسح رمز QR للدفع مباشرةstrongp\n  img src=httpskash5a.comwp-contentuploads202509WhatsApp-Image-2025-09-14-at-22.37.22_f76d47a4.jpg alt=Instapay QR Code style=max-width250px;width100%;border1px solid #ccc;border-radius6px;min-height 230px\ndiv",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-litespeed-setting",
+    "title": "Litespeed-setting",
+    "category": "General",
+    "filename": "Litespeed-setting.data",
+    "content": "[\"_version\",\"6.2.0.1\"]\n\n[\"hash\",\"g428LhqIRn06Ous1UQtLfXir6iJngjuw\"]\n\n[\"auto_upgrade\",false]\n\n[\"api_key\",\"5A99A2136818CC73D4A13DCED4B71452\"]\n\n[\"server_ip\",\"50.87.178.128\"]\n\n[\"guest\",true]\n\n[\"guest_optm\",true]\n\n[\"news\",true]\n\n[\"guest_uas\",[\"Lighthouse\",\"GTmetrix\",\"Google\",\"Pingdom\",\"bot\",\"spider\",\"PTST\",\"HeadlessChrome\"]]\n\n[\"guest_ips\",[\"208.70.247.157\",\"172.255.48.130\",\"172.255.48.131\",\"172.255.48.132\",\"172.255.48.133\",\"172.255.48.134\",\"172.255.48.135\",\"172.255.48.136\",\"172.255.48.137\",\"172.255.48.138\",\"172.255.48.139\",\"172.255.48.140\",\"172.255.48.141\",\"172.255.48.142\",\"172.255.48.143\",\"172.255.48.144\",\"172.255.48.145\",\"172.255.48.146\",\"172.255.48.147\",\"52.229.122.240\",\"104.214.72.101\",\"13.66.7.11\",\"13.85.24.83\",\"13.85.24.90\",\"13.85.82.26\",\"40.74.242.253\",\"40.74.243.13\",\"40.74.243.176\",\"104.214.48.247\",\"157.55.189.189\",\"104.214.110.135\",\"70.37.83.240\",\"65.52.36.250\",\"13.78.216.56\",\"52.162.212.163\",\"23.96.34.105\",\"65.52.113.236\",\"172.255.61.34\",\"172.255.61.35\",\"172.255.61.36\",\"172.255.61.37\",\"172.255.61.38\",\"172.255.61.39\",\"172.255.61.40\",\"104.41.2.19\",\"191.235.98.164\",\"191.235.99.221\",\"191.232.194.51\",\"52.237.235.185\",\"52.237.250.73\",\"52.237.236.145\",\"104.211.143.8\",\"104.211.165.53\",\"52.172.14.87\",\"40.83.89.214\",\"52.175.57.81\",\"20.188.63.151\",\"20.52.36.49\",\"52.246.165.153\",\"51.144.102.233\",\"13.76.97.224\",\"102.133.169.66\",\"52.231.199.170\",\"13.53.162.7\",\"40.123.218.94\"]]\n\n[\"cache\",true]\n\n[\"cache-priv\",true]\n\n[\"cache-commenter\",true]\n\n[\"cache-rest\",true]\n\n[\"cache-page_login\",true]\n\n[\"cache-resources\",true]\n\n[\"cache-mobile\",true]\n\n[\"cache-mobile_rules\",[\"Mobile\",\"Android\",\"Silk\\/\",\"Kindle\",\"BlackBerry\",\"Opera Mini\",\"Opera Mobi\"]]\n\n[\"cache-browser\",true]\n\n[\"cache-exc_useragents\",[]]\n\n[\"cache-exc_cookies\",[]]\n\n[\"cache-exc_qs\",[]]\n\n[\"cache-exc_cat\",[]]\n\n[\"cache-exc_tag\",[]]\n\n[\"cache-force_uri\",[]]\n\n[\"cache-force_pub_uri\",[]]\n\n[\"cache-priv_uri\",[]]\n\n[\"cache-exc\",[]]\n\n[\"cache-exc_roles\",[]]\n\n[\"cache-drop_qs\",[\"fbclid\",\"gclid\",\"utm*\",\"_ga\"]]\n\n[\"cache-ttl_pub\",604800]\n\n[\"cache-ttl_priv\",1800]\n\n[\"cache-ttl_frontpage\",604800]\n\n[\"cache-ttl_feed\",604800]\n\n[\"cache-ttl_rest\",604800]\n\n[\"cache-ttl_browser\",31557600]\n\n[\"cache-ttl_status\",[\"404 3600\",\"500 600\"]]\n\n[\"cache-login_cookie\",\"\"]\n\n[\"cache-vary_cookies\",[]]\n\n[\"cache-vary_group\",{\"administrator\":\"99\",\"author\":\"0\",\"contributor\":\"0\",\"editor\":\"0\",\"subscriber\":\"0\"}]\n\n[\"purge-upgrade\",true]\n\n[\"purge-stale\",false]\n\n[\"purge-post_all\",false]\n\n[\"purge-post_f\",true]\n\n[\"purge-post_h\",true]\n\n[\"purge-post_p\",true]\n\n[\"purge-post_pwrp\",true]\n\n[\"purge-post_a\",true]\n\n[\"purge-post_y\",false]\n\n[\"purge-post_m\",true]\n\n[\"purge-post_d\",false]\n\n[\"purge-post_t\",true]\n\n[\"purge-post_pt\",true]\n\n[\"purge-timed_urls\",[]]\n\n[\"purge-timed_urls_time\",\"\"]\n\n[\"purge-hook_all\",[\"switch_theme\",\"wp_create_nav_menu\",\"wp_update_nav_menu\",\"wp_delete_nav_menu\",\"create_term\",\"edit_terms\",\"delete_term\",\"add_link\",\"edit_link\",\"delete_link\"]]\n\n[\"esi\",true]\n\n[\"esi-cache_admbar\",true]\n\n[\"esi-cache_commform\",true]\n\n[\"esi-nonce\",[\"stats_nonce\",\"subscribe_nonce\"]]\n\n[\"util-instant_click\",false]\n\n[\"util-no_https_vary\",false]\n\n[\"debug-disable_all\",false]\n\n[\"debug\",0]\n\n[\"debug-ips\",[\"127.0.0.1\"]]\n\n[\"debug-level\",false]\n\n[\"debug-filesize\",3]\n\n[\"debug-cookie\",false]\n\n[\"debug-collaps_qs\",false]\n\n[\"debug-inc\",[]]\n\n[\"debug-exc\",[]]\n\n[\"debug-exc_strings\",[]]\n\n[\"db_optm-revisions_max\",0]\n\n[\"db_optm-revisions_age\",0]\n\n[\"optm-css_min\",true]\n\n[\"optm-css_comb\",true]\n\n[\"optm-css_comb_ext_inl\",true]\n\n[\"optm-ucss\",true]\n\n[\"optm-ucss_inline\",true]\n\n[\"optm-ucss_whitelist\",[]]\n\n[\"optm-ucss_file_exc_inline\",[]]\n\n[\"optm-ucss_exc\",[]]\n\n[\"optm-css_exc\",[]]\n\n[\"optm-js_min\",true]\n\n[\"optm-js_comb\",true]\n\n[\"optm-js_comb_ext_inl\",true]\n\n[\"optm-js_delay_inc\",[]]\n\n[\"optm-js_exc\",[\"jquery.js\",\"jquery.min.js\"]]\n\n[\"optm-html_min\",true]\n\n[\"optm-html_lazy\",[]]\n\n[\"optm-qs_rm\",true]\n\n[\"optm-ggfonts_rm\",false]\n\n[\"optm-css_async\",true]\n\n[\"optm-ccss_per_url\",true]\n\n[\"optm-ccss_sep_posttype\",[\"page\"]]\n\n[\"optm-ccss_sep_uri\",[]]\n\n[\"optm-css_async_inline\",true]\n\n[\"optm-css_font_display\",true]\n\n[\"optm-js_defer\",1]\n\n[\"optm-emoji_rm\",true]\n\n[\"optm-noscript_rm\",true]\n\n[\"optm-ggfonts_async\",true]\n\n[\"optm-exc_roles\",[]]\n\n[\"optm-ccss_con\",\"\"]\n\n[\"optm-js_defer_exc\",[\"jquery.js\",\"jquery.min.js\",\"gtm.js\",\"analytics.js\"]]\n\n[\"optm-gm_js_exc\",[]]\n\n[\"optm-dns_prefetch\",[]]\n\n[\"optm-dns_prefetch_ctrl\",true]\n\n[\"optm-dns_preconnect\",[]]\n\n[\"optm-exc\",[]]\n\n[\"optm-guest_only\",true]\n\n[\"object\",true]\n\n[\"object-kind\",false]\n\n[\"object-host\",\"localhost\"]\n\n[\"object-port\",11211]\n\n[\"object-life\",360]\n\n[\"object-persistent\",true]\n\n[\"object-admin\",true]\n\n[\"object-transients\",true]\n\n[\"object-db_id\",0]\n\n[\"object-user\",\"\"]\n\n[\"object-pswd\",\"\"]\n\n[\"object-global_groups\",[\"users\",\"userlogins\",\"useremail\",\"userslugs\",\"usermeta\",\"user_meta\",\"site-transient\",\"site-options\",\"site-lookup\",\"site-details\",\"blog-lookup\",\"blog-details\",\"blog-id-cache\",\"rss\",\"global-posts\",\"global-cache-test\"]]\n\n[\"object-non_persistent_groups\",[\"comment\",\"counts\",\"plugins\",\"wc_session_id\"]]\n\n[\"discuss-avatar_cache\",true]\n\n[\"discuss-avatar_cron\",false]\n\n[\"discuss-avatar_cache_ttl\",604800]\n\n[\"optm-localize\",false]\n\n[\"optm-localize_domains\",[\"### Popular scripts ###\",\"https:\\/\\/platform.twitter.com\\/widgets.js\",\"https:\\/\\/connect.facebook.net\\/en_US\\/fbevents.js\"]]\n\n[\"media-lazy\",true]\n\n[\"media-lazy_placeholder\",\"\"]\n\n[\"media-placeholder_resp\",true]\n\n[\"media-placeholder_resp_color\",\"#cfd4db\"]\n\n[\"media-placeholder_resp_svg\",\"<svg xmlns=\\\"http:\\/\\/www.w3.org\\/2000\\/svg\\\" width=\\\"{width}\\\" height=\\\"{height}\\\" viewBox=\\\"0 0 {width} {height}\\\"><rect width=\\\"100%\\\" height=\\\"100%\\\" style=\\\"fill:{color};fill-opacity: 0.1;\\\"\\/><\\/svg>\"]\n\n[\"media-lqip\",true]\n\n[\"media-lqip_qual\",4]\n\n[\"media-lqip_min_w\",150]\n\n[\"media-lqip_min_h\",150]\n\n[\"media-placeholder_resp_async\",true]\n\n[\"media-iframe_lazy\",true]\n\n[\"media-add_missing_sizes\",true]\n\n[\"media-lazy_exc\",[\"\\/website_1332d065\\/wp-content\\/uploads\\/2024\\/04\\/S4U-ICON-300x175.png.webp\",\"\\/website_1332d065\\/wp-content\\/uploads\\/2024\\/06\\/12-1.jpg\"]]\n\n[\"media-lazy_cls_exc\",[\"wmu-preview-img\"]]\n\n[\"media-lazy_parent_cls_exc\",[]]\n\n[\"media-iframe_lazy_cls_exc\",[]]\n\n[\"media-iframe_lazy_parent_cls_exc\",[]]\n\n[\"media-lazy_uri_exc\",[]]\n\n[\"media-lqip_exc\",[]]\n\n[\"media-vpi\",false]\n\n[\"media-vpi_cron\",false]\n\n[\"img_optm-auto\",false]\n\n[\"img_optm-cron\",true]\n\n[\"img_optm-ori\",true]\n\n[\"img_optm-rm_bkup\",false]\n\n[\"img_optm-webp\",true]\n\n[\"img_optm-lossless\",false]\n\n[\"img_optm-exif\",false]\n\n[\"img_optm-webp_attr\",[\"img.src\",\"div.data-thumb\",\"img.data-src\",\"img.data-lazyload\",\"div.data-large_image\",\"img.retina_logo_url\",\"div.data-parallax-image\",\"div.data-vc-parallax-image\",\"video.poster\"]]\n\n[\"img_optm-webp_replace_srcset\",true]\n\n[\"img_optm-jpg_quality\",82]\n\n[\"crawler\",false]\n\n[\"crawler-usleep\",500]\n\n[\"crawler-run_duration\",400]\n\n[\"crawler-run_interval\",600]\n\n[\"crawler-crawl_interval\",302400]\n\n[\"crawler-threads\",3]\n\n[\"crawler-timeout\",30]\n\n[\"crawler-load_limit\",1]\n\n[\"crawler-sitemap\",\"\"]\n\n[\"crawler-drop_domain\",true]\n\n[\"crawler-map_timeout\",120]\n\n[\"crawler-roles\",[]]\n\n[\"crawler-cookies\",[]]\n\n[\"misc-heartbeat_front\",true]\n\n[\"misc-heartbeat_front_ttl\",120]\n\n[\"misc-heartbeat_back\",true]\n\n[\"misc-heartbeat_back_ttl\",120]\n\n[\"misc-heartbeat_editor\",false]\n\n[\"misc-heartbeat_editor_ttl\",15]\n\n[\"cdn\",false]\n\n[\"cdn-ori\",[\"\\/\\/vhx.ewp.mybluehost.me\\/website_1332d065\\/\"]]\n\n[\"cdn-ori_dir\",[\"wp-content\",\"wp-includes\"]]\n\n[\"cdn-exc\",[]]\n\n[\"cdn-quic\",true]\n\n[\"cdn-cloudflare\",false]\n\n[\"cdn-cloudflare_email\",\"\"]\n\n[\"cdn-cloudflare_key\",\"\"]\n\n[\"cdn-cloudflare_name\",\"\"]\n\n[\"cdn-cloudflare_zone\",\"\"]\n\n[\"cdn-mapping\",[{\"url\":\"\\/\",\"inc_img\":true,\"inc_css\":true,\"inc_js\":true,\"filetype\":[\".aac\",\".css\",\".eot\",\".gif\",\".jpeg\",\".jpg\",\".js\",\".less\",\".mp3\",\".mp4\",\".ogg\",\".otf\",\".pdf\",\".png\",\".svg\",\".ttf\",\".webp\",\".woff\",\".woff2\"]}]]\n\n[\"cdn-attr\",[\".src\",\".data-src\",\".href\",\".poster\",\"source.srcset\"]]\n\n[\"qc-token\",\"\"]\n\n[\"qc-nameservers\",\"\"]\n\n[\"_cache\",true]",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-mail-champ-css-form",
+    "title": "mail champ css form",
+    "category": "General",
+    "filename": "mail champ css form.txt",
+    "content": "<div style=\"position: relative; font-family: 'Almarai', sans-serif;\">\n    <p style=\"display: flex; align-items: center; margin: 0; padding: 0;\">\n        <input type=\"email\" name=\"EMAIL\" style=\"flex: 2; padding-left: 5px; border: 1px solid #ccc; border-radius: 0px; width: calc(100% - 110px); height: 45px; direction: ltr; font-size: 16px;\" placeholder=\"البريد الالكتروني\" required />\n        <input type=\"submit\" value=\"اشترك الان\" style=\"position: absolute; right: 0px; top: 50%; transform: translateY(-50%); background-color: #070621; color: #ffffff; border: 8.5px solid #070621; border-radius: 0px; width: 110px; height: 45px; padding: 5px 15px; cursor: pointer; font-size: 16px;\" />\n    </p>\n</div>\n\n\n\nButton under the field:\n______________________________\n<div style=\"position: relative;\">\n    <input type=\"email\" name=\"EMAIL\" style=\"display: block; width: 100%; padding: 5px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 7px; box-sizing: border-box;\" required />\n    <input type=\"submit\" value=\"Subscribe Now\" style=\"background-color: #74A84A; color: #ffffff; border: 8.5px solid #74A84A; border-radius: 7px; width: 100%; padding: 5px 15px; cursor: pointer;\" />\n</div>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-make-the-popup-close-automatically-on-click",
+    "title": "Make the popup close automatically on click",
+    "category": "General",
+    "filename": "Make the popup close automatically on click.accdb",
+    "content": "Put in an HTML block\n_________________________________\n\n<script src=\"https://code.jquery.com/jquery-3.6.0.min.js\"></script>\n<script>\n    var offset = 30;\n\n    $(window).on('load scroll', function(){\n        if ($(window).scrollTop() > offset) {\n            $('body').addClass('show');\n        } else {\n            $('body').removeClass('show');\n        }\n    });\n\n    // Prevent clicks on the hidden popup from causing unexpected behavior\n    $(document).on('click', 'body.show', function(event){\n        if ($(event.target).is(selector)) {\n            event.preventDefault(); // Prevent any default action\n        }\n    });\n</script>\n\n\n\n\nPut it in the CSS code editor of the PopUp\n______________________________\n\nselector {\n    opacity: 1;\n    visibility: visible;\n    transition: all 0.3s ease-in-out;\n}\n\nbody.show selector {\n    opacity: 0;\n    visibility: hidden;\n    pointer-events: none; /* Prevent any interaction */\n    position: absolute; /* Ensure it doesn't affect layout */\n    top: 0;\n    left: 0;\n}\n\n======================================== or just use this JS code =======================================\n\n\n<script>\njQuery(function($){\n$(document).on('click','.elementor-location-popup a', function(event){\nelementorProFrontend.modules.popup.closePopup( {}, event);\n});\n});\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-perfect-news-letter-css-design",
+    "title": "Perfect News letter css design",
+    "category": "General",
+    "filename": "Perfect News letter css design.txt",
+    "content": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>Subscribe Form</title>\n    <style>\n        .subscribe-form {\n            display: flex;\n            align-items: center;\n            background-color: #23273b;\n            padding: 5px;\n            border-radius: 50px;\n            border: 1px solid #3e445b;\n            max-width: 400px; /* Ensures the form doesn't stretch too wide */\n            margin: 20px auto; /* Centers the form with some space around */\n        }\n        .subscribe-form input[type=\"email\"] {\n            border: none;\n            outline: none;\n            background-color: transparent;\n            color: #ccc;\n            padding: 10px 15px;\n            font-size: 16px;\n            border-radius: 50px 0 0 50px;\n            flex: 1; /* Allows the input field to expand */\n        }\n        .subscribe-form button {\n            border: none;\n            background-color: #3e445b;\n            color: #ccc;\n            padding: 10px 20px;\n            font-size: 16px;\n            cursor: pointer;\n            border-radius:  50px 50px ;\n            transition: background-color 0.3s ease;\n        }\n        .subscribe-form button:hover {\n\n        }\n\n    </style>\n</head>\n<body>\n\n    <form action=\"#\" method=\"post\" class=\"subscribe-form\">\n        <input type=\"email\" placeholder=\"البريد الإلكتروني\" required>\n        <button type=\"submit\">اشترك</button>\n    </form>\n\n</body>\n</html>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-popup-for-loop-items-and-acf-with-taxomnamy-filter-txt",
+    "title": "Popup for loop items and ACF with taxomnamy filter.txt",
+    "category": "General",
+    "filename": "Popup for loop items and ACF with taxomnamy filter.txt.txt",
+    "content": "<style>\n    .container {\n        display: none; /* Hide all containers by default */\n    }\n\n    .container_style {\n        pointer-events: auto;\n        cursor: pointer;\n    }\n</style>\n\n<script>\ndocument.addEventListener('DOMContentLoaded', function () {\n\n    function attachContainerEventListeners() {\n        // Select all clickable containers\n        const clickableContainers = document.querySelectorAll('.container_style');\n\n        clickableContainers.forEach(container => {\n            container.removeEventListener('click', handleContainerClick);\n            container.addEventListener('click', handleContainerClick);\n        });\n\n        // Close icons\n        document.querySelectorAll('.close-icon').forEach(icon => {\n            icon.removeEventListener('click', handleCloseIconClick);\n            icon.addEventListener('click', handleCloseIconClick);\n        });\n    }\n\n    function handleContainerClick(event) {\n        const clickedContainer = event.currentTarget;\n\n        // Expect container ID like: post123 → container123\n        const postID = clickedContainer.id;\n        const containerID = 'container' + postID;\n\n        // Hide all containers\n        document.querySelectorAll('.container').forEach(container => {\n            container.style.display = 'none';\n        });\n\n        // Show related container\n        const containerToShow = document.getElementById(containerID);\n        if (containerToShow) {\n            containerToShow.style.display = 'block';\n        }\n    }\n\n    function handleCloseIconClick(event) {\n        event.stopPropagation();\n\n        document.querySelectorAll('.container').forEach(container => {\n            container.style.display = 'none';\n        });\n    }\n\n    // Initial attach\n    attachContainerEventListeners();\n\n    // Reattach after Elementor filter / AJAX updates\n    document.querySelectorAll('.e-filter-item').forEach(filterButton => {\n        filterButton.addEventListener('click', function () {\n            setTimeout(attachContainerEventListeners, 500);\n        });\n    });\n\n});\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-popup-for-loop-items-and-acf-without-taxomnamy-filter-txt",
+    "title": "Popup for loop items and ACF without taxomnamy filter.txt",
+    "category": "General",
+    "filename": "Popup for loop items and ACF without taxomnamy filter.txt.txt",
+    "content": "<style>\n    .container {\n        display: none; /* Hide all containers by default */\n    }\n    .container_style {\n        pointer-events: auto;\n        cursor: pointer; /* Ensure pointer cursor on hover */\n    }\n</style>\n<script>\ndocument.addEventListener('DOMContentLoaded', function () {\n    // Select all elements with the 'container_style' class\n    const clickableContainers = document.querySelectorAll('.container_style');\n\n    // Add event listeners to each clickable container\n    clickableContainers.forEach(clickableContainer => {\n        clickableContainer.addEventListener('click', function () {\n            const postID = clickableContainer.id; // Get the post ID from the container's ID\n            const containerID = 'container' + postID; // Construct the target container ID\n\n            // Hide all containers\n            document.querySelectorAll('.container').forEach(container => {\n                container.style.display = 'none';\n            });\n\n            // Show the specific container related to the clicked element\n            const containerToShow = document.getElementById(containerID);\n            if (containerToShow) {\n                containerToShow.style.display = 'block';\n            }\n        });\n    });\n\n    // Add event listener to each close icon\n    document.querySelectorAll('.close-icon').forEach(icon => {\n        icon.addEventListener('click', function (event) {\n            event.stopPropagation(); // Prevent the click from bubbling to parent elements\n\n            // Hide all containers when a close icon is clicked\n            document.querySelectorAll('.container').forEach(container => {\n                container.style.display = 'none';\n            });\n        });\n    });\n});\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-pricing-plans-ribbon-desgin",
+    "title": "Pricing Plans Ribbon desgin",
+    "category": "General",
+    "filename": "Pricing Plans Ribbon desgin.txt",
+    "content": "<style>\n/*Ribbon Shape CSS*/\n.myPricing{\n    --text: 'MOST POPULAR';\n    --first-color: #62baea;\n    --second-color: #4a98bf;\n\n    position: relative;\n}\n.myPricing .myRibbon{\n    position: absolute;\n    top: -10px;\n    left: -10px;\n    width: 150px;\n    height: 150px;\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    overflow: hidden;\n}\n.myPricing .myRibbon::before{\n    content: var(--text);\n    position: absolute;\n    width: 150%;\n    height: 40px;\n    background: var(--first-color);\n    transform: rotate(-45deg) translateY(-20px);\n    display: flex;\n    justify-content: center;\n    align-items: center;\n    font-size: 14px;\n    font-weight: 600;\n    color: #fff;\n    letter-spacing: 0.1em;\n    box-shadow: 0 5px 10px rgba(0,0,0,0.1);\n}\n.myPricing .myRibbon::after{\n    content: '';\n    position: absolute;\n    bottom: 0;\n    left: 0;\n    width: 10px;\n    height: 10px;\n    background: var(--second-color);\n    z-index: -1;\n    box-shadow: 140px -140px var(--second-color);\n}\n</pre>\n</style>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-refresh-shipping-on-payment-changed",
+    "title": "Refresh shipping on payment changed",
+    "category": "General",
+    "filename": "Refresh shipping on payment changed.accdb",
+    "content": "add_action('wp_footer', 'refresh_shipping_on_payment_change');\nfunction refresh_shipping_on_payment_change() {\n    if (is_checkout()) {\n        ?>\n        <script type=\"text/javascript\">\n            jQuery(function($){\n                $(document).on('change', 'input[name=\"payment_method\"]', function(){\n                    $('body').trigger('update_checkout');\n                });\n            });\n        </script>\n        <?php\n    }\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-responsive-slides",
+    "title": "Responsive Slides",
+    "category": "General",
+    "filename": "Responsive Slides.accdb",
+    "content": "@media (min-aspect-ratio: 0.40000) and (max-aspect-ratio: 0.40832) {\n    .elementor-slides .swiper-slide {\n        height: 24.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.40833) and (max-aspect-ratio: 0.41666) {\n    .elementor-slides .swiper-slide {\n        height: 24.5vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.41667) and (max-aspect-ratio: 0.42499) {\n    .elementor-slides .swiper-slide {\n        height: 25.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.42500) and (max-aspect-ratio: 0.43332) {\n    .elementor-slides .swiper-slide {\n        height: 25.5vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.43333) and (max-aspect-ratio: 0.44166) {\n    .elementor-slides .swiper-slide {\n        height: 26.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.44167) and (max-aspect-ratio: 0.44999) {\n    .elementor-slides .swiper-slide {\n        height: 26.5vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.45000) and (max-aspect-ratio: 0.45832) {\n    .elementor-slides .swiper-slide {\n        height: 27.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.45833) and (max-aspect-ratio: 0.46666) {\n    .elementor-slides .swiper-slide {\n        height: 27.5vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.46667) and (max-aspect-ratio: 0.47499) {\n    .elementor-slides .swiper-slide {\n        height: 28.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.47500) and (max-aspect-ratio: 0.48332) {\n    .elementor-slides .swiper-slide {\n        height: 28.5vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.48333) and (max-aspect-ratio: 0.49166) {\n    .elementor-slides .swiper-slide {\n        height: 29.0vh !important;\n    }\n}\n\n\n@media (min-aspect-ratio: 0.50) and (max-aspect-ratio: 0.59999) {\n    .elementor-slides .swiper-slide {\n        height: 30.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.60) and (max-aspect-ratio: 0.69999) {\n    .elementor-slides .swiper-slide {\n        height: 36.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.70) and (max-aspect-ratio: 0.79999) {\n    .elementor-slides .swiper-slide {\n        height: 42.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.80) and (max-aspect-ratio: 0.89999) {\n    .elementor-slides .swiper-slide {\n        height: 48.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 0.90) and (max-aspect-ratio: 0.99999) {\n    .elementor-slides .swiper-slide {\n        height: 54.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.00) and (max-aspect-ratio: 1.09999) {\n    .elementor-slides .swiper-slide {\n        height: 60.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.10) and (max-aspect-ratio: 1.19999) {\n    .elementor-slides .swiper-slide {\n        height: 66.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.20) and (max-aspect-ratio: 1.29999) {\n    .elementor-slides .swiper-slide {\n        height: 72.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.30) and (max-aspect-ratio: 1.39999) {\n    .elementor-slides .swiper-slide {\n        height: 78.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.40) and (max-aspect-ratio: 1.49999) {\n    .elementor-slides .swiper-slide {\n        height: 84.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.50) and (max-aspect-ratio: 1.59999) {\n    .elementor-slides .swiper-slide {\n        height: 90.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.60) and (max-aspect-ratio: 1.69999) {\n    .elementor-slides .swiper-slide {\n        height: 96.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.70) and (max-aspect-ratio: 1.79999) {\n    .elementor-slides .swiper-slide {\n        height: 102.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.80) and (max-aspect-ratio: 1.89999) {\n    .elementor-slides .swiper-slide {\n        height: 108.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 1.90) and (max-aspect-ratio: 1.99999) {\n    .elementor-slides .swiper-slide {\n        height: 114.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.00) and (max-aspect-ratio: 2.09999) {\n    .elementor-slides .swiper-slide {\n        height: 120.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.10) and (max-aspect-ratio: 2.19999) {\n    .elementor-slides .swiper-slide {\n        height: 126.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.20) and (max-aspect-ratio: 2.29999) {\n    .elementor-slides .swiper-slide {\n        height: 132.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.30) and (max-aspect-ratio: 2.39999) {\n    .elementor-slides .swiper-slide {\n        height: 138.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.40) and (max-aspect-ratio: 2.49999) {\n    .elementor-slides .swiper-slide {\n        height: 144.0vh !important;\n    }\n}\n\n@media (min-aspect-ratio: 2.5) {\n    .elementor-slides .swiper-slide {\n        height: 150.0vh !important;\n    }\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-rtl-ltr-change-site-direction-gtranslate",
+    "title": "RTL, LTR Change Site Direction GTranslate",
+    "category": "General",
+    "filename": "RTL, LTR Change Site Direction GTranslate.txt",
+    "content": "<script>\nfunction setDirectionBasedOnLang(lang) {\n  const rtlLangs = ['ar', 'he', 'fa', 'ur'];\n  const isRTL = rtlLangs.includes(lang);\n\n  document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');\n  document.body.classList.toggle('lang-rtl', isRTL);\n  document.body.classList.toggle('lang-ltr', !isRTL);\n}\n\n// Detect GTranslate language switch\nfunction initGTranslateDirectionSwitch() {\n  const langSwitcher = document.querySelector('.goog-te-combo');\n\n  if (!langSwitcher) return;\n\n  // Initial direction based on current selection\n  setDirectionBasedOnLang(langSwitcher.value || 'ar');\n\n  // On change\n  langSwitcher.addEventListener('change', function () {\n    const selectedLang = this.value || 'ar';\n    setTimeout(() => {\n      setDirectionBasedOnLang(selectedLang);\n    }, 100); // Wait a bit for DOM changes\n  });\n}\n\ndocument.addEventListener('DOMContentLoaded', function () {\n  // GTranslate loads async, so wait a bit\n  setTimeout(initGTranslateDirectionSwitch, 1000);\n});\n</script>\n\n\n\n\n\n\n\n\n\n\nCSS-------------------\n\n\n/* Layout Direction for Columns */\nbody.lang-rtl .elementor-column {\n  flex-direction: column-reverse !important;\n  text-align: right;\n}\n\nbody.lang-ltr .elementor-column {\n  flex-direction: column !important;\n  text-align: left;\n}\n\n/* Additional fix for text widgets */\nbody.lang-rtl .elementor-heading-title,\nbody.lang-rtl .elementor-widget-text-editor,\nbody.lang-rtl .elementor-widget {\n  text-align: right;\n}\n\nbody.lang-ltr .elementor-heading-title,\nbody.lang-ltr .elementor-widget-text-editor,\nbody.lang-ltr .elementor-widget {\n  text-align: left;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-scrollbar-color",
+    "title": "Scrollbar color",
+    "category": "General",
+    "filename": "Scrollbar color.txt",
+    "content": "::-webkit-scrollbar{\n    width: 0.9vw;\n    background: #777;\n}\n::-webkit-scrollbar-thumb{\n    background: -webkit-linear-gradient(transparent,#30ff00);\n    background: linear-gradient(transparent,#30ff00);\n    border-radius: 20px;\n}\n\n::-webkit-scrollbar-thumb:hover{\n   background: -webkit-linear-gradient(transparent,#00c6ff);\n   background: linear-gradient(transparent,#00c6ff);\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-show-header-when-scroll-up",
+    "title": "Show header when scroll up",
+    "category": "General",
+    "filename": "Show header when scroll up.txt",
+    "content": "https://lytboxacademy.com/hide-header-on-scroll-down-show-on-scroll-up-with-elementor/\n_____________________________________________________\n\nGive the header ID \"hide-header\" and make it sticky top then go to\nelementor custom code and choose /boody-end then but this JS code :\n\n<!-- Hide and Show Desktop and Mobile Headers -->\n<script>\nvar prevScrollpos = window.pageYOffset;\nwindow.onscroll = function() {\n  var currentScrollPos = window.pageYOffset;\n\n  // Handle desktop header\n  var desktopHeader = document.getElementById(\"hide-header\");\n  if (desktopHeader) {\n    desktopHeader.style.top = prevScrollpos > currentScrollPos ? \"0\" : \"-120px\"; // Adjust -120px to your desktop header height\n  }\n\n  // Handle mobile header\n  var mobileHeader = document.getElementById(\"hide-mobile-header\"); // Replace with your mobile header ID\n  if (mobileHeader) {\n    mobileHeader.style.top = prevScrollpos > currentScrollPos ? \"0\" : \"-110px\"; // Adjust -80px to your mobile header height\n  }\n\n  prevScrollpos = currentScrollPos;\n};\n</script>\n\n\n<style>\n/* Show Hide Sticky Header Speed Control */\n#hide-header {\n\ttransition: all .4s ease!important;\n}\n\n\t#hide-mobile-header {\n\ttransition: all .4s ease!important;\n}\n\n</style>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-show-more-images-in-gallery",
+    "title": "Show More Images In Gallery",
+    "category": "General",
+    "filename": "Show More Images In Gallery.txt",
+    "content": "Classname: showmoreimages\n\n\n<script>\n\nlet galleries,\nshownAmount = 9, /* How many images will be shown by default */\nviewMoreMessage = 'Show XX more'; /* Enter your message here, keep the XX for where the additional images count will be dynamically entered. Needs to look like this: 'See XX More' */\n\ndocument.addEventListener('DOMContentLoaded', function() {\n\ngalleries = document.querySelectorAll('.showmoreimages');\n\nsetTimeout(function(){\nviewMoreGalleries();\n}, 2700);\n\nwindow.addEventListener(\"resize\", function() {\nsetTimeout(function(){\nviewMoreGalleries();\n}, 777);\n});\n\n});\n\nfunction viewMoreGalleries(){\n\ngalleries.forEach((e,i) => {\n\nlet galleryItems = e.querySelectorAll('.elementor-gallery-item');\nlet viewMoreImagesCount = 0;\nfor (let i = shownAmount; i < galleryItems.length; i++){\ngalleryItems[i].style.display = 'none';\nviewMoreImagesCount++;\n}\n\nlet galleryOffsetDiv = e.querySelector('.elementor-widget-container');\n\nlet offSet = galleryItems[shownAmount - 1].getBoundingClientRect().bottom - e.getBoundingClientRect().top;\n\ngalleryOffsetDiv.style.height = offSet + 'px';\n\ngalleryItems[shownAmount - 1].setAttribute('data-count', viewMoreMessage.replace('XX',viewMoreImagesCount));\n\ncssDiv.innerHTML = `\n.showmoreimages .elementor-gallery-item:nth-child(${shownAmount}):before {\ncontent: attr(data-count);\ntext-align: center;\nz-index: 5;\nmargin: 0;\nposition: absolute;\ntop: 50%;\nleft: 50%;\ntransform: translate(-50%, -50%);\ndisplay: flex;\njustify-content: center;\nalign-items: center;\n/* Edit the below CSS to adjust the 'view more' card styling */\ntext-transform: uppercase;\nfont-weight: 900;\nfont-size: 1rem;\nfont-family:inherit;\nwidth:90%;\nheight:90%;\ncolor: white;\nbackground-color: rgba(0, 0, 0, 0.4);\n}`\n});\n}\n\nlet cssDiv = document.createElement('style');\ndocument.querySelector('head').appendChild(cssDiv);\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-skew-button-animation",
+    "title": "Skew Button Animation",
+    "category": "General",
+    "filename": "Skew Button Animation.txt",
+    "content": ".grow-skew-btn a {\n  position: relative;\n  z-index: 1;\n  overflow: hidden;\n}\n.grow-skew-btn a::after {\n  content: \"\";\n  background: #fff;\n  position: absolute;\n  z-index: -1;\n  padding: 0.85em 0.75em;\n}\n\n.grow-skew-btn a::after {\n  transition: all 0.3s ease;\n}\n.grow-skew-btn a:hover::after {\n  transition: all 0.3s ease-out;\n}\n\n.grow-skew-btn a::after {\n  left: -20%;\n  right: -20%;\n  top: 0;\n  bottom: 0;\n  transform: skewX(-45deg) scale(0, 1);\n}\n.grow-skew-btn a:hover::after {\n  transform: skewX(-45deg) scale(1, 1);\n}\n\n.grow-skew-btn {\n    display: flex;\n}\n\n\n\n\n\n\n---------------------- for items --------------\n\n@media (min-width: 768px) {\n\n.project-cont {\n\n    position: absolute;\n    inset: 20px;\n    width: auto;\n    height: auto;\n    background: rgba(0, 0, 0, 0.85);\n    clip-path: inset(0 50% 0 50%);\n    transition: clip-path 0.6s cubic-bezier(0.4, 0, 0.2, 1);\n}\n\n.parent-project:hover .project-cont {\n    clip-path: inset(0 0% 0 0%);\n}\n\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-text-hightlighted-on-scroll",
+    "title": "Text Hightlighted on Scroll",
+    "category": "General",
+    "filename": "Text Hightlighted on Scroll.txt",
+    "content": "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js\"></script>\n<script src=\"https://unpkg.com/gsap@3/dist/ScrollTrigger.min.js\"></script>\n<script src=\"https://cdn.jsdelivr.net/npm/split-type@0.3.4/umd/index.min.js\"></script>\n\n<script>\n\ngsap.registerPlugin(ScrollTrigger);\n\nconst split = new SplitType(\".cool-split h2\", {\n  types: \"words, chars\",\n});\n\nconst tl = gsap\n  .timeline({\n    scrollTrigger: {\n      trigger: \".about\",\n      start: \"top 0%\",\n      end: \"+=30%\",\n      scrub: 0.5,\n    },\n  })\n  .set(\n    split.chars,\n    {\n      duration: 0.3,\n      color: \"#7DFF5F\",\n      stagger: 0.1,\n    },\n    0.1\n  );\n</script>",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-underline-hover-effect",
+    "title": "Underline hover effect",
+    "category": "General",
+    "filename": "Underline hover effect.txt",
+    "content": "/*CSS Underline*/\nselector::after {\n  content: '';\n  display: block;\n  height: 3px;\n  width: 0px;\n  background: transparent;\n  transition: width .5s ease, background-color .5s ease;\n\n}\n\nselector:hover::after {\n  width: 40%;\n  background: #B67CF9; /*change background here*/\n}\n\n/*Grow divider*/\n\nselector .elementor-divider-separator{\n     transition: transform 0.5s;\n     transform-origin: center !important;\n}\n\nselector:hover .elementor-divider-separator{\n    transform: scaleX(4) !important;\n}\n_______________________________\n\nselector .elementor-divider-separator {\n    transition: transform 0.5s;\n    transform-origin: left center !important; /* Set transform origin to right center */\n}\n\nselector:hover .elementor-divider-separator {\n    transform: scaleX(4) !important; /* ScaleX to grow the divider */\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-wordpress-resopnsive",
+    "title": "Wordpress Resopnsive @",
+    "category": "General",
+    "filename": "Wordpress Resopnsive @.accdb",
+    "content": "@media (min-width: 1000px) and (max-width: 1050px) {\n\n.elementor-slides .swiper-slide {\n    height: 80vh !important;\n}\n\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  },
+  {
+    "id": "general-wpml-currency-switcher-d-m",
+    "title": "Wpml Currency Switcher D&M",
+    "category": "General",
+    "filename": "Wpml Currency Switcher D&M.txt",
+    "content": "--------------Desktop Menu\n\n.wd-header-text [class*=\"wcml-dropdown\"] a.wcml-cs-item-toggle {\n    padding: 5px 20px;\n    height: 40px;\n    color: #fff;\n    font-weight: 600;\n    background-color: #b28181;\n    border-radius: 50px;\n}\n\n.wd-header-text [class*=\"wcml-dropdown\"] a.wcml-cs-item-toggle:hover {\n\t\t\tcolor: #fff;\n\t\t\tbackground-color: #596958;\n}\n\n.product.wcml-dropdown .wcml-cs-active-currency>a {\n    color: #fff !important;\n\n}\n\n.wd-header-text [class*=\"wcml-dropdown\"] .wcml-cs-active-currency {\n    display: flex;\n\t\tflex-direction: column;\n    width: fit-content;\n}\n\n.wd-header-text [class*=\"wcml-dropdown\"] a.wcml-cs-item-toggle:after {\n    margin-top: -5px;\n    margin-left: 6px;\n    font-size: 12px;\n    color: #fff;\n}\n\n\n--------------Mobile Menu\n\na.wcml-cs-item-toggle {\n    padding: 10px 20px;\n    font-weight: 600;\n}\n[class*=\"wcml-dropdown\"] a.wcml-cs-item-toggle:after {\n    color: #1b1b1b;\n    font-size: 12px;\n\t  color: var(--color-gray-900);\n\t\tfont-weight: 400;\n    margin-top: -1px;\n\t  margin-right: 6px;\n\n}\n\n.widget .wcml-dropdown ul li {\n    border-radius: 0px;\n    border-top: none;\n}\n\n.widgetarea-mobile {\n    padding: 0px !important;\n}\n\n[class*=\"wcml-dropdown\"] .wcml-cs-submenu {\n    right: auto !important;\n    left: auto !important;\n    width: 100% !important;\n}\n\n.widget .wcml-dropdown ul li a {\n    font-weight: 600 !important;\n}",
+    "createdAt": "2026-04-27T00:00:00.000Z",
+    "updatedAt": "2026-04-27T00:00:00.000Z"
+  }
+]
