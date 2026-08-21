@@ -2,6 +2,8 @@
    focus feedback uses border/background, never a browser outline. */
 
 .gate {
+  position: relative;
+  overflow: hidden;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -15,9 +17,113 @@
   font-family: inherit;
 }
 
+/* ---------- living background ---------- */
+
+.gate-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.gate-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.gate-orb-a {
+  width: 420px;
+  height: 420px;
+  left: -120px;
+  top: -80px;
+  background: radial-gradient(circle, rgba(124, 92, 255, 0.55), transparent 70%);
+  animation: gate-drift-a 22s ease-in-out infinite alternate;
+}
+
+.gate-orb-b {
+  width: 360px;
+  height: 360px;
+  right: -100px;
+  bottom: -60px;
+  background: radial-gradient(circle, rgba(0, 200, 190, 0.4), transparent 70%);
+  animation: gate-drift-b 26s ease-in-out infinite alternate;
+}
+
+.gate-orb-c {
+  width: 260px;
+  height: 260px;
+  left: 55%;
+  top: 12%;
+  background: radial-gradient(circle, rgba(90, 139, 255, 0.35), transparent 70%);
+  animation: gate-drift-c 19s ease-in-out infinite alternate;
+}
+
+@keyframes gate-drift-a {
+  from { transform: translate(0, 0) scale(1); }
+  to { transform: translate(140px, 90px) scale(1.18); }
+}
+
+@keyframes gate-drift-b {
+  from { transform: translate(0, 0) scale(1.1); }
+  to { transform: translate(-120px, -80px) scale(0.92); }
+}
+
+@keyframes gate-drift-c {
+  from { transform: translate(0, 0); }
+  to { transform: translate(-90px, 130px) scale(1.25); }
+}
+
+.gate-star {
+  position: absolute;
+  color: #9db4ff;
+  text-shadow: 0 0 12px rgba(124, 92, 255, 0.8);
+  animation: gate-twinkle 3.2s ease-in-out infinite;
+}
+
+.gate-star-1 { left: 12%; top: 22%; font-size: 15px; animation-delay: 0s; }
+.gate-star-2 { left: 26%; top: 68%; font-size: 11px; animation-delay: 0.7s; }
+.gate-star-3 { left: 44%; top: 14%; font-size: 13px; animation-delay: 1.4s; }
+.gate-star-4 { right: 20%; top: 30%; font-size: 16px; animation-delay: 0.35s; }
+.gate-star-5 { right: 10%; bottom: 24%; font-size: 12px; animation-delay: 1.05s; }
+.gate-star-6 { left: 62%; bottom: 12%; font-size: 14px; animation-delay: 1.75s; }
+
+@keyframes gate-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.25) rotate(20deg); }
+}
+
+/* ---------- card entrance + logo float ---------- */
+
+.gate-card-enter {
+  animation: gate-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes gate-rise {
+  from { opacity: 0; transform: translateY(26px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.gate-logo {
+  width: 44px;
+  height: 44px;
+  align-self: center;
+  animation: gate-float 4.5s ease-in-out infinite;
+  filter: drop-shadow(0 6px 18px rgba(124, 92, 255, 0.45));
+}
+
+@keyframes gate-float {
+  0%, 100% { transform: translateY(0) rotate(-2deg); }
+  50% { transform: translateY(-7px) rotate(2deg); }
+}
+
 .gate-card {
+  position: relative;
+  z-index: 1;
   width: min(400px, 100%);
-  background: #10131c;
+  background: rgba(16, 19, 28, 0.88);
+  backdrop-filter: blur(10px);
   border: 1px solid #232838;
   border-radius: 18px;
   padding: 32px 28px;
@@ -147,5 +253,41 @@
   .gate-card {
     margin-top: 8vh;
     padding: 26px 20px;
+  }
+}
+
+/* ---------- button shimmer ---------- */
+
+.gate-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.gate-button::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -80%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-20deg);
+  animation: gate-shimmer 3.5s ease-in-out infinite;
+}
+
+@keyframes gate-shimmer {
+  0%, 55% { left: -80%; }
+  85%, 100% { left: 130%; }
+}
+
+/* ---------- accessibility ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .gate-orb,
+  .gate-star,
+  .gate-logo,
+  .gate-card-enter,
+  .gate-button::after {
+    animation: none;
   }
 }

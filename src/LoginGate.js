@@ -35,7 +35,18 @@ export default function LoginGate({ needsSetup, onAuthenticated }) {
 
   return (
     <div className="gate gate-dark">
-      <form className="gate-card" onSubmit={handleSubmit}>
+      <div className="gate-bg" aria-hidden="true">
+        <span className="gate-orb gate-orb-a" />
+        <span className="gate-orb gate-orb-b" />
+        <span className="gate-orb gate-orb-c" />
+        <span className="gate-star gate-star-1">✦</span>
+        <span className="gate-star gate-star-2">✧</span>
+        <span className="gate-star gate-star-3">✦</span>
+        <span className="gate-star gate-star-4">✧</span>
+        <span className="gate-star gate-star-5">✦</span>
+        <span className="gate-star gate-star-6">✧</span>
+      </div>
+      <form className="gate-card gate-card-enter" onSubmit={handleSubmit}>
         <img className="gate-logo" src="./wizard-schedules-transparent.ico" alt="" />
         <p className="gate-eyebrow">{mode === "setup" ? "First-time setup" : "Welcome back"}</p>
         <h1 className="gate-title">{APP_NAME}</h1>
