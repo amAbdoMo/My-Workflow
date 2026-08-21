@@ -5,6 +5,8 @@
   position: relative;
   overflow: hidden;
   min-height: 100vh;
+  /* Mobile browsers: follow the visible viewport, address bar included. */
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;

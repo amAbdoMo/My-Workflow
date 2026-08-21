@@ -600,6 +600,7 @@ export default function App() {
   const [backupMessage, setBackupMessage] = useState(null);
   const closePromptResolverRef = useRef(null);
   const snippetEditorGutterRef = useRef(null);
+  const topbarActionsRef = useRef(null);
 
   sitesRef.current = sites;
   projectNotesRef.current = projectNotes;
@@ -787,10 +788,14 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  // Close the mobile topbar menu when clicking anywhere else.
+  // Close the mobile topbar menu when clicking outside the whole actions area.
   useEffect(() => {
     if (!topbarMenuOpen) return;
-    const close = () => setTopbarMenuOpen(false);
+    const close = (event) => {
+      if (topbarActionsRef.current && !topbarActionsRef.current.contains(event.target)) {
+        setTopbarMenuOpen(false);
+      }
+    };
     document.addEventListener("click", close);
     return () => document.removeEventListener("click", close);
   }, [topbarMenuOpen]);
@@ -1779,7 +1784,7 @@ export default function App() {
           </div>
         </div>
 
-        <div className="topbar-actions">
+        <div className="topbar-actions" ref={topbarActionsRef}>
           <button
             className="icon-action topbar-menu-button"
             type="button"

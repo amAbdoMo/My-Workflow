@@ -2,7 +2,7 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "wizard-shell-v1";
+const CACHE = "wizard-shell-v2";
 
 self.addEventListener("install", () => {
   self.skipWaiting();
