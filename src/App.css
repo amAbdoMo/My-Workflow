@@ -3148,9 +3148,9 @@ html[data-web="1"] * {
     display: none;
     position: absolute;
     top: calc(100% - 6px);
+    left: 0;
     right: 0;
     z-index: 30;
-    min-width: 200px;
     padding: 10px;
     flex-direction: column;
     align-items: stretch;
@@ -3159,6 +3159,26 @@ html[data-web="1"] * {
     border-radius: var(--radius);
     background: var(--panel-strong);
     box-shadow: var(--shadow);
+  }
+
+  /* No focus ring on the hamburger; pressed state gives feedback instead. */
+  .topbar-menu-button,
+  .topbar-menu-button:focus,
+  .topbar-menu-button:focus-visible,
+  .topbar-menu-button:active {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .topbar-menu-button:active {
+    background: var(--panel-soft);
+  }
+
+  .topbar-menu .icon-action,
+  .topbar-menu .theme-toggle,
+  .topbar-menu .secondary-action {
+    outline: none;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .topbar-menu.topbar-menu-open {
