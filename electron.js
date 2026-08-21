@@ -1,3 +1,11 @@
+// Web hosts (Hostinger's runner) execute this file with plain Node, where the
+// electron module is just a stub and `app` would be undefined. In that case boot
+// the Express web server instead of the desktop shell.
+if (!(process.versions && process.versions.electron)) {
+  require("./server/index.js");
+  return;
+}
+
 const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, dialog } = require("electron");
 const { ImapFlow } = require("imapflow");
 const fs = require("fs");
