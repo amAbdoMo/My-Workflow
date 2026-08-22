@@ -473,6 +473,17 @@ button:disabled {
   background: var(--accent);
 }
 
+.project-currency-toggle {
+  width: 100%;
+  min-height: 48px;
+  border-radius: var(--radius);
+}
+
+.project-currency-toggle .currency-toggle-button {
+  flex: 1 1 50%;
+  height: 40px;
+}
+
 .money-visibility-toggle {
   width: 36px;
   border: 1px solid var(--line);
@@ -710,6 +721,14 @@ button:disabled {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.snippet-category-filter-mobile {
+  display: none;
+}
+
+.snippet-export-actions {
+  display: contents;
 }
 
 .category-pill {
@@ -2318,10 +2337,10 @@ button:disabled {
 }
 
 .note-delete-action {
+  width: 42px;
+  min-width: 42px;
   min-height: 42px;
-  padding: 0 10px;
-  font-size: 0.72rem;
-  text-transform: none;
+  padding: 0;
 }
 
 .note-editor-row-done .note-text-input {
@@ -3541,11 +3560,10 @@ input[type="checkbox"]:focus-visible {
     align-items: center;
     justify-content: center;
     flex: 0 0 auto;
-    gap: 7px;
-    width: auto;
-    min-width: 108px;
+    width: 44px;
+    min-width: 44px;
     min-height: 44px;
-    padding: 0 14px;
+    padding: 0;
     color: var(--text);
     background: var(--panel-soft);
     border: 1px solid var(--line);
@@ -3560,13 +3578,8 @@ input[type="checkbox"]:focus-visible {
     background: color-mix(in srgb, var(--accent), transparent 88%);
   }
 
-  .topbar-menu-chevron {
+  .topbar-menu-icon {
     flex: 0 0 auto;
-    transition: transform 160ms ease;
-  }
-
-  .topbar-menu-button[aria-expanded="true"] .topbar-menu-chevron {
-    transform: rotate(180deg);
   }
 
   .topbar-menu {
@@ -3631,39 +3644,35 @@ input[type="checkbox"]:focus-visible {
 
   .todo-entry:not(.todo-entry-new-category),
   .todo-entry-new-category {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .todo-entry:not(.todo-entry-new-category) {
     grid-template-areas:
-      "todo-input"
-      "todo-category"
-      "todo-add"
-      "todo-clear"
-      "todo-filter";
+      "todo-input todo-input"
+      "todo-category todo-category"
+      "todo-add todo-clear"
+      "todo-filter todo-filter";
   }
 
   .todo-entry-new-category {
     grid-template-areas:
-      "todo-input"
-      "todo-category"
-      "todo-new-category"
-      "todo-add"
-      "todo-clear"
-      "todo-filter";
+      "todo-input todo-input"
+      "todo-category todo-category"
+      "todo-new-category todo-new-category"
+      "todo-add todo-clear"
+      "todo-filter todo-filter";
   }
 
   .todo-row {
     grid-template-columns: 26px 22px 30px minmax(0, 1fr) 40px 40px;
     grid-template-areas:
       "todo-text todo-text todo-text todo-text todo-text todo-text"
-      "todo-drag todo-check todo-number todo-category todo-category todo-category"
-      ". . . . todo-edit todo-delete";
+      "todo-drag todo-check todo-number . todo-edit todo-delete";
     gap: 8px;
     padding: 8px;
   }
 
-  /* Task text gets the full row; category wraps cleanly on its own row. */
   .todo-row > .todo-text-display,
   .todo-row > .todo-text-input {
     height: auto;
@@ -3674,9 +3683,7 @@ input[type="checkbox"]:focus-visible {
   }
 
   .todo-row > .todo-category-badge {
-    justify-self: stretch;
-    max-width: none;
-    white-space: normal;
+    display: none;
   }
 
   .todo-progress-meter {
@@ -3801,6 +3808,36 @@ input[type="checkbox"]:focus-visible {
   .bento-grid > .metric-card {
     grid-column: span 1;
     min-width: 0;
+  }
+
+  .snippet-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .snippet-stats div {
+    min-width: 0;
+    padding: 12px;
+  }
+
+  .category-filter {
+    display: none;
+  }
+
+  .snippet-category-filter-mobile {
+    display: block;
+    width: 100%;
+  }
+
+  .snippet-export-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .snippet-export-actions .secondary-action {
+    min-width: 0;
+    padding-inline: 8px;
   }
 
   .date-list {

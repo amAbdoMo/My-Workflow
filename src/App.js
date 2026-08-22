@@ -560,7 +560,7 @@ export default function App() {
   const [showClients, setShowClients] = useState(false);
   const [clientMenuOpen, setClientMenuOpen] = useState(false);
   const [clientFilterMenuOpen, setClientFilterMenuOpen] = useState(false);
-  const [currencyMenuOpen, setCurrencyMenuOpen] = useState(false);
+  const [snippetFilterMenuOpen, setSnippetFilterMenuOpen] = useState(false);
   const [snippetCategoryMenuOpen, setSnippetCategoryMenuOpen] = useState(false);
   const [clientName, setClientName] = useState("");
   const [search, setSearch] = useState("");
@@ -1820,7 +1820,7 @@ export default function App() {
             className="topbar-menu-button"
             ref={topbarMenuButtonRef}
             type="button"
-            aria-label="Open Settings"
+            aria-label="Open menu"
             aria-expanded={topbarMenuOpen}
             aria-controls={TOPBAR_MENU_ID}
             aria-haspopup="true"
@@ -1830,9 +1830,10 @@ export default function App() {
               setTopbarMenuOpen((open) => !open);
             }}
           >
-            <span>Settings</span>
-            <svg className="topbar-menu-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d="m4 6 4 4 4-4" />
+            <svg className="topbar-menu-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 6h16" />
+              <path d="M4 12h16" />
+              <path d="M4 18h16" />
             </svg>
           </button>
           <div id={TOPBAR_MENU_ID} className={`topbar-menu${topbarMenuOpen ? " topbar-menu-open" : ""}`} onClick={(event) => event.stopPropagation()}>
@@ -2182,12 +2183,45 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button className="secondary-action" type="button" onClick={() => handleExportSnippets("selected")} disabled={!selectedSnippet}>
-              Export Selected
-            </button>
-            <button className="secondary-action" type="button" onClick={() => handleExportSnippets("all")} disabled={snippets.length === 0}>
-              Export All
-            </button>
+            <div className="client-select snippet-category-filter-mobile" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSnippetFilterMenuOpen(false); }}>
+              <button
+                className="client-select-button"
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={snippetFilterMenuOpen}
+                onClick={() => setSnippetFilterMenuOpen((open) => !open)}
+              >
+                <span>{snippetCategory === "All" ? "All categories" : snippetCategory}</span>
+                <b aria-hidden="true">v</b>
+              </button>
+              {snippetFilterMenuOpen && (
+                <div className="client-select-menu" role="listbox">
+                  {snippetCategories.map((category) => (
+                    <button
+                      className={snippetCategory === category ? "client-option client-option-active" : "client-option"}
+                      type="button"
+                      role="option"
+                      aria-selected={snippetCategory === category}
+                      key={category}
+                      onClick={() => {
+                        setSnippetCategory(category);
+                        setSnippetFilterMenuOpen(false);
+                      }}
+                    >
+                      <span>{category === "All" ? "All categories" : category}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="snippet-export-actions">
+              <button className="secondary-action" type="button" onClick={() => handleExportSnippets("selected")} disabled={!selectedSnippet}>
+                Export Selected
+              </button>
+              <button className="secondary-action" type="button" onClick={() => handleExportSnippets("all")} disabled={snippets.length === 0}>
+                Export All
+              </button>
+            </div>
           </section>
 
           {copyState && <div className="snippet-toast">{copyState}</div>}
@@ -2903,7 +2937,6 @@ export default function App() {
             onClick={(event) => {
               event.stopPropagation();
               setClientMenuOpen(false);
-              setCurrencyMenuOpen(false);
             }}
             aria-label={editId ? "Edit project" : "New project"}
           >
@@ -2943,10 +2976,7 @@ export default function App() {
                   type="button"
                   aria-haspopup="listbox"
                   aria-expanded={clientMenuOpen}
-                  onClick={() => {
-                    setCurrencyMenuOpen(false);
-                    setClientMenuOpen((open) => !open);
-                  }}
+                  onClick={() => setClientMenuOpen((open) => !open)}
                 >
                   <span>{selectedClient ? selectedClient.name : "No client selected"}</span>
                   <b aria-hidden="true">v</b>
@@ -2999,40 +3029,18 @@ export default function App() {
               </label>
               <label>
                 Currency
-                <div className="client-select price-currency-select" onClick={(event) => event.stopPropagation()}>
-                  <button
-                    className="client-select-button"
-                    type="button"
-                    aria-haspopup="listbox"
-                    aria-expanded={currencyMenuOpen}
-                    onClick={() => {
-                      setClientMenuOpen(false);
-                      setCurrencyMenuOpen((open) => !open);
-                    }}
-                  >
-                    <span>{CURRENCIES[normalizeCurrency(form.currency, form.price)].symbol} {normalizeCurrency(form.currency, form.price)}</span>
-                    <b aria-hidden="true">v</b>
-                  </button>
-
-                  {currencyMenuOpen && (
-                    <div className="client-select-menu" role="listbox">
-                      {Object.values(CURRENCIES).map((currency) => (
-                        <button
-                          className={normalizeCurrency(form.currency, form.price) === currency.code ? "client-option client-option-active" : "client-option"}
-                          type="button"
-                          role="option"
-                          aria-selected={normalizeCurrency(form.currency, form.price) === currency.code}
-                          key={currency.code}
-                          onClick={() => {
-                            setForm((current) => ({ ...current, currency: currency.code }));
-                            setCurrencyMenuOpen(false);
-                          }}
-                        >
-                          <span>{currency.symbol} {currency.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
+                <div className="currency-toggle project-currency-toggle" role="group" aria-label="Project currency">
+                  {Object.values(CURRENCIES).map((currency) => (
+                    <button
+                      className={normalizeCurrency(form.currency, form.price) === currency.code ? "currency-toggle-button currency-toggle-active" : "currency-toggle-button"}
+                      type="button"
+                      aria-pressed={normalizeCurrency(form.currency, form.price) === currency.code}
+                      key={currency.code}
+                      onClick={() => setForm((current) => ({ ...current, currency: currency.code }))}
+                    >
+                      <span className="currency-toggle-label">{currency.label}</span>
+                    </button>
+                  ))}
                 </div>
               </label>
             </div>
@@ -3120,12 +3128,19 @@ export default function App() {
                       onChange={(event) => handleNoteChange(note.id, { text: event.target.value })}
                     />
                     <button
-                      className="secondary-action danger-action note-delete-action"
+                      className="icon-action danger-action note-delete-action"
                       type="button"
                       aria-label={`Delete note ${index + 1}`}
+                      title={`Delete note ${index + 1}`}
                       onClick={() => handleDeleteNote(note.id)}
                     >
-                      Delete
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                        <path d="M10 11v5" />
+                        <path d="M14 11v5" />
+                      </svg>
                     </button>
                   </div>
                 ))}
