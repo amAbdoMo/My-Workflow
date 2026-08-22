@@ -156,6 +156,7 @@
   box-sizing: border-box;
   object-fit: contain;
   border-radius: 50%;
+  filter: none;
   /* Dark circular medallion: a faint top light only — the mint app-accent
      colour lives in the border ring and drop shadow, like the login card. */
   background:
@@ -183,10 +184,8 @@
     height: 72px;
     padding: 13px;
     border-radius: 50%;
-    border: 1px solid rgba(110, 233, 199, 0.24);
-    box-shadow:
-      0 8px 20px rgba(110, 233, 199, 0.07),
-      0 3px 8px rgba(0, 0, 0, 0.22);
+    border: 1px solid rgba(110, 233, 199, 0.16);
+    box-shadow: 0 6px 16px rgba(110, 233, 199, 0.04);
   }
 }
 
