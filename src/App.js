@@ -3022,7 +3022,7 @@ export default function App() {
                 Project price
                 <input
                   value={form.price}
-                  placeholder={form.currency === "EGP" ? "e.g. 50000" : "e.g. 1500"}
+                  placeholder={form.currency === "EGP" ? "E£ EGP — e.g. 50000" : "$ USD — e.g. 1500"}
                   inputMode="decimal"
                   onChange={(event) => handlePriceChange(event.target.value)}
                 />

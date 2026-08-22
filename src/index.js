@@ -15,7 +15,7 @@ const IS_ELECTRON = isElectron();
 function Splash({ label, children }) {
   return (
     <div className="gate gate-dark">
-      <div className="gate-card" style={{ alignItems: "center" }}>
+      <div className="gate-card gate-splash">
         <img className="gate-logo" src="./wizard-schedules-transparent.ico" alt="" />
         <p className="gate-sub" style={{ margin: 0 }}>
           {label}

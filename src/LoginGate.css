@@ -135,6 +135,37 @@
   gap: 14px;
 }
 
+.gate-splash {
+  align-items: center;
+  gap: 18px;
+  width: auto;
+  min-width: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.gate-splash .gate-logo {
+  display: none;
+}
+
+.gate-splash::before {
+  content: "";
+  width: 54px;
+  height: 54px;
+  border: 3px solid rgba(124, 92, 255, 0.22);
+  border-top-color: #7c5cff;
+  border-right-color: #00c8be;
+  border-radius: 50%;
+  animation: gate-splash-spin 0.9s linear infinite;
+}
+
+@keyframes gate-splash-spin {
+  to { transform: rotate(1turn); }
+}
+
 .gate-logo {
   width: 44px;
   height: 44px;
@@ -285,6 +316,10 @@
 /* ---------- accessibility ---------- */
 
 @media (prefers-reduced-motion: reduce) {
+  .gate-splash::before {
+    animation: none;
+  }
+
   .gate-orb,
   .gate-star,
   .gate-logo,

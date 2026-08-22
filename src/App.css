@@ -2193,9 +2193,27 @@ button:disabled {
 
 .modal {
   width: min(520px, 100%);
+  max-height: calc(100vh - 36px);
   margin: auto 0;
   padding: 24px;
   background: var(--panel-strong);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.client-select-menu::-webkit-scrollbar-track,
+.modal::-webkit-scrollbar-track {
+  margin-block: 0;
+}
+
+.client-select-menu::-webkit-scrollbar-button:vertical:start:decrement,
+.client-select-menu::-webkit-scrollbar-button:vertical:end:increment,
+.modal::-webkit-scrollbar-button:vertical:start:decrement,
+.modal::-webkit-scrollbar-button:vertical:end:increment {
+  display: block;
+  height: 12px;
+  background: transparent;
 }
 
 .modal-header {
@@ -2413,6 +2431,7 @@ button:disabled {
   max-height: 230px;
   padding: 10px;
   overflow-y: auto;
+  scrollbar-gutter: stable;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel-strong);
