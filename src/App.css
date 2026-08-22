@@ -1,7 +1,7 @@
 :root {
   --font-main: "Oxanium", "Segoe UI", sans-serif;
-  --radius: 8px;
-  --shadow: 0 24px 70px rgba(0, 0, 0, 0.22);
+  --radius: 12px;
+  --shadow: 0 18px 42px rgba(2, 13, 24, 0.22);
 }
 
 * {
@@ -63,6 +63,8 @@ button {
 }
 
 .app {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -71,44 +73,47 @@ button {
   font-family: var(--font-main);
   color: var(--text);
   background:
+    radial-gradient(circle at 88% 5%, color-mix(in srgb, var(--accent), transparent 88%), transparent 34%),
     linear-gradient(135deg, var(--bg) 0%, var(--bg-soft) 58%, var(--bg) 100%);
   transition: background 180ms ease, color 180ms ease;
 }
 
 .app-dark {
-  --bg: #080a0f;
-  --bg-soft: #111827;
-  --panel: rgba(17, 24, 39, 0.82);
-  --panel-strong: rgba(21, 31, 49, 0.95);
-  --panel-soft: rgba(255, 255, 255, 0.05);
-  --text: #f6f8fb;
-  --muted: #9da8b8;
-  --line: rgba(255, 255, 255, 0.11);
-  --accent: #47e5bc;
-  --accent-strong: #7cf8d7;
-  --accent-ink: #06100d;
-  --warning: #f8b84e;
-  --danger: #ff6f7d;
-  --ok: #47e5bc;
-  --input: rgba(255, 255, 255, 0.07);
+  --bg: #071321;
+  --bg-soft: #102538;
+  --panel: #10283d;
+  --panel-strong: #15334c;
+  --panel-soft: rgba(179, 237, 224, 0.065);
+  --text: #edf9f6;
+  --muted: #9bb5c0;
+  --text-dim: #78929f;
+  --line: rgba(182, 233, 224, 0.16);
+  --accent: #65e5c1;
+  --accent-strong: #9af5db;
+  --accent-ink: #062118;
+  --warning: #f3bc61;
+  --danger: #ff7a86;
+  --ok: #65e5c1;
+  --input: #0d2235;
 }
 
 .app-light {
-  --bg: #eef3f8;
-  --bg-soft: #f8fbff;
-  --panel: rgba(255, 255, 255, 0.86);
-  --panel-strong: rgba(255, 255, 255, 0.96);
-  --panel-soft: rgba(10, 18, 28, 0.04);
-  --text: #121826;
-  --muted: #596579;
-  --line: rgba(15, 23, 42, 0.12);
-  --accent: #0d9f7c;
-  --accent-strong: #06745b;
-  --accent-ink: #f7fffc;
-  --warning: #b86e00;
-  --danger: #c9364c;
-  --ok: #0d9f7c;
-  --input: rgba(255, 255, 255, 0.78);
+  --bg: #e9f1f5;
+  --bg-soft: #f7fbfa;
+  --panel: #fafdff;
+  --panel-strong: #ffffff;
+  --panel-soft: rgba(19, 55, 70, 0.055);
+  --text: #122637;
+  --muted: #57707c;
+  --text-dim: #6f8791;
+  --line: rgba(18, 58, 72, 0.16);
+  --accent: #159e7c;
+  --accent-strong: #087057;
+  --accent-ink: #f4fffb;
+  --warning: #ad6800;
+  --danger: #c93850;
+  --ok: #159e7c;
+  --input: #f1f7f8;
 }
 
 .window-titlebar {
@@ -356,7 +361,6 @@ button:disabled {
   border-radius: var(--radius);
   background: var(--panel);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(18px);
 }
 
 .bento-card {
@@ -3042,6 +3046,10 @@ html[data-web="1"] * {
   display: contents;
 }
 
+.topbar-theme-row {
+  display: contents;
+}
+
 @media (max-width: 900px) {
   /* Modals: keep the header reachable and let tall bodies scroll. */
   .modal {
@@ -3252,5 +3260,485 @@ html[data-web="1"] * {
 
   .modal {
     margin: 0 auto;
+  }
+}
+
+/* ===== Command-center surfaces, atmosphere, and responsive hardening ===== */
+
+.ambient-stars {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 0.78;
+}
+
+.app-light .ambient-stars {
+  opacity: 0.26;
+}
+
+.ambient-star {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--accent-strong);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--accent), transparent 38%);
+  animation: ambient-star-drift 9s ease-in-out infinite;
+}
+
+.ambient-star-1 { top: 12%; left: 13%; animation-delay: -1.5s; }
+.ambient-star-2 { top: 23%; left: 72%; width: 2px; height: 2px; animation-delay: -6s; }
+.ambient-star-3 { top: 41%; left: 88%; width: 4px; height: 4px; animation-delay: -3.5s; }
+.ambient-star-4 { top: 58%; left: 19%; width: 2px; height: 2px; animation-delay: -7s; }
+.ambient-star-5 { top: 69%; left: 62%; animation-delay: -4.5s; }
+.ambient-star-6 { top: 82%; left: 91%; width: 2px; height: 2px; animation-delay: -2.5s; }
+.ambient-star-7 { top: 88%; left: 36%; width: 4px; height: 4px; animation-delay: -8s; }
+
+@keyframes ambient-star-drift {
+  0%,
+  100% {
+    opacity: 0.2;
+    transform: translate3d(0, 0, 0) scale(0.8);
+  }
+
+  50% {
+    opacity: 0.82;
+    transform: translate3d(4px, -5px, 0) scale(1);
+  }
+}
+
+.window-titlebar,
+.app-scroll {
+  position: relative;
+  z-index: 1;
+}
+
+.bento-card,
+.project-card,
+.empty-state,
+.modal,
+.todo-entry-card,
+.todo-list-card,
+.snippet-list,
+.snippet-detail,
+.snippet-editor,
+.email-account-card,
+.email-summary-card,
+.email-log-card {
+  backdrop-filter: none;
+  box-shadow: var(--shadow);
+}
+
+.overview-card,
+.unpaid-card,
+.snippets-hero,
+.todo-hero-card,
+.email-hero-card {
+  border-inline-start: 3px solid var(--accent);
+}
+
+.metric-card,
+.todo-stats-card,
+.email-account-card,
+.email-summary-card,
+.email-log-card {
+  border-inline-start: 2px solid color-mix(in srgb, var(--accent), transparent 38%);
+}
+
+/* Keyboard feedback stays visible without a browser outline or focus ring. */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+button:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent), var(--panel-soft) 84%);
+  transform: scale(1.01);
+}
+
+button.primary-action:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent-strong);
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--input), var(--accent) 7%);
+}
+
+input[type="checkbox"]:focus-visible {
+  accent-color: var(--accent-strong);
+  transform: scale(1.06);
+}
+
+.editor-input-wrap:focus-within {
+  border: 1px solid var(--accent);
+}
+
+.editor-input-wrap textarea:focus {
+  border: 0;
+  box-shadow: none;
+}
+
+/* To-do entry controls use explicit areas so the optional category field never auto-places. */
+.todo-entry {
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) auto auto minmax(180px, 240px);
+  grid-template-areas: "todo-input todo-category todo-add todo-clear todo-filter";
+}
+
+.todo-entry-new-category {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, 210px) minmax(170px, 210px) auto auto;
+  grid-template-areas:
+    "todo-input todo-category todo-new-category todo-add todo-clear"
+    "todo-filter todo-filter todo-filter todo-filter todo-filter";
+}
+
+.todo-entry .todo-input { grid-area: todo-input; }
+.todo-entry .todo-category-select { grid-area: todo-category; width: auto; }
+.todo-entry .todo-new-category-input { grid-area: todo-new-category; width: 100%; }
+.todo-entry > .primary-action { grid-area: todo-add; }
+.todo-entry > .secondary-action { grid-area: todo-clear; }
+.todo-entry .todo-filter-inline { grid-area: todo-filter; }
+
+.todo-row {
+  grid-template-columns: 28px 22px 32px minmax(0, 1fr) minmax(90px, 180px) 42px 42px;
+  grid-template-areas: "todo-drag todo-check todo-number todo-text todo-category todo-edit todo-delete";
+}
+
+.todo-row > * {
+  min-width: 0;
+}
+
+.todo-row > .todo-drag-handle { grid-area: todo-drag; }
+.todo-row > .todo-check { grid-area: todo-check; }
+.todo-row > .todo-number { grid-area: todo-number; }
+.todo-row > .todo-text-input,
+.todo-row > .todo-text-display { grid-area: todo-text; }
+.todo-row > .todo-category-badge { grid-area: todo-category; }
+.todo-row > .todo-edit-action,
+.todo-row > .todo-save-action { grid-area: todo-edit; }
+.todo-row > .todo-delete-action { grid-area: todo-delete; }
+
+.todo-category-badge {
+  min-width: 0;
+  max-width: 100%;
+  height: auto;
+  min-height: 32px;
+  padding: 7px 10px;
+  line-height: 1.25;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.todo-progress-meter {
+  flex: 0 0 auto;
+}
+
+/* Email controls keep every column shrinkable before the phone layout takes over. */
+.email-hero-grid > *,
+.email-account-grid > *,
+.email-progress-grid > *,
+.email-fields > *,
+.email-account-row > *,
+.email-dns-provider,
+.email-dns-records,
+.email-dns-row {
+  min-width: 0;
+}
+
+.email-account-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  min-width: 0;
+}
+
+.email-account-fields input {
+  width: 100%;
+}
+
+.email-date-filters,
+.email-date-filters label,
+.email-date-filters input {
+  min-width: 0;
+}
+
+.email-log-card {
+  min-height: 0;
+}
+
+.email-log-list {
+  height: clamp(180px, 32vh, 320px);
+  min-height: 0;
+}
+
+.email-dns-cell-name,
+.email-dns-cell-type,
+.email-dns-cell-value,
+.email-dns-note {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 900px) {
+  .todo-entry,
+  .todo-entry-new-category {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .todo-entry:not(.todo-entry-new-category) {
+    grid-template-areas:
+      "todo-input todo-input"
+      "todo-category todo-category"
+      "todo-add todo-clear"
+      "todo-filter todo-filter";
+  }
+
+  .todo-entry-new-category {
+    grid-template-areas:
+      "todo-input todo-input"
+      "todo-category todo-category"
+      "todo-new-category todo-new-category"
+      "todo-add todo-clear"
+      "todo-filter todo-filter";
+  }
+
+  .todo-row {
+    grid-template-columns: 28px 22px 30px minmax(0, 1fr) minmax(80px, 140px) 40px 40px;
+    gap: 8px;
+  }
+
+  .email-log-list {
+    height: clamp(180px, 34vh, 280px);
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar-actions {
+    position: relative;
+  }
+
+  .topbar-menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    gap: 7px;
+    width: auto;
+    min-width: 108px;
+    min-height: 44px;
+    padding: 0 14px;
+    color: var(--text);
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    cursor: pointer;
+    font-weight: 800;
+  }
+
+  .topbar-menu-button[aria-expanded="true"] {
+    color: var(--accent-strong);
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent), transparent 88%);
+  }
+
+  .topbar-menu-chevron {
+    flex: 0 0 auto;
+    transition: transform 160ms ease;
+  }
+
+  .topbar-menu-button[aria-expanded="true"] .topbar-menu-chevron {
+    transform: rotate(180deg);
+  }
+
+  .topbar-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    right: auto;
+    z-index: 30;
+    display: none;
+    width: 100%;
+    max-width: none;
+    padding: 10px;
+    transform: translateX(-50%);
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel-strong);
+    box-shadow: var(--shadow);
+  }
+
+  .topbar-menu.topbar-menu-open {
+    display: grid;
+  }
+
+  .topbar-menu .topbar-settings-action,
+  .topbar-menu > .secondary-action {
+    width: 100%;
+  }
+
+  .topbar-theme-row {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .topbar-theme-row .theme-toggle {
+    justify-content: center;
+    width: min(100%, 220px);
+  }
+
+  .todo-entry:not(.todo-entry-new-category),
+  .todo-entry-new-category {
+    grid-template-columns: 1fr;
+  }
+
+  .todo-entry:not(.todo-entry-new-category) {
+    grid-template-areas:
+      "todo-input"
+      "todo-category"
+      "todo-add"
+      "todo-clear"
+      "todo-filter";
+  }
+
+  .todo-entry-new-category {
+    grid-template-areas:
+      "todo-input"
+      "todo-category"
+      "todo-new-category"
+      "todo-add"
+      "todo-clear"
+      "todo-filter";
+  }
+
+  .todo-row {
+    grid-template-columns: 26px 22px 30px minmax(0, 1fr) 40px 40px;
+    grid-template-areas:
+      "todo-drag todo-check todo-number todo-text todo-edit todo-delete"
+      ". . . todo-category todo-category todo-category";
+    gap: 8px;
+    padding: 8px;
+  }
+
+  .todo-progress-meter {
+    width: 94px;
+    height: 94px;
+    font-size: 1.15rem;
+  }
+
+  .todo-stats-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 148px;
+  }
+
+  .todo-stats-card div {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .todo-stats-card strong {
+    font-size: 2.4rem;
+  }
+
+  .email-date-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .email-date-filters label {
+    display: grid;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .email-date-filters input {
+    width: 100%;
+    min-height: 44px;
+  }
+
+  .email-account-row {
+    display: grid;
+    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "email-number email-fields email-fields"
+      "email-number email-test email-remove";
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .email-account-number {
+    grid-area: email-number;
+    align-self: start;
+  }
+
+  .email-account-fields {
+    grid-area: email-fields;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .email-account-row > .secondary-action {
+    grid-area: email-test;
+    min-width: 0;
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .email-account-row > .icon-action {
+    grid-area: email-remove;
+    width: 40px;
+    min-width: 40px;
+  }
+
+  .email-summary-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .email-log-list {
+    height: clamp(180px, 38vh, 260px);
+  }
+
+  .email-dns-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .email-dns-toggle-row {
+    justify-content: space-between;
+  }
+
+  .email-dns-head,
+  .email-dns-row {
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
+
+  .ambient-star {
+    opacity: 0.32;
+    transform: none;
   }
 }

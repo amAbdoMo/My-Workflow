@@ -28,7 +28,6 @@ let started = false;
 let applyingRemote = false;
 let pending = new Set();
 let pushTimer = null;
-let pullTimer = null;
 
 // ---------- meta (per-key local timestamps) ----------
 
@@ -226,7 +225,7 @@ export async function initSync() {
   installStoragePatch();
   await initialMerge();
 
-  pullTimer = setInterval(() => pullRemote().catch(() => {}), PULL_INTERVAL_MS);
+  setInterval(() => pullRemote().catch(() => {}), PULL_INTERVAL_MS);
   const pullOnFocus = () => {
     if (document.visibilityState === "visible") pullRemote().catch(() => {});
   };

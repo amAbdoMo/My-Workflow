@@ -5,6 +5,7 @@ import generalSnippets from "./generalSnippets.json";
 import { createZip, snippetFileName } from "./zipTools";
 
 const APP_NAME = "WorkflowY";
+const TOPBAR_MENU_ID = "workflowy-settings-menu";
 // Brand rendering with the accented Y.
 function BrandName() {
   return <>Workflow<span className="name-accent">Y</span></>;
@@ -601,6 +602,7 @@ export default function App() {
   const closePromptResolverRef = useRef(null);
   const snippetEditorGutterRef = useRef(null);
   const topbarActionsRef = useRef(null);
+  const topbarMenuButtonRef = useRef(null);
 
   sitesRef.current = sites;
   projectNotesRef.current = projectNotes;
@@ -788,16 +790,28 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  // Close the mobile topbar menu when clicking outside the whole actions area.
+  // Close the mobile topbar menu when clicking outside the whole actions area or pressing Escape.
   useEffect(() => {
-    if (!topbarMenuOpen) return;
+    if (!topbarMenuOpen) return undefined;
+
     const close = (event) => {
       if (topbarActionsRef.current && !topbarActionsRef.current.contains(event.target)) {
         setTopbarMenuOpen(false);
       }
     };
+    const closeWithEscape = (event) => {
+      if (event.key !== "Escape") return;
+      event.preventDefault();
+      setTopbarMenuOpen(false);
+      topbarMenuButtonRef.current?.focus();
+    };
+
     document.addEventListener("click", close);
-    return () => document.removeEventListener("click", close);
+    document.addEventListener("keydown", closeWithEscape);
+    return () => {
+      document.removeEventListener("click", close);
+      document.removeEventListener("keydown", closeWithEscape);
+    };
   }, [topbarMenuOpen]);
 
   // Follow theme changes that arrive from another synced device.
@@ -1769,6 +1783,16 @@ export default function App() {
 
   return (
     <main className={`app app-${theme}`}>
+      <div className="ambient-stars" aria-hidden="true">
+        <span className="ambient-star ambient-star-1" />
+        <span className="ambient-star ambient-star-2" />
+        <span className="ambient-star ambient-star-3" />
+        <span className="ambient-star ambient-star-4" />
+        <span className="ambient-star ambient-star-5" />
+        <span className="ambient-star ambient-star-6" />
+        <span className="ambient-star ambient-star-7" />
+      </div>
+
       <div className="window-titlebar" aria-hidden="true">
         <img src="./wizard-schedules-transparent.ico" alt="" />
         <span>{APP_NAME}</span>
@@ -1786,31 +1810,37 @@ export default function App() {
 
         <div className="topbar-actions" ref={topbarActionsRef}>
           <button
-            className="icon-action topbar-menu-button"
+            className="topbar-menu-button"
+            ref={topbarMenuButtonRef}
             type="button"
-            aria-label="Menu"
+            aria-label="Open Settings"
             aria-expanded={topbarMenuOpen}
+            aria-controls={TOPBAR_MENU_ID}
+            aria-haspopup="true"
             onClick={(event) => {
               // Keep this click from reaching the outside-click closer below.
               event.stopPropagation();
               setTopbarMenuOpen((open) => !open);
             }}
           >
-            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M3 6h18M3 12h18M3 18h18" />
+            <span>Settings</span>
+            <svg className="topbar-menu-chevron" viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="m4 6 4 4 4-4" />
             </svg>
           </button>
-          <div className={`topbar-menu${topbarMenuOpen ? " topbar-menu-open" : ""}`} onClick={(event) => event.stopPropagation()}>
-            <button className="icon-action" type="button" aria-label="Settings" title="Settings" onClick={() => { setTopbarMenuOpen(false); setActiveTab((current) => (current === "settings" ? "schedule" : "settings")); }}>
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </button>
-          <ThemeToggle theme={theme} onToggle={() => setTheme((current) => (current === "dark" ? "light" : "dark"))} />
-          <button className="secondary-action" type="button" onClick={() => { setTopbarMenuOpen(false); setShowClients(true); }}>
-            Clients
-          </button>
+          <div id={TOPBAR_MENU_ID} className={`topbar-menu${topbarMenuOpen ? " topbar-menu-open" : ""}`} onClick={(event) => event.stopPropagation()}>
+            <button className="icon-action topbar-settings-action" type="button" aria-label="Settings" title="Settings" onClick={() => { setTopbarMenuOpen(false); setActiveTab((current) => (current === "settings" ? "schedule" : "settings")); }}>
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+              </svg>
+            </button>
+            <div className="topbar-theme-row">
+              <ThemeToggle theme={theme} onToggle={() => setTheme((current) => (current === "dark" ? "light" : "dark"))} />
+            </div>
+            <button className="secondary-action" type="button" onClick={() => { setTopbarMenuOpen(false); setShowClients(true); }}>
+              Clients
+            </button>
           </div>
           <button className="primary-action" type="button" onClick={openCreateForm}>
             Add Project
@@ -2336,7 +2366,7 @@ export default function App() {
 
           <section className="todo-entry-card">
             <form
-              className="todo-entry"
+              className={`todo-entry${todoCategory === "__new__" ? " todo-entry-new-category" : ""}`}
               onSubmit={(event) => {
                 event.preventDefault();
                 handleAddTodo();

@@ -2,8 +2,6 @@ import { useState } from "react";
 import { apiFetch, isElectron, storeToken } from "./api";
 import "./LoginGate.css";
 
-const APP_NAME = "WorkflowY";
-
 export default function LoginGate({ needsSetup, onAuthenticated }) {
   const [mode] = useState(needsSetup ? "setup" : "login");
   const [username, setUsername] = useState("");

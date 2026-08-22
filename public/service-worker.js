@@ -2,12 +2,14 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v3";
+const CACHE = "workflowy-shell-v4";
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
   "/workflowy-icon-192.png",
   "/workflowy-icon-512.png",
+  "/workflowy-maskable-192.png",
+  "/workflowy-maskable-512.png",
 ]);
 
 self.addEventListener("install", () => {
