@@ -156,8 +156,10 @@
   box-sizing: border-box;
   object-fit: contain;
   border-radius: 50%;
+  /* Dark circular medallion: a faint top light only — the violet/teal
+     colour lives in the border ring and drop shadow, like the login card. */
   background:
-    radial-gradient(circle at 32% 26%, rgba(124, 92, 255, 0.38), rgba(124, 92, 255, 0.12) 58%, rgba(0, 200, 190, 0.16) 100%),
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.07), transparent 55%),
     #12151f;
   border: 1px solid rgba(124, 92, 255, 0.42);
   box-shadow:

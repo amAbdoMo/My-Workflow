@@ -3941,3 +3941,114 @@ input[type="checkbox"]:focus-visible {
     scale: none;
   }
 }
+
+/* ============================================================
+   Branded pull-to-refresh indicator (web/PWA touch only).
+   Fixed positioning: zero layout shift at any width.
+   ============================================================ */
+
+/* The custom branded gesture replaces the browser's native overscroll refresh
+   so the two never double-trigger. */
+html[data-web="1"] .app-scroll {
+  overscroll-behavior-y: contain;
+}
+
+.ptr-indicator {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 80;
+  width: 58px;
+  height: 58px;
+  /* Parked fully above the viewport until pulled down. */
+  margin: -74px 0 0 -29px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.07), transparent 55%),
+    #12151f;
+  border: 1px solid rgba(124, 92, 255, 0.4);
+  box-shadow:
+    0 14px 34px color-mix(in srgb, #7c5cff calc(18% + var(--ptr-progress, 0) * 26%), transparent),
+    0 8px 20px color-mix(in srgb, #00c8be calc(12% + var(--ptr-progress, 0) * 16%), transparent);
+  opacity: 0;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.28s ease, opacity 0.22s ease;
+  pointer-events: none;
+}
+
+.ptr-indicator img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  transform: rotate(calc(var(--ptr-progress, 0) * 120deg))
+    scale(calc(0.65 + var(--ptr-progress, 0) * 0.35));
+  transition: transform 0.2s ease;
+}
+
+/* While the finger drags, follow it 1:1 with no easing. */
+.ptr-active {
+  opacity: 1;
+  transform: translate3d(0, var(--ptr-pull, 0px), 0);
+  transition: none;
+}
+
+.ptr-active img {
+  transition: none;
+}
+
+/* Threshold crossed: ring and glow intensify as the release cue. */
+.ptr-ready {
+  border-color: rgba(124, 92, 255, 0.78);
+}
+
+/* Released past threshold: settle into a short refreshing beat, then reload. */
+.ptr-refreshing {
+  opacity: 1;
+  transform: translate3d(0, 88px, 0);
+  transition: transform 0.25s ease, opacity 0.2s ease;
+  animation: ptr-breathe 1s ease-in-out infinite;
+}
+
+.ptr-refreshing img {
+  animation: ptr-rock 1.2s ease-in-out infinite;
+}
+
+@keyframes ptr-breathe {
+  0%,
+  100% {
+    box-shadow:
+      0 14px 34px color-mix(in srgb, #7c5cff 44%, transparent),
+      0 8px 20px color-mix(in srgb, #00c8be 18%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 14px 34px color-mix(in srgb, #7c5cff 24%, transparent),
+      0 8px 20px color-mix(in srgb, #00c8be 32%, transparent);
+  }
+}
+
+@keyframes ptr-rock {
+  0%,
+  100% {
+    rotate: -8deg;
+  }
+  50% {
+    rotate: 8deg;
+  }
+}
+
+/* Live status for assistive tech; the medallion itself is decorative. */
+.ptr-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

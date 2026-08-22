@@ -503,6 +503,154 @@ function CodePreview({ title, content }) {
   );
 }
 
+const PTR_THRESHOLD = 76;
+const PTR_START_SLOP = 8;
+const PTR_MAX_PULL = 132;
+const PTR_BLOCKED_TARGETS = [
+  "input", "textarea", "select", "button", "a", "label", "[contenteditable]", "[role='slider']",
+  ".modal", ".client-select-menu", ".snippet-list", ".email-log-list", ".code-preview", ".editor-input-wrap",
+].join(", ");
+
+function usePullToRefresh(scrollRef) {
+  const [pull, setPull] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshingRef = useRef(false);
+  const reloadTimerRef = useRef(null);
+
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    if (!scroller) return undefined;
+    if (document.documentElement.getAttribute("data-web") !== "1") return undefined;
+    if (!window.matchMedia("(pointer: coarse)").matches) return undefined;
+
+    let startX = 0;
+    let startY = 0;
+    let candidate = false;
+    let active = false;
+    let distance = 0;
+
+    const isBlockedTarget = (target) =>
+      target instanceof Element && Boolean(target.closest(PTR_BLOCKED_TARGETS));
+
+    const resetGesture = () => {
+      candidate = false;
+      active = false;
+      distance = 0;
+    };
+
+    const onTouchStart = (event) => {
+      if (refreshingRef.current || event.touches.length !== 1) {
+        candidate = false;
+        return;
+      }
+      const touch = event.touches[0];
+      startY = touch.clientY;
+      startX = touch.clientX;
+      distance = 0;
+      active = false;
+      candidate = scroller.scrollTop <= 0 && !isBlockedTarget(touch.target);
+    };
+
+    const onTouchMove = (event) => {
+      if (!candidate || refreshingRef.current) return;
+      if (event.touches.length !== 1) {
+        resetGesture();
+        setPull(0);
+        return;
+      }
+
+      const touch = event.touches[0];
+      const dy = touch.clientY - startY;
+      const dx = touch.clientX - startX;
+      if (!active) {
+        if (Math.abs(dx) >= Math.abs(dy)) {
+          candidate = false;
+          return;
+        }
+        if (dy <= PTR_START_SLOP) return;
+        if (scroller.scrollTop > 0) {
+          candidate = false;
+          return;
+        }
+        active = true;
+      }
+
+      event.preventDefault();
+      const resistedDistance = dy <= PTR_THRESHOLD
+        ? Math.max(0, dy)
+        : PTR_THRESHOLD + (dy - PTR_THRESHOLD) * 0.35;
+      distance = Math.min(resistedDistance, PTR_MAX_PULL);
+      setPull(distance);
+    };
+
+    const finishGesture = (allowRefresh) => {
+      if (!candidate) return;
+      const shouldRefresh = allowRefresh && active && distance >= PTR_THRESHOLD;
+      resetGesture();
+      if (!shouldRefresh) {
+        setPull(0);
+        return;
+      }
+
+      refreshingRef.current = true;
+      setRefreshing(true);
+      reloadTimerRef.current = window.setTimeout(() => window.location.reload(), 600);
+    };
+
+    const onTouchEnd = () => finishGesture(true);
+    const onTouchCancel = () => finishGesture(false);
+
+    scroller.addEventListener("touchstart", onTouchStart, { passive: true });
+    scroller.addEventListener("touchmove", onTouchMove, { passive: false });
+    scroller.addEventListener("touchend", onTouchEnd, { passive: true });
+    scroller.addEventListener("touchcancel", onTouchCancel, { passive: true });
+
+    return () => {
+      scroller.removeEventListener("touchstart", onTouchStart);
+      scroller.removeEventListener("touchmove", onTouchMove);
+      scroller.removeEventListener("touchend", onTouchEnd);
+      scroller.removeEventListener("touchcancel", onTouchCancel);
+      if (reloadTimerRef.current) window.clearTimeout(reloadTimerRef.current);
+    };
+  }, [scrollRef]);
+
+  return { pull, refreshing };
+}
+
+// Fixed-position logo medallion that follows the pull. Parked above the
+// viewport when idle, so it can never shift layout; springs back on release.
+function PtrIndicator({ pull, refreshing }) {
+  const armed = !refreshing && pull >= PTR_THRESHOLD;
+  const progress = refreshing ? 1 : Math.min(pull / PTR_THRESHOLD, 1);
+  const classes = ["ptr-indicator"];
+  if (!refreshing && pull > 0) classes.push("ptr-active");
+  if (armed) classes.push("ptr-ready");
+  if (refreshing) classes.push("ptr-refreshing");
+  const status = refreshing
+    ? "Refreshing…"
+    : armed
+    ? "Release to refresh"
+    : pull > 0
+    ? "Pull down to refresh"
+    : "";
+  return (
+    <>
+      <div
+        className={classes.join(" ")}
+        style={{ "--ptr-pull": `${Math.round(pull)}px`, "--ptr-progress": progress.toFixed(3) }}
+        aria-hidden="true"
+      >
+        <img src={`${process.env.PUBLIC_URL}/wizard-schedules-logo.png`} alt="" />
+      </div>
+      {status ? (
+        <div className="ptr-visually-hidden" role="status" aria-live="polite">
+          {status}
+        </div>
+      ) : null}
+    </>
+  );
+}
+
 export default function App() {
   const initialProjectDraftRef = useRef();
   if (initialProjectDraftRef.current === undefined) {
@@ -603,6 +751,8 @@ export default function App() {
   const snippetEditorGutterRef = useRef(null);
   const topbarActionsRef = useRef(null);
   const topbarMenuButtonRef = useRef(null);
+  const appScrollRef = useRef(null);
+  const ptr = usePullToRefresh(appScrollRef);
 
   sitesRef.current = sites;
   projectNotesRef.current = projectNotes;
@@ -1783,6 +1933,7 @@ export default function App() {
 
   return (
     <main className={`app app-${theme}`}>
+      <PtrIndicator pull={ptr.pull} refreshing={ptr.refreshing} />
       <div className="ambient-stars" aria-hidden="true">
         <span className="ambient-star ambient-star-1" />
         <span className="ambient-star ambient-star-2" />
@@ -1805,7 +1956,7 @@ export default function App() {
         <span>{APP_NAME}</span>
       </div>
 
-      <div className="app-scroll">
+      <div className="app-scroll" ref={appScrollRef}>
       <header className="topbar">
         <div className="brand-lockup">
           <img src={`${process.env.PUBLIC_URL}/wizard-schedules-logo.png`} alt="" />
