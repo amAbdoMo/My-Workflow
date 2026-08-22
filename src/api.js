@@ -2,11 +2,13 @@
 
 const API_BASE_KEY = "wizard-api-base";
 const TOKEN_KEY = "wizard-api-token";
+// Capture native preload bridges before the web shim creates compatible names.
+const NATIVE_ELECTRON = Boolean(window.wizardImap || window.wizardApp);
 // Default remote API for the desktop app (overridable via localStorage).
 export const DEFAULT_REMOTE_BASE = "https://workflow.abdom.me";
 
 export function isElectron() {
-  return Boolean(window.wizardImap || window.wizardApp);
+  return NATIVE_ELECTRON;
 }
 
 export function getApiBase() {

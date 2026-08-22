@@ -4,13 +4,13 @@ import "./index.css";
 import App from "./App";
 import LoginGate from "./LoginGate";
 import { installWebShim } from "./webShim";
-import { apiFetch, onUnauthorized } from "./api";
+import { apiFetch, isElectron, onUnauthorized } from "./api";
 import { initSync } from "./sync";
 import reportWebVitals from "./reportWebVitals";
 
 installWebShim();
 
-const IS_ELECTRON = Boolean(window.wizardImap || window.wizardApp);
+const IS_ELECTRON = isElectron();
 
 function Splash({ label, children }) {
   return (
