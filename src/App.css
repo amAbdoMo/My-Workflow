@@ -7,7 +7,7 @@
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: color-mix(in srgb, var(--accent), transparent 35%) color-mix(in srgb, var(--panel), transparent 35%);
+  scrollbar-color: color-mix(in srgb, var(--accent), transparent 35%) transparent;
 }
 
 html,
@@ -22,29 +22,24 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: color-mix(in srgb, var(--panel), transparent 42%);
+  margin-block: 10px;
+  margin-inline: 10px;
+  background: transparent;
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
   border-radius: 999px;
-  background:
-    linear-gradient(color-mix(in srgb, var(--accent), white 8%), color-mix(in srgb, var(--accent-strong), transparent 12%))
-    border-box;
-  background-clip: padding-box;
+  background: color-mix(in srgb, var(--accent), transparent 32%);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background:
-    linear-gradient(var(--accent-strong), var(--accent))
-    border-box;
-  background-clip: padding-box;
+  background: color-mix(in srgb, var(--accent-strong), transparent 12%);
 }
 
 ::-webkit-scrollbar-corner {
@@ -79,22 +74,22 @@ button {
 }
 
 .app-dark {
-  --bg: #071321;
-  --bg-soft: #102538;
-  --panel: #10283d;
-  --panel-strong: #15334c;
-  --panel-soft: rgba(179, 237, 224, 0.065);
+  --bg: #020811;
+  --bg-soft: #071525;
+  --panel: #0a1b2b;
+  --panel-strong: #0d2538;
+  --panel-soft: rgba(179, 237, 224, 0.07);
   --text: #edf9f6;
-  --muted: #9bb5c0;
-  --text-dim: #78929f;
-  --line: rgba(182, 233, 224, 0.16);
-  --accent: #65e5c1;
-  --accent-strong: #9af5db;
+  --muted: #a3bcc7;
+  --text-dim: #8099a6;
+  --line: rgba(182, 233, 224, 0.18);
+  --accent: #6ee9c7;
+  --accent-strong: #a7f7e0;
   --accent-ink: #062118;
-  --warning: #f3bc61;
-  --danger: #ff7a86;
-  --ok: #65e5c1;
-  --input: #0d2235;
+  --warning: #f5c26b;
+  --danger: #ff8590;
+  --ok: #6ee9c7;
+  --input: #071725;
 }
 
 .app-light {
@@ -139,26 +134,23 @@ button {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 26px 50px 50px;
-  scrollbar-color: color-mix(in srgb, var(--accent), transparent 30%) color-mix(in srgb, var(--panel), transparent 48%);
+  scrollbar-color: color-mix(in srgb, var(--accent), transparent 30%) transparent;
   scrollbar-gutter: stable;
 }
 
 .app-scroll::-webkit-scrollbar {
-  width: 10px;
+  width: 8px;
 }
 
 .app-scroll::-webkit-scrollbar-track {
-  background: color-mix(in srgb, var(--panel), transparent 44%);
+  margin-block: 10px;
+  background: transparent;
   border-radius: 999px;
 }
 
 .app-scroll::-webkit-scrollbar-thumb {
-  border: 2px solid transparent;
   border-radius: 999px;
-  background:
-    linear-gradient(color-mix(in srgb, var(--accent), white 8%), color-mix(in srgb, var(--accent-strong), transparent 12%))
-    border-box;
-  background-clip: padding-box;
+  background: color-mix(in srgb, var(--accent), transparent 30%);
 }
 
 .window-titlebar img {
@@ -919,15 +911,15 @@ button:disabled {
 
 .code-preview::-webkit-scrollbar-track,
 .editor-input-wrap::-webkit-scrollbar-track {
-  background: #241f1b;
+  margin: 6px;
+  background: transparent;
+  border-radius: 999px;
 }
 
 .code-preview::-webkit-scrollbar-thumb,
 .editor-input-wrap::-webkit-scrollbar-thumb {
-  background:
-    linear-gradient(color-mix(in srgb, var(--accent), white 4%), color-mix(in srgb, var(--warning), transparent 35%))
-    border-box;
-  background-clip: padding-box;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--warning), transparent 45%);
 }
 
 .code-preview code {
@@ -3050,6 +3042,11 @@ html[data-web="1"] * {
   display: contents;
 }
 
+/* Mobile-only "Settings" text label (shown in the phone dropdown panel). */
+.topbar-settings-label {
+  display: none;
+}
+
 @media (max-width: 900px) {
   /* Modals: keep the header reachable and let tall bodies scroll. */
   .modal {
@@ -3271,41 +3268,53 @@ html[data-web="1"] * {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  opacity: 0.78;
+  opacity: 0.85;
 }
 
 .app-light .ambient-stars {
-  opacity: 0.26;
+  opacity: 0.18;
 }
 
+/* Plus/cross-shaped stars (matching the login screen), gently drifting. */
 .ambient-star {
   position: absolute;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
+  width: 9px;
+  height: 9px;
   background: var(--accent-strong);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--accent), transparent 38%);
-  animation: ambient-star-drift 9s ease-in-out infinite;
+  clip-path: polygon(35% 0, 65% 0, 65% 35%, 100% 35%, 100% 65%, 65% 65%, 65% 100%, 35% 100%, 35% 65%, 0 65%, 0 35%, 35% 35%);
+  filter: drop-shadow(0 0 5px color-mix(in srgb, var(--accent), transparent 45%));
+  animation: ambient-star-drift 11s ease-in-out infinite;
 }
 
 .ambient-star-1 { top: 12%; left: 13%; animation-delay: -1.5s; }
-.ambient-star-2 { top: 23%; left: 72%; width: 2px; height: 2px; animation-delay: -6s; }
-.ambient-star-3 { top: 41%; left: 88%; width: 4px; height: 4px; animation-delay: -3.5s; }
-.ambient-star-4 { top: 58%; left: 19%; width: 2px; height: 2px; animation-delay: -7s; }
+.ambient-star-2 { top: 23%; left: 72%; transform: scale(0.7); animation-delay: -6s; }
+.ambient-star-3 { top: 41%; left: 88%; animation-delay: -3.5s; }
+.ambient-star-4 { top: 58%; left: 19%; transform: scale(0.75); animation-delay: -7s; }
 .ambient-star-5 { top: 69%; left: 62%; animation-delay: -4.5s; }
-.ambient-star-6 { top: 82%; left: 91%; width: 2px; height: 2px; animation-delay: -2.5s; }
-.ambient-star-7 { top: 88%; left: 36%; width: 4px; height: 4px; animation-delay: -8s; }
+.ambient-star-6 { top: 82%; left: 91%; transform: scale(0.7); animation-delay: -2.5s; }
+.ambient-star-7 { top: 88%; left: 36%; animation-delay: -8s; }
+.ambient-star-8 { top: 7%; left: 46%; transform: scale(0.8); animation-delay: -0.5s; }
+.ambient-star-9 { top: 18%; left: 33%; transform: scale(0.65); animation-delay: -9.5s; }
+.ambient-star-10 { top: 33%; left: 8%; transform: scale(0.85); animation-delay: -5s; }
+.ambient-star-11 { top: 49%; left: 78%; transform: scale(0.7); animation-delay: -10.5s; }
+.ambient-star-12 { top: 64%; left: 42%; transform: scale(0.6); animation-delay: -3s; }
+.ambient-star-13 { top: 76%; left: 15%; transform: scale(0.8); animation-delay: -7.5s; }
+.ambient-star-14 { top: 93%; left: 68%; transform: scale(0.75); animation-delay: -1s; }
 
 @keyframes ambient-star-drift {
   0%,
   100% {
-    opacity: 0.2;
-    transform: translate3d(0, 0, 0) scale(0.8);
+    opacity: 0.22;
+    translate: 0 0;
+    rotate: 0deg;
+    scale: 0.85;
   }
 
   50% {
-    opacity: 0.82;
-    transform: translate3d(4px, -5px, 0) scale(1);
+    opacity: 0.85;
+    translate: 4px -6px;
+    rotate: 90deg;
+    scale: 1;
   }
 }
 
@@ -3569,6 +3578,7 @@ input[type="checkbox"]:focus-visible {
     display: none;
     width: 100%;
     max-width: none;
+    max-height: min(62dvh, 340px);
     padding: 10px;
     transform: translateX(-50%);
     flex-direction: column;
@@ -3578,6 +3588,8 @@ input[type="checkbox"]:focus-visible {
     border-radius: var(--radius);
     background: var(--panel-strong);
     box-shadow: var(--shadow);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .topbar-menu.topbar-menu-open {
@@ -3589,15 +3601,32 @@ input[type="checkbox"]:focus-visible {
     width: 100%;
   }
 
+  /* Opened panel: full-width centered "Settings" text instead of the gear icon. */
+  .topbar-menu .topbar-settings-action {
+    justify-content: center;
+    gap: 8px;
+    min-height: 44px;
+    font-weight: 800;
+  }
+
+  .topbar-settings-icon {
+    display: none;
+  }
+
+  .topbar-settings-label {
+    display: inline;
+  }
+
   .topbar-theme-row {
     display: flex;
     justify-content: center;
     width: 100%;
   }
 
+  /* Dark/Light toggle spans the whole panel width, centered content. */
   .topbar-theme-row .theme-toggle {
     justify-content: center;
-    width: min(100%, 220px);
+    width: 100%;
   }
 
   .todo-entry:not(.todo-entry-new-category),
@@ -3627,10 +3656,27 @@ input[type="checkbox"]:focus-visible {
   .todo-row {
     grid-template-columns: 26px 22px 30px minmax(0, 1fr) 40px 40px;
     grid-template-areas:
-      "todo-drag todo-check todo-number todo-text todo-edit todo-delete"
-      ". . . todo-category todo-category todo-category";
+      "todo-text todo-text todo-text todo-text todo-text todo-text"
+      "todo-drag todo-check todo-number todo-category todo-category todo-category"
+      ". . . . todo-edit todo-delete";
     gap: 8px;
     padding: 8px;
+  }
+
+  /* Task text gets the full row; category wraps cleanly on its own row. */
+  .todo-row > .todo-text-display,
+  .todo-row > .todo-text-input {
+    height: auto;
+    min-height: 42px;
+    padding-top: 8px;
+    padding-bottom: 8px;
+    align-items: start;
+  }
+
+  .todo-row > .todo-category-badge {
+    justify-self: stretch;
+    max-width: none;
+    white-space: normal;
   }
 
   .todo-progress-meter {
@@ -3670,19 +3716,32 @@ input[type="checkbox"]:focus-visible {
     min-height: 44px;
   }
 
+  /* Account badge becomes a compact header row; fields/actions share the
+     card's left edge with no badge-column indent. */
   .email-account-row {
-    display: grid;
-    grid-template-columns: 26px minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "email-number email-fields email-fields"
-      "email-number email-test email-remove";
+      "email-number email-number"
+      "email-fields email-fields"
+      "email-test email-remove";
     align-items: stretch;
     gap: 8px;
   }
 
   .email-account-number {
     grid-area: email-number;
-    align-self: start;
+    justify-self: start;
+    width: auto;
+    min-width: 24px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+  }
+
+  .email-account-row > .icon-action {
+    grid-area: email-remove;
+    width: 44px;
+    min-width: 44px;
   }
 
   .email-account-fields {
@@ -3708,6 +3767,11 @@ input[type="checkbox"]:focus-visible {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Odd final summary card spans both columns. */
+  .email-summary-stats div:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+
   .email-log-list {
     height: clamp(180px, 38vh, 260px);
   }
@@ -3727,6 +3791,82 @@ input[type="checkbox"]:focus-visible {
   }
 }
 
+/* Mobile refinements appended last so they win over all earlier phone rules. */
+@media (max-width: 560px) {
+  /* Schedule overview: metric cards (Projects/Urgent/Overdue/Average) two per row. */
+  .bento-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .bento-grid > .metric-card {
+    grid-column: span 1;
+    min-width: 0;
+  }
+
+  .date-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Project cards: Edit/Delete side by side, 50/50. */
+  .project-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .project-actions button {
+    flex: 1 1 calc(50% - 4px);
+    width: auto;
+    min-width: 0;
+  }
+
+  /* Modal footers: Cancel/Add Project (and Cancel/Save) share a row 50/50 at
+     320px and up; single-button dialogs keep full width. */
+  .modal-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .modal-actions button {
+    flex: 1 1 calc(50% - 5px);
+    width: auto;
+    min-width: 0;
+  }
+
+  .unsaved-actions button {
+    flex: 1 1 100%;
+  }
+
+  /* Project modal notes: compact drag/check/number/Delete metadata row,
+     then the note text on its own full-width row. */
+  .note-editor-row {
+    grid-template-columns: auto auto 28px minmax(0, 1fr);
+    grid-template-areas:
+      "note-drag note-check note-number note-delete"
+      "note-text note-text note-text note-text";
+  }
+
+  .note-editor-row > .note-drag-handle { grid-area: note-drag; }
+  .note-editor-row > .note-done-check { grid-area: note-check; }
+  .note-editor-row > .note-editor-number { grid-area: note-number; }
+  .note-editor-row > .note-text-input { grid-area: note-text; }
+
+  .note-editor-row > .note-delete-action {
+    grid-area: note-delete;
+    justify-self: end;
+  }
+
+  /* To-do hero: heading and description centered above the 0% meter. */
+  .todo-hero-card {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .todo-hero-card > div:first-child {
+    align-items: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -3740,5 +3880,8 @@ input[type="checkbox"]:focus-visible {
   .ambient-star {
     opacity: 0.32;
     transform: none;
+    translate: none;
+    rotate: none;
+    scale: none;
   }
 }
