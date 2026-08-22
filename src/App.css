@@ -3993,9 +3993,12 @@ html[data-web="1"] .app-scroll {
   height: 36px;
   object-fit: contain;
   /* --ptr-rotation / --ptr-scale are concrete values computed in JS per drag
-     frame, so the logo tracks the finger with no easing lag while active. */
+     frame, so the logo tracks the finger with no easing lag while active.
+     On release the return transition matches the medallion's transform
+     0.28s ease exactly, so the logo counter-rotates back to upright 0deg
+     and settles upright at the same instant the container parks. */
   transform: rotate(var(--ptr-rotation, 0deg)) scale(var(--ptr-scale, 0.65));
-  transition: transform 0.2s ease;
+  transition: transform 0.28s ease;
 }
 
 /* While the finger drags, follow it 1:1 with no easing. */

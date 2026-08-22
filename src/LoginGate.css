@@ -176,6 +176,22 @@
   50% { transform: translateY(-9px); }
 }
 
+/* Desktop-only refinement: the full-size 108px medallion and its broad halo
+   read oversized on large screens, so compact the disk and tighten the mint
+   glow. Mobile (≤480px) keeps the base styling above untouched. */
+@media (min-width: 481px) {
+  .gate-splash .gate-logo {
+    width: 84px;
+    height: 84px;
+    padding: 17px;
+    border: 1px solid rgba(110, 233, 199, 0.38);
+    box-shadow:
+      0 0 0 4px rgba(110, 233, 199, 0.06),
+      0 10px 24px rgba(110, 233, 199, 0.22),
+      0 6px 14px rgba(110, 233, 199, 0.12);
+  }
+}
+
 .gate-logo {
   width: 44px;
   height: 44px;
