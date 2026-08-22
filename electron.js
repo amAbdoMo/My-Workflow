@@ -6,14 +6,13 @@ if (!(process.versions && process.versions.electron)) {
   return;
 }
 
-const { app, BrowserWindow, Menu, Tray, globalShortcut, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, Menu, Tray, ipcMain, dialog } = require("electron");
 const { ImapFlow } = require("imapflow");
 const fs = require("fs");
 const path = require("path");
 const { pathToFileURL } = require("url");
 
 const APP_NAME = "WorkflowY";
-const OPEN_SHORTCUT = "CommandOrControl+Shift+W";
 const START_HIDDEN = process.argv.includes("--hidden");
 const iconPath = path.join(__dirname, "public", "wizard-schedules-transparent.ico");
 const appBuildIndex = path.join(__dirname, "app-build", "index.html");
@@ -898,11 +897,6 @@ if (!gotSingleInstanceLock) {
   app.whenReady().then(() => {
     createTray();
     createWindow();
-
-    const registered = globalShortcut.register(OPEN_SHORTCUT, showMainWindow);
-    if (!registered) {
-      console.warn(`Could not register ${OPEN_SHORTCUT}. It may already be used by another app.`);
-    }
   });
 }
 
@@ -920,9 +914,5 @@ app.on("activate", () => {
 
 app.on("before-quit", () => {
   isQuitting = true;
-});
-
-app.on("will-quit", () => {
-  globalShortcut.unregisterAll();
 });
 
