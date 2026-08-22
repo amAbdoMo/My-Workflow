@@ -176,20 +176,17 @@
   50% { transform: translateY(-9px); }
 }
 
-/* Desktop-only refinement: swap the circular halo medallion for a compact dark
-   rounded-square logo tile per the loading-screen design — actual logo centered,
-   modest corner radius, very subtle mint border/shadow, no outer spread ring and
-   no broad colored aura. Mobile (≤480px) keeps the base styling above untouched. */
+/* Desktop keeps the compact logo treatment but uses a minimal circular frame. */
 @media (min-width: 481px) {
   .gate-splash .gate-logo {
     width: 72px;
     height: 72px;
     padding: 13px;
-    border-radius: 16px;
-    border: 1px solid rgba(110, 233, 199, 0.32);
+    border-radius: 50%;
+    border: 1px solid rgba(110, 233, 199, 0.24);
     box-shadow:
-      0 10px 26px rgba(110, 233, 199, 0.14),
-      0 4px 10px rgba(0, 0, 0, 0.35);
+      0 8px 20px rgba(110, 233, 199, 0.07),
+      0 3px 8px rgba(0, 0, 0, 0.22);
   }
 }
 
