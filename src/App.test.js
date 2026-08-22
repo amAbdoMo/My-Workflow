@@ -1,8 +1,8 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders deadline dashboard', () => {
+test('renders WorkflowY dashboard heading', () => {
   render(<App />);
-  const linkElement = screen.getByRole('heading', { name: /workflowy/i });
-  expect(linkElement).toBeInTheDocument();
+  const heading = screen.getByRole('heading', { name: /workflow\s*y/i });
+  expect(heading).toBeInTheDocument();
 });

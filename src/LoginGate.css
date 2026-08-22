@@ -250,10 +250,10 @@
 @media (max-width: 480px) {
   .gate {
     padding: 16px;
-    align-items: flex-start;
+    align-items: center;
   }
   .gate-card {
-    margin-top: 8vh;
+    margin-top: 0;
     padding: 26px 20px;
   }
 }

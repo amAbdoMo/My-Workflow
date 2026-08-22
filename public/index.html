@@ -4,7 +4,14 @@
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
+    <meta name="theme-color" content="#080a0f" />
+    <script>
+      // Some hosting/CDN paths expose this CRA template directly at /index.html.
+      // Redirect that path to the built app shell served at the canonical root.
+      if (window.location.pathname === "/index.html") {
+        window.location.replace(`/${window.location.search}${window.location.hash}`);
+      }
+    </script>
     <meta
       name="description"
       content="WorkflowY — project tracker and snippet library"
