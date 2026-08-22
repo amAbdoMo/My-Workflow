@@ -176,19 +176,20 @@
   50% { transform: translateY(-9px); }
 }
 
-/* Desktop-only refinement: the full-size 108px medallion and its broad halo
-   read oversized on large screens, so compact the disk and tighten the mint
-   glow. Mobile (≤480px) keeps the base styling above untouched. */
+/* Desktop-only refinement: swap the circular halo medallion for a compact dark
+   rounded-square logo tile per the loading-screen design — actual logo centered,
+   modest corner radius, very subtle mint border/shadow, no outer spread ring and
+   no broad colored aura. Mobile (≤480px) keeps the base styling above untouched. */
 @media (min-width: 481px) {
   .gate-splash .gate-logo {
-    width: 84px;
-    height: 84px;
-    padding: 17px;
-    border: 1px solid rgba(110, 233, 199, 0.38);
+    width: 72px;
+    height: 72px;
+    padding: 13px;
+    border-radius: 16px;
+    border: 1px solid rgba(110, 233, 199, 0.32);
     box-shadow:
-      0 0 0 4px rgba(110, 233, 199, 0.06),
-      0 10px 24px rgba(110, 233, 199, 0.22),
-      0 6px 14px rgba(110, 233, 199, 0.12);
+      0 10px 26px rgba(110, 233, 199, 0.14),
+      0 4px 10px rgba(0, 0, 0, 0.35);
   }
 }
 

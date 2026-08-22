@@ -3992,11 +3992,7 @@ html[data-web="1"] .app-scroll {
   width: 36px;
   height: 36px;
   object-fit: contain;
-  /* --ptr-rotation / --ptr-scale are concrete values computed in JS per drag
-     frame, so the logo tracks the finger with no easing lag while active.
-     On release the return transition matches the medallion's transform
-     0.28s ease exactly, so the logo counter-rotates back to upright 0deg
-     and settles upright at the same instant the container parks. */
+  /* Concrete JS values avoid unsupported calc multiplication during drag. */
   transform: rotate(var(--ptr-rotation, 0deg)) scale(var(--ptr-scale, 0.65));
   transition: transform 0.28s ease;
 }
@@ -4030,6 +4026,18 @@ html[data-web="1"] .app-scroll {
 
 .ptr-refreshing img {
   animation: ptr-rock 1.2s ease-in-out infinite;
+}
+
+/* Keep the indicator visible until the reverse rotation completes; this
+   duration must match PTR_RETURN_MS in App.js. */
+.ptr-returning {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.12s ease;
+}
+
+.ptr-returning img {
+  transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @keyframes ptr-breathe {

@@ -506,6 +506,10 @@ function CodePreview({ title, content }) {
 const PTR_THRESHOLD = 76;
 const PTR_START_SLOP = 8;
 const PTR_MAX_PULL = 132;
+// Under-threshold release keeps the medallion visible for this long while it
+// travels back above the viewport and the logo counter-rotates to upright.
+// Must match the .ptr-returning transition duration in App.css exactly.
+const PTR_RETURN_MS = 320;
 const PTR_BLOCKED_TARGETS = [
   "input", "textarea", "select", "button", "a", "label", "[contenteditable]", "[role='slider']",
   ".modal", ".client-select-menu", ".snippet-list", ".email-log-list", ".code-preview", ".editor-input-wrap",
@@ -514,8 +518,17 @@ const PTR_BLOCKED_TARGETS = [
 function usePullToRefresh(scrollRef) {
   const [pull, setPull] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [returning, setReturning] = useState(false);
   const refreshingRef = useRef(false);
   const reloadTimerRef = useRef(null);
+  const returnTimerRef = useRef(null);
+
+  const clearReturnTimer = () => {
+    if (returnTimerRef.current) {
+      window.clearTimeout(returnTimerRef.current);
+      returnTimerRef.current = null;
+    }
+  };
 
   useEffect(() => {
     const scroller = scrollRef.current;
@@ -538,7 +551,24 @@ function usePullToRefresh(scrollRef) {
       distance = 0;
     };
 
+    const beginReturn = () => {
+      clearReturnTimer();
+      setReturning(true);
+      returnTimerRef.current = window.setTimeout(() => {
+        returnTimerRef.current = null;
+        setReturning(false);
+        setPull(0);
+      }, PTR_RETURN_MS);
+    };
+
     const onTouchStart = (event) => {
+      if (returnTimerRef.current) {
+        // A new gesture during the return: drop the medallion gracefully and
+        // re-arm the gesture instead of letting the stale timer fire mid-drag.
+        clearReturnTimer();
+        setReturning(false);
+        setPull(0);
+      }
       if (refreshingRef.current || event.touches.length !== 1) {
         candidate = false;
         return;
@@ -555,7 +585,7 @@ function usePullToRefresh(scrollRef) {
       if (!candidate || refreshingRef.current) return;
       if (event.touches.length !== 1) {
         resetGesture();
-        setPull(0);
+        beginReturn();
         return;
       }
 
@@ -588,11 +618,16 @@ function usePullToRefresh(scrollRef) {
       const shouldRefresh = allowRefresh && active && distance >= PTR_THRESHOLD;
       resetGesture();
       if (!shouldRefresh) {
-        setPull(0);
+        // RETURNING phase: keep the medallion fully visible while it travels
+        // back above the viewport; hide only after the return completes.
+        beginReturn();
         return;
       }
 
       refreshingRef.current = true;
+      // Reset the dragged pull so the refreshing beat rocks around upright
+      // instead of a residual dragged angle.
+      setPull(0);
       setRefreshing(true);
       reloadTimerRef.current = window.setTimeout(() => window.location.reload(), 600);
     };
@@ -610,30 +645,36 @@ function usePullToRefresh(scrollRef) {
       scroller.removeEventListener("touchmove", onTouchMove);
       scroller.removeEventListener("touchend", onTouchEnd);
       scroller.removeEventListener("touchcancel", onTouchCancel);
+      clearReturnTimer();
       if (reloadTimerRef.current) window.clearTimeout(reloadTimerRef.current);
     };
   }, [scrollRef]);
 
-  return { pull, refreshing };
+  return { pull, refreshing, returning };
 }
 
 // Fixed-position logo medallion that follows the pull. Parked above the
 // viewport when idle, so it can never shift layout; springs back on release.
-function PtrIndicator({ pull, refreshing }) {
-  const armed = !refreshing && pull >= PTR_THRESHOLD;
+function PtrIndicator({ pull, refreshing, returning }) {
+  const armed = !refreshing && !returning && pull >= PTR_THRESHOLD;
   const progress = refreshing ? 1 : Math.min(pull / PTR_THRESHOLD, 1);
   // Browser-safe concrete values: CSS calc() multiplication inside rotate()/scale()
   // is not reliably supported, so rotation/scale are computed here per drag frame.
   // Rotation follows raw pull distance, so it keeps turning through the resisted
   // over-threshold range instead of freezing once progress caps at 1.
-  const rotation = `${(pull * 2).toFixed(2)}deg`;
+  // While RETURNING the rotation is forced to 0deg so the img transition visibly
+  // counter-rotates from the dragged angle back to upright over PTR_RETURN_MS.
+  const rotation = `${(returning ? 0 : pull * 2).toFixed(2)}deg`;
   const scale = (0.65 + progress * 0.35).toFixed(3);
   const classes = ["ptr-indicator"];
-  if (!refreshing && pull > 0) classes.push("ptr-active");
+  if (!refreshing && !returning && pull > 0) classes.push("ptr-active");
   if (armed) classes.push("ptr-ready");
   if (refreshing) classes.push("ptr-refreshing");
+  if (returning) classes.push("ptr-returning");
   const status = refreshing
     ? "Refreshing…"
+    : returning
+    ? ""
     : armed
     ? "Release to refresh"
     : pull > 0
@@ -1943,7 +1984,7 @@ export default function App() {
 
   return (
     <main className={`app app-${theme}`}>
-      <PtrIndicator pull={ptr.pull} refreshing={ptr.refreshing} />
+      <PtrIndicator pull={ptr.pull} refreshing={ptr.refreshing} returning={ptr.returning} />
       <div className="ambient-stars" aria-hidden="true">
         <span className="ambient-star ambient-star-1" />
         <span className="ambient-star ambient-star-2" />
