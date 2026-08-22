@@ -622,6 +622,12 @@ function usePullToRefresh(scrollRef) {
 function PtrIndicator({ pull, refreshing }) {
   const armed = !refreshing && pull >= PTR_THRESHOLD;
   const progress = refreshing ? 1 : Math.min(pull / PTR_THRESHOLD, 1);
+  // Browser-safe concrete values: CSS calc() multiplication inside rotate()/scale()
+  // is not reliably supported, so rotation/scale are computed here per drag frame.
+  // Rotation follows raw pull distance, so it keeps turning through the resisted
+  // over-threshold range instead of freezing once progress caps at 1.
+  const rotation = `${(pull * 2).toFixed(2)}deg`;
+  const scale = (0.65 + progress * 0.35).toFixed(3);
   const classes = ["ptr-indicator"];
   if (!refreshing && pull > 0) classes.push("ptr-active");
   if (armed) classes.push("ptr-ready");
@@ -637,7 +643,11 @@ function PtrIndicator({ pull, refreshing }) {
     <>
       <div
         className={classes.join(" ")}
-        style={{ "--ptr-pull": `${Math.round(pull)}px`, "--ptr-progress": progress.toFixed(3) }}
+        style={{
+          "--ptr-pull": `${pull.toFixed(2)}px`,
+          "--ptr-rotation": rotation,
+          "--ptr-scale": scale,
+        }}
         aria-hidden="true"
       >
         <img src={`${process.env.PUBLIC_URL}/wizard-schedules-logo.png`} alt="" />

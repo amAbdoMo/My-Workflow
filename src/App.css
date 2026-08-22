@@ -3940,6 +3940,13 @@ input[type="checkbox"]:focus-visible {
     rotate: none;
     scale: none;
   }
+
+  /* Suppress the nonessential drag-linked rotation but keep the medallion's
+     position/scale feedback; the global rule above already stops the
+     refreshing beat animations. */
+  .ptr-indicator img {
+    transform: scale(var(--ptr-scale, 0.65)) !important;
+  }
 }
 
 /* ============================================================
@@ -3969,10 +3976,12 @@ html[data-web="1"] .app-scroll {
   background:
     radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.07), transparent 55%),
     #12151f;
-  border: 1px solid rgba(124, 92, 255, 0.4);
+  /* Mint app accent (var(--accent) = #6ee9c7): static color-mix percentages only —
+     dynamic calc() percentages are not reliably supported. */
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 60%);
   box-shadow:
-    0 14px 34px color-mix(in srgb, #7c5cff calc(18% + var(--ptr-progress, 0) * 26%), transparent),
-    0 8px 20px color-mix(in srgb, #00c8be calc(12% + var(--ptr-progress, 0) * 16%), transparent);
+    0 14px 34px color-mix(in srgb, var(--accent), transparent 78%),
+    0 8px 20px color-mix(in srgb, var(--accent), transparent 86%);
   opacity: 0;
   transform: translate3d(0, 0, 0);
   transition: transform 0.28s ease, opacity 0.22s ease;
@@ -3983,8 +3992,9 @@ html[data-web="1"] .app-scroll {
   width: 36px;
   height: 36px;
   object-fit: contain;
-  transform: rotate(calc(var(--ptr-progress, 0) * 120deg))
-    scale(calc(0.65 + var(--ptr-progress, 0) * 0.35));
+  /* --ptr-rotation / --ptr-scale are concrete values computed in JS per drag
+     frame, so the logo tracks the finger with no easing lag while active. */
+  transform: rotate(var(--ptr-rotation, 0deg)) scale(var(--ptr-scale, 0.65));
   transition: transform 0.2s ease;
 }
 
@@ -4001,7 +4011,10 @@ html[data-web="1"] .app-scroll {
 
 /* Threshold crossed: ring and glow intensify as the release cue. */
 .ptr-ready {
-  border-color: rgba(124, 92, 255, 0.78);
+  border-color: color-mix(in srgb, var(--accent-strong), transparent 22%);
+  box-shadow:
+    0 14px 34px color-mix(in srgb, var(--accent-strong), transparent 56%),
+    0 10px 26px color-mix(in srgb, var(--accent), transparent 68%);
 }
 
 /* Released past threshold: settle into a short refreshing beat, then reload. */
@@ -4020,13 +4033,13 @@ html[data-web="1"] .app-scroll {
   0%,
   100% {
     box-shadow:
-      0 14px 34px color-mix(in srgb, #7c5cff 44%, transparent),
-      0 8px 20px color-mix(in srgb, #00c8be 18%, transparent);
+      0 16px 38px color-mix(in srgb, var(--accent-strong), transparent 52%),
+      0 10px 26px color-mix(in srgb, var(--accent), transparent 74%);
   }
   50% {
     box-shadow:
-      0 14px 34px color-mix(in srgb, #7c5cff 24%, transparent),
-      0 8px 20px color-mix(in srgb, #00c8be 32%, transparent);
+      0 14px 34px color-mix(in srgb, var(--accent), transparent 64%),
+      0 12px 30px color-mix(in srgb, var(--accent-strong), transparent 60%);
   }
 }
 
