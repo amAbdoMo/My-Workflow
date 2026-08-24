@@ -773,6 +773,8 @@ export default function App() {
   const [todoDueId, setTodoDueId] = useState(null);
   const [todoDueText, setTodoDueText] = useState("");
   const [todoDueDraft, setTodoDueDraft] = useState("");
+  const [dueViewMonth, setDueViewMonth] = useState(() => new Date());
+  const [dueTimeMenu, setDueTimeMenu] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [clients, setClients] = useState(() => {
@@ -1430,15 +1432,19 @@ export default function App() {
   }
 
   function openTodoDue(todo) {
+    const initial = todo.dueAt ? new Date(todo.dueAt) : new Date(Date.now() + 60 * 60 * 1000);
     setTodoDueId(todo.id);
     setTodoDueText(todo.text);
-    setTodoDueDraft(todo.dueAt ? toLocalInputValue(todo.dueAt) : toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000)));
+    setTodoDueDraft(toLocalInputValue(initial));
+    setDueViewMonth(new Date(initial.getFullYear(), initial.getMonth(), 1));
+    setDueTimeMenu(null);
   }
 
   function closeTodoDue() {
     setTodoDueId(null);
     setTodoDueText("");
     setTodoDueDraft("");
+    setDueTimeMenu(null);
   }
 
   function saveTodoDue() {
@@ -1470,6 +1476,73 @@ export default function App() {
       date.setHours(9, 0, 0, 0);
     }
     setTodoDueDraft(toLocalInputValue(date));
+    setDueViewMonth(new Date(date.getFullYear(), date.getMonth(), 1));
+    setDueTimeMenu(null);
+  }
+
+  // ----- custom due-date picker -----
+
+  const dueSelected = todoDueDraft && !Number.isNaN(new Date(todoDueDraft).getTime()) ? new Date(todoDueDraft) : null;
+  const dueViewYear = dueViewMonth.getFullYear();
+  const dueViewMonthIndex = dueViewMonth.getMonth();
+  const dueCells = (() => {
+    const firstWeekday = new Date(dueViewYear, dueViewMonthIndex, 1).getDay();
+    const daysInMonth = new Date(dueViewYear, dueViewMonthIndex + 1, 0).getDate();
+    const cells = [];
+    for (let i = 0; i < firstWeekday; i += 1) cells.push(null);
+    for (let day = 1; day <= daysInMonth; day += 1) cells.push(day);
+    return cells;
+  })();
+  const dueHour12 = dueSelected ? (dueSelected.getHours() % 12 || 12) : 12;
+  const dueAmPm = dueSelected && dueSelected.getHours() >= 12 ? "PM" : "AM";
+  const dueMinuteOptions = (() => {
+    const options = [];
+    for (let minute = 0; minute < 60; minute += 5) options.push(minute);
+    const current = dueSelected ? dueSelected.getMinutes() : 0;
+    if (!options.includes(current)) {
+      options.push(current);
+      options.sort((a, b) => a - b);
+    }
+    return options;
+  })();
+
+  function setDueParts(parts) {
+    const base = dueSelected || new Date(Date.now() + 60 * 60 * 1000);
+    const next = new Date(
+      parts.year ?? base.getFullYear(),
+      parts.month ?? base.getMonth(),
+      parts.day ?? base.getDate(),
+      parts.hour ?? base.getHours(),
+      parts.minute ?? base.getMinutes(),
+      0,
+      0,
+    );
+    setTodoDueDraft(toLocalInputValue(next));
+  }
+
+  function shiftDueViewMonth(delta) {
+    setDueViewMonth(new Date(dueViewYear, dueViewMonthIndex + delta, 1));
+    setDueTimeMenu(null);
+  }
+
+  function selectDueDay(day) {
+    setDueParts({ year: dueViewYear, month: dueViewMonthIndex, day });
+    setDueTimeMenu(null);
+  }
+
+  function selectDueHour(hour12) {
+    setDueParts({ hour: (hour12 % 12) + (dueAmPm === "PM" ? 12 : 0) });
+    setDueTimeMenu(null);
+  }
+
+  function selectDueMinute(minute) {
+    setDueParts({ minute });
+    setDueTimeMenu(null);
+  }
+
+  function selectDueAmPm(ampm) {
+    setDueParts({ hour: (dueHour12 % 12) + (ampm === "PM" ? 12 : 0) });
+    setDueTimeMenu(null);
   }
 
   async function markAllNotificationsRead() {
@@ -3607,7 +3680,7 @@ export default function App() {
 
       {todoDueId && (
         <div className="modal-backdrop" onClick={closeTodoDue}>
-          <section className="modal todo-due-modal" onClick={(event) => event.stopPropagation()} aria-label="Set due date and time">
+          <section className="modal todo-due-modal" onClick={(event) => { event.stopPropagation(); setDueTimeMenu(null); }} aria-label="Set due date and time">
             <div className="modal-header">
               <div>
                 <p className="card-kicker">To-Do Reminder</p>
@@ -3618,14 +3691,146 @@ export default function App() {
               </button>
             </div>
             <p className="todo-due-task" dir={getTextDirection(todoDueText)}>{todoDueText}</p>
-            <label className="todo-due-field">
+            <div className="todo-due-field">
               <span>Remind me at</span>
-              <input
-                type="datetime-local"
-                value={todoDueDraft}
-                onChange={(event) => setTodoDueDraft(event.target.value)}
-              />
-            </label>
+              <div className="due-picker">
+                <div className="due-picker-calendar">
+                  <div className="due-picker-header">
+                    <button className="icon-action due-picker-nav" type="button" aria-label="Previous month" onClick={() => shiftDueViewMonth(-1)}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="m15 18-6-6 6-6" />
+                      </svg>
+                    </button>
+                    <span className="due-picker-month">{dueViewMonth.toLocaleDateString([], { month: "long", year: "numeric" })}</span>
+                    <button className="icon-action due-picker-nav" type="button" aria-label="Next month" onClick={() => shiftDueViewMonth(1)}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="m9 18 6-6-6-6" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="due-picker-weekdays">
+                    {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((weekday) => (
+                      <span key={weekday}>{weekday}</span>
+                    ))}
+                  </div>
+                  <div className="due-picker-grid">
+                    {dueCells.map((day, cellIndex) =>
+                      day === null ? (
+                        <span key={`pad-${cellIndex}`} />
+                      ) : (
+                        <button
+                          className={[
+                            "due-picker-day",
+                            dueSelected && dueSelected.getFullYear() === dueViewYear && dueSelected.getMonth() === dueViewMonthIndex && dueSelected.getDate() === day ? "due-picker-day-selected" : "",
+                          ].filter(Boolean).join(" ")}
+                          key={day}
+                          type="button"
+                          aria-pressed={dueSelected && dueSelected.getDate() === day && dueSelected.getMonth() === dueViewMonthIndex ? "true" : "false"}
+                          onClick={() => selectDueDay(day)}
+                        >
+                          {day}
+                        </button>
+                      )
+                    )}
+                  </div>
+                </div>
+                <div className="due-picker-time">
+                  <div className="client-select due-time-select">
+                    <button
+                      className="secondary-action due-time-trigger"
+                      type="button"
+                      aria-label="Hour"
+                      aria-expanded={dueTimeMenu === "hour"}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDueTimeMenu(dueTimeMenu === "hour" ? null : "hour");
+                      }}
+                    >
+                      <span>{String(dueHour12).padStart(2, "0")}</span>
+                      <b aria-hidden="true">v</b>
+                    </button>
+                    {dueTimeMenu === "hour" && (
+                      <div className="client-select-menu due-time-menu" role="listbox">
+                        {Array.from({ length: 12 }, (_, index) => index + 1).map((hour) => (
+                          <button
+                            className={hour === dueHour12 ? "client-option client-option-active" : "client-option"}
+                            key={hour}
+                            type="button"
+                            role="option"
+                            aria-selected={hour === dueHour12}
+                            onClick={() => selectDueHour(hour)}
+                          >
+                            <span>{String(hour).padStart(2, "0")}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="client-select due-time-select">
+                    <button
+                      className="secondary-action due-time-trigger"
+                      type="button"
+                      aria-label="Minute"
+                      aria-expanded={dueTimeMenu === "minute"}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDueTimeMenu(dueTimeMenu === "minute" ? null : "minute");
+                      }}
+                    >
+                      <span>{String(dueSelected ? dueSelected.getMinutes() : 0).padStart(2, "0")}</span>
+                      <b aria-hidden="true">v</b>
+                    </button>
+                    {dueTimeMenu === "minute" && (
+                      <div className="client-select-menu due-time-menu" role="listbox">
+                        {dueMinuteOptions.map((minute) => (
+                          <button
+                            className={dueSelected && dueSelected.getMinutes() === minute ? "client-option client-option-active" : "client-option"}
+                            key={minute}
+                            type="button"
+                            role="option"
+                            aria-selected={Boolean(dueSelected && dueSelected.getMinutes() === minute)}
+                            onClick={() => selectDueMinute(minute)}
+                          >
+                            <span>{String(minute).padStart(2, "0")}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div className="client-select due-time-select">
+                    <button
+                      className="secondary-action due-time-trigger"
+                      type="button"
+                      aria-label="AM or PM"
+                      aria-expanded={dueTimeMenu === "ampm"}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setDueTimeMenu(dueTimeMenu === "ampm" ? null : "ampm");
+                      }}
+                    >
+                      <span>{dueAmPm}</span>
+                      <b aria-hidden="true">v</b>
+                    </button>
+                    {dueTimeMenu === "ampm" && (
+                      <div className="client-select-menu due-time-menu" role="listbox">
+                        {["AM", "PM"].map((ampm) => (
+                          <button
+                            className={ampm === dueAmPm ? "client-option client-option-active" : "client-option"}
+                            key={ampm}
+                            type="button"
+                            role="option"
+                            aria-selected={ampm === dueAmPm}
+                            onClick={() => selectDueAmPm(ampm)}
+                          >
+                            <span>{ampm}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
             <div className="todo-due-presets">
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("hour")}>+1 hour</button>
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("tonight")}>Tonight 21:00</button>
