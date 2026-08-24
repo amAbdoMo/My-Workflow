@@ -161,8 +161,8 @@ function createBlankNote() {
   return { id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text: "", done: false };
 }
 
-function createTodoItem(text, category) {
-  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString(), dueAt: "" };
+function createTodoItem(text, category, dueAt = "") {
+  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString(), dueAt: dueAt || "" };
 }
 
 function toLocalInputValue(date) {
@@ -773,6 +773,7 @@ export default function App() {
   const [todoDueId, setTodoDueId] = useState(null);
   const [todoDueText, setTodoDueText] = useState("");
   const [todoDueDraft, setTodoDueDraft] = useState("");
+  const [newTodoDueAt, setNewTodoDueAt] = useState("");
   const [dueViewMonth, setDueViewMonth] = useState(() => new Date());
   const [dueTimeMenu, setDueTimeMenu] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -1393,8 +1394,9 @@ export default function App() {
     const text = todoDraft.trim();
     const category = activeTodoCategory || "General";
     if (!text) return;
-    setTodoItems((current) => [...current, createTodoItem(text, category)]);
+    setTodoItems((current) => [...current, createTodoItem(text, category, newTodoDueAt)]);
     setTodoDraft("");
+    setNewTodoDueAt("");
     if (todoCategory === "__new__") {
       setTodoCategory(category);
       setTodoNewCategory("");
@@ -1440,6 +1442,18 @@ export default function App() {
     setDueTimeMenu(null);
   }
 
+  // Sentinel id used while picking a reminder for the item being typed.
+  const NEW_TODO_DUE_ID = "__new__";
+
+  function openNewTodoDue() {
+    const initial = newTodoDueAt ? new Date(newTodoDueAt) : new Date(Date.now() + 60 * 60 * 1000);
+    setTodoDueId(NEW_TODO_DUE_ID);
+    setTodoDueText(todoDraft.trim() || "New to-do item");
+    setTodoDueDraft(toLocalInputValue(initial));
+    setDueViewMonth(new Date(initial.getFullYear(), initial.getMonth(), 1));
+    setDueTimeMenu(null);
+  }
+
   function closeTodoDue() {
     setTodoDueId(null);
     setTodoDueText("");
@@ -1451,7 +1465,11 @@ export default function App() {
     if (!todoDueId || !todoDueDraft) return;
     const due = new Date(todoDueDraft);
     if (Number.isNaN(due.getTime())) return;
-    handleTodoChange(todoDueId, { dueAt: due.toISOString() });
+    if (todoDueId === NEW_TODO_DUE_ID) {
+      setNewTodoDueAt(due.toISOString());
+    } else {
+      handleTodoChange(todoDueId, { dueAt: due.toISOString() });
+    }
     // Natural moment to ask for notification permission (first deadline only).
     if (!isElectron() && typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
@@ -1460,7 +1478,11 @@ export default function App() {
   }
 
   function removeTodoDue() {
-    if (todoDueId) handleTodoChange(todoDueId, { dueAt: "" });
+    if (todoDueId === NEW_TODO_DUE_ID) {
+      setNewTodoDueAt("");
+    } else if (todoDueId) {
+      handleTodoChange(todoDueId, { dueAt: "" });
+    }
     closeTodoDue();
   }
 
@@ -2852,13 +2874,39 @@ export default function App() {
                 handleAddTodo();
               }}
             >
-              <input
-                className="search-input todo-input"
-                dir={getTextDirection(todoDraft)}
-                value={todoDraft}
-                placeholder="Add a to-do item..."
-                onChange={(event) => setTodoDraft(event.target.value)}
-              />
+              <div className="todo-entry-row todo-entry-main-row">
+                <input
+                  className="search-input todo-input"
+                  dir={getTextDirection(todoDraft)}
+                  value={todoDraft}
+                  placeholder="Add a to-do item..."
+                  onChange={(event) => setTodoDraft(event.target.value)}
+                />
+                <button
+                  className={["icon-action", "todo-new-due-action", newTodoDueAt ? "todo-due-active" : ""].filter(Boolean).join(" ")}
+                  type="button"
+                  aria-label="Set a reminder for the new to-do item"
+                  title="Set due date & time for the new item"
+                  onClick={openNewTodoDue}
+                >
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="M12 7v5l3 2" />
+                  </svg>
+                </button>
+                {newTodoDueAt ? (
+                  <button className="todo-due-badge" type="button" title="Edit due date & time" onClick={openNewTodoDue}>
+                    {formatDueLabel(newTodoDueAt)}
+                  </button>
+                ) : null}
+                <button className="primary-action" type="submit">
+                  Add Item
+                </button>
+                <button className="secondary-action" type="button" onClick={handleClearCompletedTodos} disabled={totalCompletedTodoCount === 0}>
+                  Clear Done
+                </button>
+              </div>
+              <div className="todo-entry-row todo-entry-secondary-row">
               <div className="client-select todo-category-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoCategoryMenuOpen(false); }}>
                 <button
                   className="client-select-button"
@@ -2912,12 +2960,7 @@ export default function App() {
                   onChange={(event) => setTodoNewCategory(event.target.value)}
                 />
               ) : null}
-              <button className="primary-action" type="submit">
-                Add Item
-              </button>
-              <button className="secondary-action" type="button" onClick={handleClearCompletedTodos} disabled={totalCompletedTodoCount === 0}>
-                Clear Done
-              </button>
+              <span className="todo-entry-spacer" aria-hidden="true" />
               <div className="todo-filter-inline" aria-label="To-do category filter">
                 <div className="client-select todo-filter-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoFilterMenuOpen(false); }}>
                   <button
@@ -2984,6 +3027,7 @@ export default function App() {
                 <span className="project-count">
                   {filteredTodoItems.length} item{filteredTodoItems.length === 1 ? "" : "s"}
                 </span>
+              </div>
               </div>
             </form>
           </section>

@@ -1200,9 +1200,33 @@ button:disabled {
 
 .todo-entry {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px 220px auto auto auto;
-  gap: 10px;
+  gap: 14px;
+}
+
+.todo-entry-row {
+  display: flex;
   align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.todo-entry-main-row .todo-input {
+  flex: 1 1 auto;
+}
+
+.todo-entry-secondary-row {
+  flex-wrap: wrap;
+}
+
+.todo-entry-spacer {
+  flex: 1 1 auto;
+}
+
+.todo-new-due-action {
+  flex: 0 0 46px;
+  width: 46px;
+  min-height: 46px;
+  padding: 0;
 }
 
 .todo-input,
@@ -1243,8 +1267,8 @@ button:disabled {
   width: 240px;
 }
 
-.todo-entry > .primary-action,
-.todo-entry > .secondary-action {
+.todo-entry-main-row > .primary-action,
+.todo-entry-main-row > .secondary-action {
   min-width: 118px;
 }
 
@@ -2721,12 +2745,20 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .todo-entry {
-    grid-template-columns: minmax(0, 1fr) minmax(180px, 240px);
+  .todo-entry-main-row {
+    flex-wrap: wrap;
   }
 
-  .todo-category-select,
-  .todo-new-category-input,
+  /* Input keeps the clock icon beside it; the action buttons wrap below. */
+  .todo-entry-main-row .todo-input {
+    flex: 1 1 160px;
+  }
+
+  .todo-entry .todo-category-select,
+  .todo-entry .todo-new-category-input {
+    flex: 1 1 100%;
+  }
+
   .todo-filter-select {
     width: 100%;
   }
@@ -3458,25 +3490,14 @@ input[type="checkbox"]:focus-visible {
   box-shadow: none;
 }
 
-/* To-do entry controls use explicit areas so the optional category field never auto-places. */
-.todo-entry {
-  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px) auto auto minmax(180px, 240px);
-  grid-template-areas: "todo-input todo-category todo-add todo-clear todo-filter";
+/* To-do entry rows: main row holds the input + actions, secondary row the category and filter dropdowns. */
+.todo-entry .todo-category-select {
+  flex: 0 1 240px;
 }
 
-.todo-entry-new-category {
-  grid-template-columns: minmax(0, 1fr) minmax(170px, 210px) minmax(170px, 210px) auto auto;
-  grid-template-areas:
-    "todo-input todo-category todo-new-category todo-add todo-clear"
-    "todo-filter todo-filter todo-filter todo-filter todo-filter";
+.todo-entry .todo-new-category-input {
+  flex: 0 1 220px;
 }
-
-.todo-entry .todo-input { grid-area: todo-input; }
-.todo-entry .todo-category-select { grid-area: todo-category; width: auto; }
-.todo-entry .todo-new-category-input { grid-area: todo-new-category; width: 100%; }
-.todo-entry > .primary-action { grid-area: todo-add; }
-.todo-entry > .secondary-action { grid-area: todo-clear; }
-.todo-entry .todo-filter-inline { grid-area: todo-filter; }
 
 .todo-row {
   grid-template-columns: 28px 22px 32px minmax(0, 1fr) minmax(90px, 180px) auto 42px 42px 42px;
@@ -3560,28 +3581,6 @@ input[type="checkbox"]:focus-visible {
 }
 
 @media (max-width: 900px) {
-  .todo-entry,
-  .todo-entry-new-category {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .todo-entry:not(.todo-entry-new-category) {
-    grid-template-areas:
-      "todo-input todo-input"
-      "todo-category todo-category"
-      "todo-add todo-clear"
-      "todo-filter todo-filter";
-  }
-
-  .todo-entry-new-category {
-    grid-template-areas:
-      "todo-input todo-input"
-      "todo-category todo-category"
-      "todo-new-category todo-new-category"
-      "todo-add todo-clear"
-      "todo-filter todo-filter";
-  }
-
   .todo-row {
     grid-template-columns: 28px 22px 30px minmax(0, 1fr) minmax(80px, 140px) 40px 40px;
     gap: 8px;
@@ -3682,28 +3681,6 @@ input[type="checkbox"]:focus-visible {
   .topbar-theme-row .theme-toggle {
     justify-content: center;
     width: 100%;
-  }
-
-  .todo-entry:not(.todo-entry-new-category),
-  .todo-entry-new-category {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .todo-entry:not(.todo-entry-new-category) {
-    grid-template-areas:
-      "todo-input todo-input"
-      "todo-category todo-category"
-      "todo-add todo-clear"
-      "todo-filter todo-filter";
-  }
-
-  .todo-entry-new-category {
-    grid-template-areas:
-      "todo-input todo-input"
-      "todo-category todo-category"
-      "todo-new-category todo-new-category"
-      "todo-add todo-clear"
-      "todo-filter todo-filter";
   }
 
   .todo-row {
@@ -4197,6 +4174,9 @@ html[data-web="1"] .app-scroll {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  /* Keep the round arrows clear of the weekday row below. */
+  padding-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .due-picker-month {
@@ -4205,9 +4185,12 @@ html[data-web="1"] .app-scroll {
 }
 
 .due-picker-nav {
-  width: 32px;
-  height: 32px;
-  flex: 0 0 32px;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 30px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .due-picker-weekdays,
@@ -4282,6 +4265,13 @@ html[data-web="1"] .app-scroll {
   right: auto;
   min-width: 100%;
   max-height: 200px;
+}
+
+/* The AM/PM select sits at the row's end, so its menu must grow leftward
+   and stay inside the picker's right padding instead of past it. */
+.due-time-select:last-child .due-time-menu {
+  left: auto;
+  right: 0;
 }
 
 .todo-due-presets {
