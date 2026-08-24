@@ -1198,6 +1198,21 @@ button:disabled {
   z-index: 60;
 }
 
+/* Let the to-do dropdowns grow to fit the longest category name instead of
+   clipping it with a horizontal scrollbar. The filter menu grows leftward so
+   it stays inside the card. */
+.todo-category-select .client-select-menu,
+.todo-filter-select .client-select-menu {
+  width: max-content;
+  min-width: 100%;
+  max-width: min(300px, calc(100vw - 48px));
+}
+
+.todo-filter-select .client-select-menu {
+  left: auto;
+  right: 0;
+}
+
 .todo-entry {
   display: grid;
   gap: 14px;
@@ -1271,20 +1286,6 @@ button:disabled {
   min-width: 118px;
 }
 
-/* Clear Done mirrors the notifications toolbar's "Mark all read" pill. */
-.todo-entry-main-row > .secondary-action {
-  font-size: 0.8rem;
-  padding: 8px 12px;
-}
-
-.todo-entry-main-row > .secondary-action:disabled {
-  opacity: 1;
-  background: transparent;
-  border: 1px solid var(--line);
-  color: var(--text-dim) !important;
-  cursor: default;
-}
-
 .todo-filter-inline {
   display: flex;
   align-items: center;
@@ -1330,32 +1331,6 @@ button:disabled {
 
 .todo-row:active {
   cursor: grabbing;
-}
-
-.todo-drag-handle {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  min-height: 42px;
-  padding: 0;
-  color: var(--muted);
-  background: var(--input);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  cursor: inherit;
-  font-weight: 900;
-  line-height: 1;
-}
-
-.todo-drag-handle:active {
-  cursor: grabbing;
-}
-
-.todo-drag-handle:hover,
-.todo-drag-handle:focus-visible {
-  color: var(--accent-strong);
-  border-color: var(--accent);
-  outline: none;
 }
 
 .todo-row-done {
@@ -2767,15 +2742,6 @@ button:disabled {
     flex: 1 1 160px;
   }
 
-  .todo-entry .todo-category-select,
-  .todo-entry .todo-new-category-input {
-    flex: 1 1 100%;
-  }
-
-  .todo-filter-select {
-    width: 100%;
-  }
-
   .snippet-workspace {
     height: auto;
   }
@@ -3513,15 +3479,14 @@ input[type="checkbox"]:focus-visible {
 }
 
 .todo-row {
-  grid-template-columns: 28px 22px 32px minmax(0, 1fr) minmax(90px, 180px) auto 42px 42px 42px;
-  grid-template-areas: "todo-drag todo-check todo-number todo-text todo-category todo-due todo-clock todo-edit todo-delete";
+  grid-template-columns: 22px 32px minmax(0, 1fr) minmax(90px, 180px) auto 42px 42px 42px;
+  grid-template-areas: "todo-check todo-number todo-text todo-category todo-due todo-clock todo-edit todo-delete";
 }
 
 .todo-row > * {
   min-width: 0;
 }
 
-.todo-row > .todo-drag-handle { grid-area: todo-drag; }
 .todo-row > .todo-check { grid-area: todo-check; }
 .todo-row > .todo-number { grid-area: todo-number; }
 .todo-row > .todo-text-input,
@@ -3595,8 +3560,19 @@ input[type="checkbox"]:focus-visible {
 
 @media (max-width: 900px) {
   .todo-row {
-    grid-template-columns: 28px 22px 30px minmax(0, 1fr) minmax(80px, 140px) auto 38px 38px 38px;
+    grid-template-columns: 22px 30px minmax(0, 1fr) minmax(80px, 140px) auto 38px 38px 38px;
     gap: 8px;
+  }
+
+  /* Both dropdowns span the full card width on tablet/phone. Placed after the
+     base rules so they win the cascade. */
+  .todo-entry .todo-category-select,
+  .todo-entry .todo-new-category-input {
+    flex: 1 1 100%;
+  }
+
+  .todo-entry .todo-filter-select {
+    width: 100%;
   }
 
   .email-log-list {
@@ -3697,10 +3673,10 @@ input[type="checkbox"]:focus-visible {
   }
 
   .todo-row {
-    grid-template-columns: 26px 22px 30px minmax(0, 1fr) auto 40px 40px 40px;
+    grid-template-columns: 22px 30px minmax(0, 1fr) auto 40px 40px 40px;
     grid-template-areas:
-      "todo-text todo-text todo-text todo-text todo-text todo-text todo-text todo-text"
-      "todo-drag todo-check todo-number . todo-due todo-clock todo-edit todo-delete";
+      "todo-text todo-text todo-text todo-text todo-text todo-text todo-text"
+      "todo-check todo-number . todo-due todo-clock todo-edit todo-delete";
     gap: 8px;
     padding: 8px;
   }

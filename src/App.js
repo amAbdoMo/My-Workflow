@@ -1626,10 +1626,6 @@ export default function App() {
     setDraggingTodoId(null);
   }
 
-  function handleClearCompletedTodos() {
-    setTodoItems((current) => current.filter((todo) => !todo.done));
-  }
-
   function handleDeleteTodoCategory() {
     if (todoFilter === "all" || todoFilter === "General") {
       // No specific category selected: clear the checked items instead so the
@@ -2907,9 +2903,6 @@ export default function App() {
                 <button className="primary-action" type="submit">
                   Add Item
                 </button>
-                <button className="secondary-action" type="button" onClick={handleClearCompletedTodos} disabled={totalCompletedTodoCount === 0}>
-                  Clear Done
-                </button>
               </div>
               <div className="todo-entry-row todo-entry-secondary-row">
               <div className="client-select todo-category-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoCategoryMenuOpen(false); }}>
@@ -3058,15 +3051,6 @@ export default function App() {
                     onDragOver={(event) => handleTodoDragOver(event, todo.id)}
                     onDrop={handleTodoDrop}
                   >
-                    <button
-                      className="todo-drag-handle"
-                      type="button"
-                      disabled={filteredTodoItems.length <= 1}
-                      aria-label={`Reorder to-do item ${index + 1}`}
-                      title="Drag the row to reorder"
-                    >
-                      ::
-                    </button>
                     <input
                       className="todo-check"
                       type="checkbox"
