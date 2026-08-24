@@ -25,6 +25,7 @@ const SNIPPET_ENCODING_REPAIR_KEY = "wizard-schedule-snippets-encoding-repaired"
 const SNIPPET_CONTENT_REPAIR_KEY = "wizard-schedule-snippets-content-repaired-v2";
 const THEME_KEY = "wizard-schedules-theme";
 const LEGACY_THEME_KEY = "deadline-os-theme";
+const NOTIF_PROMPT_DISMISSED_KEY = "wizard-schedules-notif-prompt-dismissed";
 const UNPAID_CURRENCY_KEY = "wizard-schedules-unpaid-currency";
 const MONEY_VISIBILITY_KEY = "wizard-schedules-money-visible";
 const USD_EGP_RATE_KEY = "wizard-schedules-usd-egp-rate";
@@ -778,6 +779,14 @@ export default function App() {
   const [dueTimeMenu, setDueTimeMenu] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notifPermission, setNotifPermission] = useState(() => (typeof Notification !== "undefined" ? Notification.permission : "denied"));
+  const [notifPromptDismissed, setNotifPromptDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(NOTIF_PROMPT_DISMISSED_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [clients, setClients] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || [];
@@ -889,34 +898,49 @@ export default function App() {
 
   // Web Push subscription so phones get reminders with the PWA closed.
   // The desktop app has no service worker (file://) — its toast comes from the
-  // SSE event above instead.
-  useEffect(() => {
+  // SSE event above instead. Permission is never requested silently: the user
+  // enables it through the banner or the notifications panel.
+  async function subscribeToPush() {
     if (isElectron() || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    try {
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        const config = await apiFetch("/api/push/config");
+        if (!config?.publicKey) return;
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: config.publicKey,
+        });
+      }
+      if (subscription) {
+        await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
+      }
+    } catch {}
+  }
+
+  async function enableNotifications() {
+    if (typeof Notification === "undefined") return;
+    try {
+      const permission = await Notification.requestPermission();
+      setNotifPermission(permission);
+      if (permission === "granted") await subscribeToPush();
+    } catch {}
+  }
+
+  useEffect(() => {
     let cancelled = false;
-    async function subscribePush() {
-      try {
-        if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-        const registration = await navigator.serviceWorker.ready;
-        let subscription = await registration.pushManager.getSubscription();
-        if (!subscription) {
-          const config = await apiFetch("/api/push/config");
-          if (!config?.publicKey) return;
-          subscription = await registration.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: config.publicKey,
-          });
-        }
-        if (subscription && !cancelled) {
-          await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
-        }
-      } catch {}
+    function run() {
+      if (!cancelled) subscribeToPush();
     }
-    subscribePush();
-    window.addEventListener("focus", subscribePush);
+    run();
+    window.addEventListener("focus", run);
     return () => {
       cancelled = true;
-      window.removeEventListener("focus", subscribePush);
+      window.removeEventListener("focus", run);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -2334,6 +2358,29 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {!isElectron() && notifPermission === "default" && !notifPromptDismissed && (
+        <div className="notif-enable-banner" role="status">
+          <span>Turn on notifications to get reminder alerts on this device.</span>
+          <button className="primary-action" type="button" onClick={enableNotifications}>
+            Enable
+          </button>
+          <button
+            className="icon-action"
+            type="button"
+            aria-label="Dismiss notification prompt"
+            title="Dismiss"
+            onClick={() => {
+              setNotifPromptDismissed(true);
+              try {
+                localStorage.setItem(NOTIF_PROMPT_DISMISSED_KEY, "1");
+              } catch {}
+            }}
+          >
+            X
+          </button>
+        </div>
+      )}
 
       <nav className="app-tabs" aria-label="Main sections">
         <button className={activeTab === "schedule" ? "tab-button tab-button-active" : "tab-button"} type="button" onClick={() => setActiveTab("schedule")}>
@@ -3867,11 +3914,11 @@ export default function App() {
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("hour")}>+1 hour</button>
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("tonight")}>Tonight 21:00</button>
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("tomorrow")}>Tomorrow 09:00</button>
-            </div>
-            <div className="modal-actions">
               <button className="danger-action" type="button" onClick={removeTodoDue}>
                 Remove
               </button>
+            </div>
+            <div className="modal-actions">
               <span className="modal-actions-spacer" />
               <button className="secondary-action" type="button" onClick={closeTodoDue}>
                 Cancel
@@ -3896,6 +3943,14 @@ export default function App() {
                 X
               </button>
             </div>
+            {!isElectron() && notifPermission !== "granted" && (
+              <div className="notifications-enable-row">
+                <span>Get reminder alerts on this device.</span>
+                <button className="primary-action" type="button" onClick={enableNotifications}>
+                  Enable notifications
+                </button>
+              </div>
+            )}
             <div className="notifications-toolbar">
               <button className="secondary-action" type="button" onClick={markAllNotificationsRead} disabled={unreadNotificationCount === 0}>
                 Mark read

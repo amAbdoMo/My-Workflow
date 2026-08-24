@@ -2213,7 +2213,6 @@ button:disabled {
   background: var(--panel-strong);
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
 }
 
 /* Scrollbars keep the global 10px track inset so the thumb starts below the
@@ -2436,7 +2435,6 @@ button:disabled {
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   border: 1px solid var(--line);
   border-radius: var(--radius);
   background: var(--panel-strong);
@@ -4259,6 +4257,57 @@ html[data-web="1"] .app-scroll {
   order: -1;
 }
 
+/* "Turn on notifications" prompt shown until the user enables or dismisses it. */
+.notif-enable-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 55%);
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+}
+
+.notif-enable-banner span {
+  flex: 1;
+  min-width: 0;
+  font-weight: 700;
+}
+
+.notif-enable-banner .primary-action {
+  min-height: 38px;
+  padding: 0 14px;
+}
+
+.notif-enable-banner .icon-action {
+  width: 34px;
+  min-width: 34px;
+  min-height: 38px;
+}
+
+.notifications-enable-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border: 1px dashed color-mix(in srgb, var(--accent), transparent 55%);
+  border-radius: var(--radius);
+}
+
+.notifications-enable-row span {
+  min-width: 0;
+  font-weight: 700;
+}
+
+.notifications-enable-row .primary-action {
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 14px;
+}
+
 .topbar-bell-action:hover {
   color: var(--accent-strong);
   border-color: color-mix(in srgb, var(--accent), transparent 45%);
@@ -4372,21 +4421,30 @@ html[data-web="1"] .app-scroll {
   flex: 0 0 34px;
 }
 
-/* Due-picker presets share a 50/50 grid like the Cancel/Save footer on phones.
-   Appended after the base rule so it wins the cascade. */
+/* Due-picker presets share a 50/50 grid like the Cancel/Save footer on phones
+   (Remove pairs with Tomorrow). Appended after the base rule so it wins. */
 @media (max-width: 560px) {
   .todo-due-presets {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .todo-due-presets .secondary-action {
+  .todo-due-presets button {
     width: 100%;
     min-height: 44px;
     padding: 8px 10px;
   }
 
-  .todo-due-presets .secondary-action:last-child {
-    grid-column: 1 / -1;
+  /* Notification prompt: copy on its own line, buttons side by side. */
+  .notif-enable-banner {
+    flex-wrap: wrap;
+  }
+
+  .notif-enable-banner span {
+    flex: 1 1 100%;
+  }
+
+  .notif-enable-banner .primary-action {
+    flex: 1;
   }
 }
