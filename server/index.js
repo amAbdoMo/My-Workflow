@@ -5,6 +5,7 @@ const crypto = require("crypto");
 const store = require("./store");
 const auth = require("./auth");
 const imap = require("./imap-service");
+const reminders = require("./reminders");
 
 // Hostinger's proxy expects port 3000 when it does not inject PORT.
 const PORT = Number(process.env.PORT || 3000);
@@ -147,6 +148,61 @@ app.get("/api/events", (req, res) => {
     clearInterval(heartbeat);
     sseClients.delete(res);
   });
+});
+
+// ---------- deadline reminders + web push ----------
+
+app.get("/api/push/config", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  res.json({ publicKey: reminders.publicKey() });
+});
+
+app.post("/api/push/subscribe", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  try {
+    reminders.addSub(req.body);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+app.post("/api/push/unsubscribe", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  const endpoint = typeof req.body?.endpoint === "string" ? req.body.endpoint : "";
+  if (endpoint) reminders.removeSub(endpoint);
+  res.json({ ok: true });
+});
+
+app.get("/api/notifications", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  res.json({ notifications: reminders.listNotifications() });
+});
+
+app.post("/api/notifications/read", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  reminders.markAllRead();
+  res.json({ ok: true });
+});
+
+app.delete("/api/notifications/:id", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  reminders.deleteNotification(String(req.params.id));
+  res.json({ ok: true });
+});
+
+app.delete("/api/notifications", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  reminders.clearNotifications();
+  res.json({ ok: true });
+});
+
+reminders.startScheduler((name, payload) => {
+  for (const client of sseClients) {
+    try {
+      client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
+    } catch {}
+  }
 });
 
 app.get("/api/data/export", (req, res) => {

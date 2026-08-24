@@ -248,6 +248,14 @@ function openLiveChannel() {
     source.addEventListener("data-changed", () => {
       pullRemote().catch(() => {});
     });
+    // Deadline reminders: the server fires this per fresh notification.
+    source.addEventListener("notification", (event) => {
+      let detail = null;
+      try {
+        detail = JSON.parse(event.data);
+      } catch {}
+      window.dispatchEvent(new CustomEvent("wizard-notification", { detail }));
+    });
     source.onerror = () => {
       // Stream lost (network change, server restart): pull once on reopen.
       source.addEventListener("open", () => pullRemote().catch(() => {}), { once: true });

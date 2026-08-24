@@ -3,6 +3,7 @@ import "./App.css";
 import seedSnippets from "./seedSnippets.json";
 import generalSnippets from "./generalSnippets.json";
 import { createZip, snippetFileName } from "./zipTools";
+import { apiFetch, isElectron } from "./api";
 
 const APP_NAME = "WorkflowY";
 const TOPBAR_MENU_ID = "workflowy-settings-menu";
@@ -161,7 +162,40 @@ function createBlankNote() {
 }
 
 function createTodoItem(text, category) {
-  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString() };
+  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString(), dueAt: "" };
+}
+
+function toLocalInputValue(date) {
+  const value = date instanceof Date ? date : new Date(date);
+  if (Number.isNaN(value.getTime())) return "";
+  const pad = (part) => String(part).padStart(2, "0");
+  return `${value.getFullYear()}-${pad(value.getMonth() + 1)}-${pad(value.getDate())}T${pad(value.getHours())}:${pad(value.getMinutes())}`;
+}
+
+function formatDueLabel(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const time = date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+  if (date.toDateString() === today.toDateString()) return `Today ${time}`;
+  if (date.toDateString() === tomorrow.toDateString()) return `Tomorrow ${time}`;
+  return `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
+}
+
+// Fires a native OS notification: a Windows toast in Electron, a browser
+// notification on the web. Silent no-op without permission.
+function showSystemNotification(notification) {
+  try {
+    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+    const note = new Notification("WorkflowY — task due", {
+      body: notification.text,
+      tag: notification.id,
+      icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
+    });
+    note.onclick = () => window.focus();
+  } catch {}
 }
 
 function createEmptyForm() {
@@ -225,6 +259,7 @@ function normalizeTodoItems(items) {
       category: String(todo?.category || "General"),
       done: Boolean(todo?.done),
       createdAt: todo?.createdAt || "",
+      dueAt: String(todo?.dueAt || ""),
     }))
     .filter((todo) => todo.text.trim());
 }
@@ -735,6 +770,11 @@ export default function App() {
   const [todoEditId, setTodoEditId] = useState(null);
   const [todoEditText, setTodoEditText] = useState("");
   const [draggingTodoId, setDraggingTodoId] = useState(null);
+  const [todoDueId, setTodoDueId] = useState(null);
+  const [todoDueText, setTodoDueText] = useState("");
+  const [todoDueDraft, setTodoDueDraft] = useState("");
+  const [notifications, setNotifications] = useState([]);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [clients, setClients] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || [];
@@ -818,6 +858,63 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(TODO_ITEMS_KEY, JSON.stringify(normalizeTodoItems(todoItems)));
   }, [todoItems]);
+
+  // ----- deadline notifications (server is the source of truth) -----
+  useEffect(() => {
+    let cancelled = false;
+    async function loadNotifications() {
+      try {
+        const data = await apiFetch("/api/notifications");
+        if (!cancelled && Array.isArray(data?.notifications)) setNotifications(data.notifications);
+      } catch {}
+    }
+    loadNotifications();
+    const interval = setInterval(loadNotifications, 60_000);
+    const onNotification = (event) => {
+      const notification = event?.detail;
+      if (!notification?.id) return;
+      setNotifications((current) => (current.some((item) => item.id === notification.id) ? current : [notification, ...current]));
+      showSystemNotification(notification);
+    };
+    window.addEventListener("wizard-notification", onNotification);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      window.removeEventListener("wizard-notification", onNotification);
+    };
+  }, []);
+
+  // Web Push subscription so phones get reminders with the PWA closed.
+  // The desktop app has no service worker (file://) — its toast comes from the
+  // SSE event above instead.
+  useEffect(() => {
+    if (isElectron() || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    let cancelled = false;
+    async function subscribePush() {
+      try {
+        if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+        const registration = await navigator.serviceWorker.ready;
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          const config = await apiFetch("/api/push/config");
+          if (!config?.publicKey) return;
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: config.publicKey,
+          });
+        }
+        if (subscription && !cancelled) {
+          await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
+        }
+      } catch {}
+    }
+    subscribePush();
+    window.addEventListener("focus", subscribePush);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", subscribePush);
+    };
+  }, []);
 
   useEffect(() => {
     if (!showForm) return;
@@ -1246,6 +1343,7 @@ export default function App() {
   const selectedSnippet = snippets.find((snippet) => snippet.id === selectedSnippetId) || null;
   const formNotes = getFormNotes(form.notes);
   const todoCategories = ["General", ...Array.from(new Set(todoItems.map((todo) => todo.category || "General"))).filter((category) => category !== "General").sort()];
+  const unreadNotificationCount = notifications.filter((notification) => !notification.read).length;
   const activeTodoCategory = todoCategory === "__new__" ? todoNewCategory.trim() : todoCategory;
   const filteredTodoItems = todoFilter === "all" ? todoItems : todoItems.filter((todo) => (todo.category || "General") === todoFilter);
   const completedTodoCount = filteredTodoItems.filter((todo) => todo.done).length;
@@ -1329,6 +1427,64 @@ export default function App() {
       setTodoEditId(null);
       setTodoEditText("");
     }
+  }
+
+  function openTodoDue(todo) {
+    setTodoDueId(todo.id);
+    setTodoDueText(todo.text);
+    setTodoDueDraft(todo.dueAt ? toLocalInputValue(todo.dueAt) : toLocalInputValue(new Date(Date.now() + 60 * 60 * 1000)));
+  }
+
+  function closeTodoDue() {
+    setTodoDueId(null);
+    setTodoDueText("");
+    setTodoDueDraft("");
+  }
+
+  function saveTodoDue() {
+    if (!todoDueId || !todoDueDraft) return;
+    const due = new Date(todoDueDraft);
+    if (Number.isNaN(due.getTime())) return;
+    handleTodoChange(todoDueId, { dueAt: due.toISOString() });
+    // Natural moment to ask for notification permission (first deadline only).
+    if (!isElectron() && typeof Notification !== "undefined" && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+    closeTodoDue();
+  }
+
+  function removeTodoDue() {
+    if (todoDueId) handleTodoChange(todoDueId, { dueAt: "" });
+    closeTodoDue();
+  }
+
+  function applyDuePreset(kind) {
+    const date = new Date();
+    if (kind === "hour") {
+      date.setHours(date.getHours() + 1, 0, 0, 0);
+    } else if (kind === "tonight") {
+      date.setHours(21, 0, 0, 0);
+      if (date <= new Date()) date.setDate(date.getDate() + 1);
+    } else {
+      date.setDate(date.getDate() + 1);
+      date.setHours(9, 0, 0, 0);
+    }
+    setTodoDueDraft(toLocalInputValue(date));
+  }
+
+  async function markAllNotificationsRead() {
+    setNotifications((current) => current.map((item) => ({ ...item, read: true })));
+    await apiFetch("/api/notifications/read", { method: "POST" }).catch(() => {});
+  }
+
+  async function deleteNotificationById(id) {
+    setNotifications((current) => current.filter((item) => item.id !== id));
+    await apiFetch(`/api/notifications/${encodeURIComponent(id)}`, { method: "DELETE" }).catch(() => {});
+  }
+
+  async function clearAllNotifications() {
+    setNotifications([]);
+    await apiFetch("/api/notifications", { method: "DELETE" }).catch(() => {});
   }
 
   function reorderTodoItem(todoId, targetTodoId) {
@@ -2053,6 +2209,13 @@ export default function App() {
               Clients
             </button>
           </div>
+          <button className="icon-action topbar-bell-action" type="button" aria-label={`Notifications${unreadNotificationCount ? ` (${unreadNotificationCount} unread)` : ""}`} title="Notifications" onClick={() => setNotificationsOpen(true)}>
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+            </svg>
+            {unreadNotificationCount > 0 && <span className="bell-badge">{unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}</span>}
+          </button>
           <button className="primary-action" type="button" onClick={openCreateForm}>
             Add Project
           </button>
@@ -2806,6 +2969,36 @@ export default function App() {
                       <p className="todo-text-display" dir={getTextDirection(todo.text)}>{todo.text}</p>
                     )}
                     <span className="todo-category-badge">{todo.category || "General"}</span>
+                    {todo.dueAt ? (
+                      <button
+                        className={[
+                          "todo-due-badge",
+                          !todo.done && Date.parse(todo.dueAt) < Date.now() ? "todo-due-overdue" : "",
+                        ].filter(Boolean).join(" ")}
+                        type="button"
+                        aria-label={`Due ${formatDueLabel(todo.dueAt)} — edit`}
+                        title="Edit due date & time"
+                        onClick={() => openTodoDue(todo)}
+                      >
+                        {formatDueLabel(todo.dueAt)}
+                      </button>
+                    ) : null}
+                    <button
+                      className={[
+                        "icon-action",
+                        "todo-due-action",
+                        todo.dueAt ? "todo-due-active" : "",
+                      ].filter(Boolean).join(" ")}
+                      type="button"
+                      aria-label={`Set due date for to-do item ${index + 1}`}
+                      title="Set due date & time"
+                      onClick={() => openTodoDue(todo)}
+                    >
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9" />
+                        <path d="M12 7v5l3 2" />
+                      </svg>
+                    </button>
                     {todoEditId === todo.id ? (
                       <button className="icon-action todo-save-action" type="button" aria-label={`Save to-do item ${index + 1}`} onClick={saveEditingTodo}>
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -3403,6 +3596,96 @@ export default function App() {
                     <span>{client.name}</span>
                     <button className="danger-action" type="button" onClick={() => handleDeleteClient(client.id)}>
                       Delete
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {todoDueId && (
+        <div className="modal-backdrop" onClick={closeTodoDue}>
+          <section className="modal todo-due-modal" onClick={(event) => event.stopPropagation()} aria-label="Set due date and time">
+            <div className="modal-header">
+              <div>
+                <p className="card-kicker">To-Do Reminder</p>
+                <h2>Due date &amp; time</h2>
+              </div>
+              <button className="icon-action" type="button" aria-label="Close reminder settings" onClick={closeTodoDue}>
+                X
+              </button>
+            </div>
+            <p className="todo-due-task" dir={getTextDirection(todoDueText)}>{todoDueText}</p>
+            <label className="todo-due-field">
+              <span>Remind me at</span>
+              <input
+                type="datetime-local"
+                value={todoDueDraft}
+                onChange={(event) => setTodoDueDraft(event.target.value)}
+              />
+            </label>
+            <div className="todo-due-presets">
+              <button className="secondary-action" type="button" onClick={() => applyDuePreset("hour")}>+1 hour</button>
+              <button className="secondary-action" type="button" onClick={() => applyDuePreset("tonight")}>Tonight 21:00</button>
+              <button className="secondary-action" type="button" onClick={() => applyDuePreset("tomorrow")}>Tomorrow 09:00</button>
+            </div>
+            <div className="modal-actions">
+              <button className="danger-action" type="button" onClick={removeTodoDue}>
+                Remove
+              </button>
+              <span className="modal-actions-spacer" />
+              <button className="secondary-action" type="button" onClick={closeTodoDue}>
+                Cancel
+              </button>
+              <button className="primary-action" type="button" onClick={saveTodoDue} disabled={!todoDueDraft}>
+                Save
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+
+      {notificationsOpen && (
+        <div className="modal-backdrop" onClick={() => setNotificationsOpen(false)}>
+          <section className="modal notifications-modal" onClick={(event) => event.stopPropagation()} aria-label="Notifications">
+            <div className="modal-header">
+              <div>
+                <p className="card-kicker">Activity</p>
+                <h2>Notifications</h2>
+              </div>
+              <button className="icon-action" type="button" aria-label="Close notifications" onClick={() => setNotificationsOpen(false)}>
+                X
+              </button>
+            </div>
+            <div className="notifications-toolbar">
+              <button className="secondary-action" type="button" onClick={markAllNotificationsRead} disabled={unreadNotificationCount === 0}>
+                Mark all read
+              </button>
+              <button className="danger-action" type="button" onClick={clearAllNotifications} disabled={notifications.length === 0}>
+                Clear all
+              </button>
+            </div>
+            <div className="notifications-list">
+              {notifications.length === 0 ? (
+                <p className="muted">No notifications yet. Reminders you set on to-do items will appear here.</p>
+              ) : (
+                notifications.map((notification) => (
+                  <div className={notification.read ? "notification-row" : "notification-row notification-unread"} key={notification.id}>
+                    <span className={notification.read ? "notification-dot notification-dot-read" : "notification-dot"} aria-hidden="true" />
+                    <div className="notification-main">
+                      <p className="notification-title" dir={getTextDirection(notification.text)}>{notification.text}</p>
+                      <p className="notification-meta">
+                        Due {formatDueLabel(notification.dueAt)} · Sent {formatDueLabel(notification.sentAt)} · {notification.category || "General"}
+                      </p>
+                    </div>
+                    <button className="icon-action danger-action notification-delete-action" type="button" aria-label="Delete notification" onClick={() => deleteNotificationById(notification.id)}>
+                      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M3 6h18" />
+                        <path d="M8 6V4h8v2" />
+                        <path d="M19 6l-1 14H6L5 6" />
+                      </svg>
                     </button>
                   </div>
                 ))

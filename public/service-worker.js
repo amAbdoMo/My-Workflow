@@ -26,6 +26,37 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+// ---------- deadline reminders (Web Push) ----------
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {}
+  event.waitUntil(
+    self.registration.showNotification(payload.title || "WorkflowY", {
+      body: payload.body || "A to-do item is due.",
+      icon: "/workflowy-icon-192.png",
+      badge: "/workflowy-icon-192.png",
+      tag: payload.tag,
+      data: { url: "/" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  event.waitUntil(
+    (async () => {
+      const clientList = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of clientList) {
+        if ("focus" in client) return client.focus();
+      }
+      return self.clients.openWindow((event.notification.data && event.notification.data.url) || "/");
+    })()
+  );
+});
+
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET") return;

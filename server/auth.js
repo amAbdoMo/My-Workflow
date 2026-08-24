@@ -190,6 +190,7 @@ module.exports = {
   clearSessionCookie,
   requireAuth,
   verifyRequest,
+  verifyToken,
   issueToken,
   isRateLimited,
   recordFailedLogin,
