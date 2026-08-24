@@ -99,6 +99,33 @@ function clearNotifications() {
   saveNotifications([]);
 }
 
+// Temporary helper for trying the reminder pipeline end to end: records a
+// test notification, pushes it to subscribed devices, and returns it so the
+// caller can broadcast it over SSE.
+function sendTestNotification(broadcast) {
+  const notification = {
+    id: `ntf-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
+    todoId: "",
+    text: "Test reminder — this is how a due-task alert looks.",
+    category: "General",
+    dueAt: new Date().toISOString(),
+    sentAt: new Date().toISOString(),
+    read: false,
+    test: true,
+  };
+  addNotification(notification);
+  sendPush({
+    title: "WorkflowY — task due",
+    body: notification.text,
+    tag: notification.id,
+    notification,
+  });
+  try {
+    broadcast?.("notification", notification);
+  } catch {}
+  return notification;
+}
+
 // ---------- push subscriptions ----------
 
 function listSubs() {
@@ -215,6 +242,7 @@ module.exports = {
   markAllRead,
   deleteNotification,
   clearNotifications,
+  sendTestNotification,
   addSub,
   removeSub,
   startScheduler,

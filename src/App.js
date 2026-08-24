@@ -1434,7 +1434,7 @@ export default function App() {
   }
 
   function openTodoDue(todo) {
-    const initial = todo.dueAt ? new Date(todo.dueAt) : new Date(Date.now() + 60 * 60 * 1000);
+    const initial = todo.dueAt ? new Date(todo.dueAt) : new Date();
     setTodoDueId(todo.id);
     setTodoDueText(todo.text);
     setTodoDueDraft(toLocalInputValue(initial));
@@ -1446,7 +1446,7 @@ export default function App() {
   const NEW_TODO_DUE_ID = "__new__";
 
   function openNewTodoDue() {
-    const initial = newTodoDueAt ? new Date(newTodoDueAt) : new Date(Date.now() + 60 * 60 * 1000);
+    const initial = newTodoDueAt ? new Date(newTodoDueAt) : new Date();
     setTodoDueId(NEW_TODO_DUE_ID);
     setTodoDueText(todoDraft.trim() || "New to-do item");
     setTodoDueDraft(toLocalInputValue(initial));
@@ -1529,7 +1529,7 @@ export default function App() {
   })();
 
   function setDueParts(parts) {
-    const base = dueSelected || new Date(Date.now() + 60 * 60 * 1000);
+    const base = dueSelected || new Date();
     const next = new Date(
       parts.year ?? base.getFullYear(),
       parts.month ?? base.getMonth(),
@@ -1580,6 +1580,23 @@ export default function App() {
   async function clearAllNotifications() {
     setNotifications([]);
     await apiFetch("/api/notifications", { method: "DELETE" }).catch(() => {});
+  }
+
+  // Temporary helper for trying the reminder pipeline end to end: asks the
+  // server to record a test notification, then shows it locally right away.
+  async function sendTestNotification() {
+    if (!isElectron() && typeof Notification !== "undefined" && Notification.permission === "default") {
+      try {
+        await Notification.requestPermission();
+      } catch {}
+    }
+    try {
+      const data = await apiFetch("/api/notifications/test", { method: "POST" });
+      const notification = data?.notification;
+      if (!notification?.id) return;
+      setNotifications((current) => (current.some((item) => item.id === notification.id) ? current : [notification, ...current]));
+      showSystemNotification(notification);
+    } catch {}
   }
 
   function reorderTodoItem(todoId, targetTodoId) {
@@ -2887,7 +2904,7 @@ export default function App() {
                   className={["icon-action", "todo-new-due-action", newTodoDueAt ? "todo-due-active" : ""].filter(Boolean).join(" ")}
                   type="button"
                   aria-label="Set a reminder for the new to-do item"
-                  title="Set due date & time for the new item"
+                  title={newTodoDueAt ? `Reminder set for ${formatDueLabel(newTodoDueAt)} — edit` : "Set due date & time for the new item"}
                   onClick={openNewTodoDue}
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -2895,11 +2912,6 @@ export default function App() {
                     <path d="M12 7v5l3 2" />
                   </svg>
                 </button>
-                {newTodoDueAt ? (
-                  <button className="todo-due-badge" type="button" title="Edit due date & time" onClick={openNewTodoDue}>
-                    {formatDueLabel(newTodoDueAt)}
-                  </button>
-                ) : null}
                 <button className="primary-action" type="submit">
                   Add Item
                 </button>
@@ -3075,29 +3087,16 @@ export default function App() {
                       <p className="todo-text-display" dir={getTextDirection(todo.text)}>{todo.text}</p>
                     )}
                     <span className="todo-category-badge">{todo.category || "General"}</span>
-                    {todo.dueAt ? (
-                      <button
-                        className={[
-                          "todo-due-badge",
-                          !todo.done && Date.parse(todo.dueAt) < Date.now() ? "todo-due-overdue" : "",
-                        ].filter(Boolean).join(" ")}
-                        type="button"
-                        aria-label={`Due ${formatDueLabel(todo.dueAt)} — edit`}
-                        title="Edit due date & time"
-                        onClick={() => openTodoDue(todo)}
-                      >
-                        {formatDueLabel(todo.dueAt)}
-                      </button>
-                    ) : null}
                     <button
                       className={[
                         "icon-action",
                         "todo-due-action",
                         todo.dueAt ? "todo-due-active" : "",
+                        todo.dueAt && !todo.done && Date.parse(todo.dueAt) < Date.now() ? "todo-due-overdue" : "",
                       ].filter(Boolean).join(" ")}
                       type="button"
                       aria-label={`Set due date for to-do item ${index + 1}`}
-                      title="Set due date & time"
+                      title={todo.dueAt ? `Due ${formatDueLabel(todo.dueAt)} — edit` : "Set due date & time"}
                       onClick={() => openTodoDue(todo)}
                     >
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -3899,7 +3898,10 @@ export default function App() {
             </div>
             <div className="notifications-toolbar">
               <button className="secondary-action" type="button" onClick={markAllNotificationsRead} disabled={unreadNotificationCount === 0}>
-                Mark all read
+                Mark read
+              </button>
+              <button className="secondary-action" type="button" onClick={sendTestNotification} title="Temporary: fires a test reminder through the real pipeline">
+                Test alert
               </button>
               <button className="danger-action" type="button" onClick={clearAllNotifications} disabled={notifications.length === 0}>
                 Clear all

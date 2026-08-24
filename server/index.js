@@ -185,6 +185,19 @@ app.post("/api/notifications/read", (req, res) => {
   res.json({ ok: true });
 });
 
+// Temporary: fires a test reminder through the real pipeline (record + push + SSE).
+app.post("/api/notifications/test", (req, res) => {
+  if (!auth.requireAuth(req, res)) return;
+  const notification = reminders.sendTestNotification((name, payload) => {
+    for (const client of sseClients) {
+      try {
+        client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
+      } catch {}
+    }
+  });
+  res.json({ ok: true, notification });
+});
+
 app.delete("/api/notifications/:id", (req, res) => {
   if (!auth.requireAuth(req, res)) return;
   reminders.deleteNotification(String(req.params.id));
