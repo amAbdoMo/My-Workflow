@@ -3187,6 +3187,11 @@ html[data-web="1"] * {
     width: 44px;
   }
 
+  /* Mobile keeps the bell after the menu trigger, before Add Project. */
+  .topbar-bell-action {
+    order: 0;
+  }
+
   .topbar-menu {
     display: none;
     position: absolute;
@@ -3401,6 +3406,22 @@ select:focus,
 textarea:focus {
   outline: none;
   box-shadow: none;
+}
+
+/* Tab keys must not paint a ring or highlight on the section tabs. */
+.tab-button:focus-visible,
+.category-pill:focus-visible {
+  outline: none;
+  border-color: var(--line);
+  background: var(--panel-soft);
+  transform: none;
+}
+
+.tab-button-active:focus-visible,
+.category-pill-active:focus-visible {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: transparent;
 }
 
 button:focus-visible {
@@ -4189,6 +4210,9 @@ html[data-web="1"] .app-scroll {
 .topbar-bell-action {
   position: relative;
   color: var(--muted);
+  /* Desktop: sit before the settings gear (the topbar menu is display:contents
+     there, so flex order reaches into it). Mobile resets this below. */
+  order: -1;
 }
 
 .topbar-bell-action:hover {
