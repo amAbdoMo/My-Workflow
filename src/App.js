@@ -1631,7 +1631,12 @@ export default function App() {
   }
 
   function handleDeleteTodoCategory() {
-    if (todoFilter === "all" || todoFilter === "General") return;
+    if (todoFilter === "all" || todoFilter === "General") {
+      // No specific category selected: clear the checked items instead so the
+      // trash always has a working action.
+      setTodoItems((current) => current.filter((todo) => !todo.done));
+      return;
+    }
 
     const deletedCategory = todoFilter;
     setTodoItems((current) => current.filter((todo) => (todo.category || "General") !== deletedCategory));
@@ -3011,10 +3016,10 @@ export default function App() {
                 <button
                   className="icon-action danger-action todo-delete-category-action"
                   type="button"
-                  aria-label="Delete selected category and its items"
+                  aria-label={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete selected category and its items"}
                   onClick={handleDeleteTodoCategory}
-                  disabled={todoFilter === "all" || todoFilter === "General"}
-                  title="Delete this category and its items"
+                  disabled={todoFilter === "all" || todoFilter === "General" ? totalCompletedTodoCount === 0 : false}
+                  title={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete this category and its items"}
                 >
                   <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M3 6h18" />
