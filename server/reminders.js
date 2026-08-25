@@ -167,7 +167,7 @@ function sendPush(payload) {
 
 // ---------- due-item scan ----------
 
-const REPEAT_STEPS = new Set(["daily", "weekly", "monthly"]);
+const REPEAT_STEPS = new Set(["30min", "daily", "weekly", "monthly"]);
 
 function parseTodos() {
   const raw = store.getAll()[TODOS_KEY]?.value;
@@ -182,8 +182,9 @@ function parseTodos() {
 function advanceRepeat(iso, repeat, now) {
   const next = new Date(iso);
   let guard = 0;
-  while (next.getTime() <= now && guard < 1000) {
-    if (repeat === "daily") next.setDate(next.getDate() + 1);
+  while (next.getTime() <= now && guard < 10000) {
+    if (repeat === "30min") next.setMinutes(next.getMinutes() + 30);
+    else if (repeat === "daily") next.setDate(next.getDate() + 1);
     else if (repeat === "weekly") next.setDate(next.getDate() + 7);
     else next.setMonth(next.getMonth() + 1);
     guard += 1;

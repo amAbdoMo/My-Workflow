@@ -26,6 +26,7 @@ const SNIPPET_CONTENT_REPAIR_KEY = "wizard-schedule-snippets-content-repaired-v2
 const THEME_KEY = "wizard-schedules-theme";
 const LEGACY_THEME_KEY = "deadline-os-theme";
 const NOTIF_PROMPT_DISMISSED_KEY = "wizard-schedules-notif-prompt-dismissed";
+const ACTIVE_TAB_KEY = "wizard-schedules-active-tab";
 const UNPAID_CURRENCY_KEY = "wizard-schedules-unpaid-currency";
 const MONEY_VISIBILITY_KEY = "wizard-schedules-money-visible";
 const USD_EGP_RATE_KEY = "wizard-schedules-usd-egp-rate";
@@ -168,6 +169,7 @@ function createTodoItem(text, category, dueAt = "", repeat = "") {
 
 const REPEAT_OPTIONS = [
   { value: "", label: "No repeat" },
+  { value: "30min", label: "Repeats every 30 minutes" },
   { value: "daily", label: "Repeats daily" },
   { value: "weekly", label: "Repeats weekly" },
   { value: "monthly", label: "Repeats monthly" },
@@ -753,7 +755,13 @@ export default function App() {
     initialProjectDraftRef.current = loadProjectFormDraft();
   }
   const initialProjectDraft = initialProjectDraftRef.current;
-  const [activeTab, setActiveTab] = useState("schedule");
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      return localStorage.getItem(ACTIVE_TAB_KEY) || "schedule";
+    } catch {
+      return "schedule";
+    }
+  });
   const [sites, setSites] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY)) || [];
@@ -881,6 +889,13 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem(TODO_ITEMS_KEY, JSON.stringify(normalizeTodoItems(todoItems)));
   }, [todoItems]);
+
+  // Reopening/refreshing the app lands back on the section you left.
+  useEffect(() => {
+    try {
+      localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+    } catch {}
+  }, [activeTab]);
 
   // ----- deadline notifications (server is the source of truth) -----
   useEffect(() => {
