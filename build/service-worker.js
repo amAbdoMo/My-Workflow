@@ -2,7 +2,7 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v4";
+const CACHE = "workflowy-shell-v5";
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",

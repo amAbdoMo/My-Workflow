@@ -162,9 +162,16 @@ function createBlankNote() {
   return { id: `note-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text: "", done: false };
 }
 
-function createTodoItem(text, category, dueAt = "") {
-  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString(), dueAt: dueAt || "" };
+function createTodoItem(text, category, dueAt = "", repeat = "") {
+  return { id: `todo-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, text, category, done: false, createdAt: new Date().toISOString(), dueAt: dueAt || "", repeat: repeat || "" };
 }
+
+const REPEAT_OPTIONS = [
+  { value: "", label: "No repeat" },
+  { value: "daily", label: "Repeats daily" },
+  { value: "weekly", label: "Repeats weekly" },
+  { value: "monthly", label: "Repeats monthly" },
+];
 
 function toLocalInputValue(date) {
   const value = date instanceof Date ? date : new Date(date);
@@ -262,6 +269,7 @@ function normalizeTodoItems(items) {
       done: Boolean(todo?.done),
       createdAt: todo?.createdAt || "",
       dueAt: String(todo?.dueAt || ""),
+      repeat: String(todo?.repeat || ""),
     }))
     .filter((todo) => todo.text.trim());
 }
@@ -775,7 +783,9 @@ export default function App() {
   const [todoDueId, setTodoDueId] = useState(null);
   const [todoDueText, setTodoDueText] = useState("");
   const [todoDueDraft, setTodoDueDraft] = useState("");
+  const [dueRepeat, setDueRepeat] = useState("");
   const [newTodoDueAt, setNewTodoDueAt] = useState("");
+  const [newTodoRepeat, setNewTodoRepeat] = useState("");
   const [dueViewMonth, setDueViewMonth] = useState(() => new Date());
   const [dueTimeMenu, setDueTimeMenu] = useState(null);
   const [notifications, setNotifications] = useState([]);
@@ -1419,9 +1429,10 @@ export default function App() {
     const text = todoDraft.trim();
     const category = activeTodoCategory || "General";
     if (!text) return;
-    setTodoItems((current) => [...current, createTodoItem(text, category, newTodoDueAt)]);
+    setTodoItems((current) => [...current, createTodoItem(text, category, newTodoDueAt, newTodoRepeat)]);
     setTodoDraft("");
     setNewTodoDueAt("");
+    setNewTodoRepeat("");
     if (todoCategory === "__new__") {
       setTodoCategory(category);
       setTodoNewCategory("");
@@ -1463,6 +1474,7 @@ export default function App() {
     setTodoDueId(todo.id);
     setTodoDueText(todo.text);
     setTodoDueDraft(toLocalInputValue(initial));
+    setDueRepeat(todo.repeat || "");
     setDueViewMonth(new Date(initial.getFullYear(), initial.getMonth(), 1));
     setDueTimeMenu(null);
   }
@@ -1475,6 +1487,7 @@ export default function App() {
     setTodoDueId(NEW_TODO_DUE_ID);
     setTodoDueText(todoDraft.trim() || "New to-do item");
     setTodoDueDraft(toLocalInputValue(initial));
+    setDueRepeat(newTodoRepeat);
     setDueViewMonth(new Date(initial.getFullYear(), initial.getMonth(), 1));
     setDueTimeMenu(null);
   }
@@ -1492,8 +1505,9 @@ export default function App() {
     if (Number.isNaN(due.getTime())) return;
     if (todoDueId === NEW_TODO_DUE_ID) {
       setNewTodoDueAt(due.toISOString());
+      setNewTodoRepeat(dueRepeat);
     } else {
-      handleTodoChange(todoDueId, { dueAt: due.toISOString() });
+      handleTodoChange(todoDueId, { dueAt: due.toISOString(), repeat: dueRepeat });
     }
     // Natural moment to ask for notification permission (first deadline only).
     if (!isElectron() && typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -1505,8 +1519,9 @@ export default function App() {
   function removeTodoDue() {
     if (todoDueId === NEW_TODO_DUE_ID) {
       setNewTodoDueAt("");
+      setNewTodoRepeat("");
     } else if (todoDueId) {
-      handleTodoChange(todoDueId, { dueAt: "" });
+      handleTodoChange(todoDueId, { dueAt: "", repeat: "" });
     }
     closeTodoDue();
   }
@@ -3144,7 +3159,9 @@ export default function App() {
                       ].filter(Boolean).join(" ")}
                       type="button"
                       aria-label={`Set due date for to-do item ${index + 1}`}
-                      title={todo.dueAt ? `Due ${formatDueLabel(todo.dueAt)} — edit` : "Set due date & time"}
+                      title={todo.dueAt
+                        ? `Due ${formatDueLabel(todo.dueAt)}${todo.repeat ? ` · repeats ${REPEAT_OPTIONS.find((option) => option.value === todo.repeat)?.label?.replace("Repeats ", "").toLowerCase() || todo.repeat}` : ""} — edit`
+                        : "Set due date & time"}
                       onClick={() => openTodoDue(todo)}
                     >
                       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -3902,16 +3919,50 @@ export default function App() {
                             aria-selected={ampm === dueAmPm}
                             onClick={() => selectDueAmPm(ampm)}
                           >
-                            <span>{ampm}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="todo-due-presets">
+                           <span>{ampm}</span>
+                           </button>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                 </div>
+                 <div className="client-select due-time-select due-repeat-select">
+                   <button
+                     className="secondary-action due-time-trigger"
+                     type="button"
+                     aria-label="Repeat"
+                     aria-expanded={dueTimeMenu === "repeat"}
+                     onClick={(event) => {
+                       event.stopPropagation();
+                       setDueTimeMenu(dueTimeMenu === "repeat" ? null : "repeat");
+                     }}
+                   >
+                     <span>{REPEAT_OPTIONS.find((option) => option.value === dueRepeat)?.label || "No repeat"}</span>
+                     <b aria-hidden="true">v</b>
+                   </button>
+                   {dueTimeMenu === "repeat" && (
+                     <div className="client-select-menu due-time-menu" role="listbox">
+                       {REPEAT_OPTIONS.map((option) => (
+                         <button
+                           className={dueRepeat === option.value ? "client-option client-option-active" : "client-option"}
+                           key={option.value || "off"}
+                           type="button"
+                           role="option"
+                           aria-selected={dueRepeat === option.value}
+                           onClick={() => {
+                             setDueRepeat(option.value);
+                             setDueTimeMenu(null);
+                           }}
+                         >
+                           <span>{option.label}</span>
+                         </button>
+                       ))}
+                     </div>
+                   )}
+                 </div>
+               </div>
+             </div>
+             <div className="todo-due-presets">
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("hour")}>+1 hour</button>
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("tonight")}>Tonight 21:00</button>
               <button className="secondary-action" type="button" onClick={() => applyDuePreset("tomorrow")}>Tomorrow 09:00</button>

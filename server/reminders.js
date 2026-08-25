@@ -167,6 +167,8 @@ function sendPush(payload) {
 
 // ---------- due-item scan ----------
 
+const REPEAT_STEPS = new Set(["daily", "weekly", "monthly"]);
+
 function parseTodos() {
   const raw = store.getAll()[TODOS_KEY]?.value;
   let todos = [];
@@ -176,7 +178,21 @@ function parseTodos() {
   return Array.isArray(todos) ? todos : [];
 }
 
-// Returns the notifications created during this scan (possibly empty).
+// Pushes a repeating deadline forward until it lands in the future.
+function advanceRepeat(iso, repeat, now) {
+  const next = new Date(iso);
+  let guard = 0;
+  while (next.getTime() <= now && guard < 1000) {
+    if (repeat === "daily") next.setDate(next.getDate() + 1);
+    else if (repeat === "weekly") next.setDate(next.getDate() + 7);
+    else next.setMonth(next.getMonth() + 1);
+    guard += 1;
+  }
+  return next;
+}
+
+// Returns { fresh, rescheduled } — rescheduled is true when at least one
+// repeating todo had its dueAt moved forward in the synced store.
 function collectDue() {
   const now = Date.now();
   const todos = parseTodos();
@@ -184,6 +200,7 @@ function collectDue() {
   const recorded = listNotifications();
   const sentNext = {};
   const fresh = [];
+  let todosChanged = false;
 
   for (const todo of todos) {
     if (!todo || todo.done || !todo.dueAt || !todo.text) continue;
@@ -213,22 +230,40 @@ function collectDue() {
     sentNext[todo.id] = { dueAt: todo.dueAt, sentAt: notification.sentAt };
     addNotification(notification);
     fresh.push(notification);
+
+    // Repeating task: roll the deadline forward in the synced store so it
+    // fires again at its next occurrence instead of going stale.
+    if (REPEAT_STEPS.has(todo.repeat)) {
+      const next = advanceRepeat(todo.dueAt, todo.repeat, now);
+      if (next.getTime() > dueMs) {
+        todo.dueAt = next.toISOString();
+        todosChanged = true;
+      }
+    }
   }
 
+  if (todosChanged) {
+    try {
+      store.mergeEntries([{ key: TODOS_KEY, value: JSON.stringify(todos), updatedAt: Date.now() }]);
+    } catch (error) {
+      console.error("[reminders] failed to reschedule repeating todo:", error.message);
+      todosChanged = false;
+    }
+  }
   if (JSON.stringify(sent) !== JSON.stringify(sentNext)) writeJson(SENT_FILE, sentNext);
-  return fresh;
+  return { fresh, rescheduled: todosChanged };
 }
 
 function startScheduler(broadcast) {
   const scan = () => {
-    let fresh = [];
+    let result = { fresh: [], rescheduled: false };
     try {
-      fresh = collectDue();
+      result = collectDue();
     } catch (error) {
       console.error("[reminders] scan failed:", error.message);
       return;
     }
-    for (const notification of fresh) {
+    for (const notification of result.fresh) {
       sendPush({
         title: "WorkflowY — task due",
         body: notification.text,
@@ -237,6 +272,12 @@ function startScheduler(broadcast) {
       });
       try {
         broadcast("notification", notification);
+      } catch {}
+    }
+    // Nudge open devices to pull the rolled-forward repeating deadlines.
+    if (result.rescheduled) {
+      try {
+        broadcast("data-changed", {});
       } catch {}
     }
   };
