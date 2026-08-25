@@ -2,7 +2,8 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v6";
+const CACHE = "workflowy-shell-v7";
+const BADGE = "/workflowy-badge-v2.png?v=2"; // white glyph versioned so old caches never stick
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -11,6 +12,7 @@ const NETWORK_FIRST_ASSETS = new Set([
   "/workflowy-maskable-192.png",
   "/workflowy-maskable-512.png",
   "/workflowy-notif-icon.png",
+  "/workflowy-badge-v2.png",
 ]);
 
 self.addEventListener("install", () => {
@@ -30,20 +32,39 @@ self.addEventListener("activate", (event) => {
 // ---------- deadline reminders (Web Push) ----------
 
 self.addEventListener("push", (event) => {
-  let payload = {};
+  // Parse defensively: a malformed payload must never stop the notification
+  // from showing (an empty waitUntil here is what makes pushes vanish while
+  // the phone is locked).
+  let title = "WorkflowY";
+  let options = {
+    body: "A to-do item is due.",
+    icon: "/workflowy-icon-192.png",
+    // Android's status bar needs a white-on-transparent glyph; a full-color
+    // icon renders as a plain white square there.
+    badge: BADGE,
+    data: { url: "/" },
+  };
   try {
-    payload = event.data ? event.data.json() : {};
+    if (event.data) {
+      let payload = null;
+      try {
+        payload = event.data.json();
+      } catch {
+        const text = event.data.text();
+        if (text) options.body = text;
+      }
+      if (payload && typeof payload === "object") {
+        title = String(payload.title || title);
+        if (payload.body) options.body = String(payload.body);
+        if (payload.tag) {
+          options.tag = String(payload.tag);
+          options.renotify = true; // repeat alerts replace the previous one audibly
+        }
+      }
+    }
   } catch {}
   event.waitUntil(
-    self.registration.showNotification(payload.title || "WorkflowY", {
-      body: payload.body || "A to-do item is due.",
-      icon: "/workflowy-icon-192.png",
-      // Android's status bar needs a white-on-transparent glyph; a full-color
-      // icon renders as a plain white square there.
-      badge: "/workflowy-notif-icon.png",
-      tag: payload.tag,
-      data: { url: "/" },
-    })
+    self.registration.showNotification(title, options).catch(() => {})
   );
 });
 

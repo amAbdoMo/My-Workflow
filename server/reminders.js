@@ -102,7 +102,7 @@ function clearNotifications() {
 // Temporary helper for trying the reminder pipeline end to end: records a
 // test notification, pushes it to subscribed devices, and returns it so the
 // caller can broadcast it over SSE.
-function sendTestNotification(broadcast) {
+async function sendTestNotification(broadcast) {
   const notification = {
     id: `ntf-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
     todoId: "",
@@ -114,7 +114,7 @@ function sendTestNotification(broadcast) {
     test: true,
   };
   addNotification(notification);
-  sendPush({
+  await sendPush({
     title: "WorkflowY — task due",
     body: notification.text,
     tag: notification.id,
@@ -145,24 +145,43 @@ function removeSub(endpoint) {
   writeJson(SUBS_FILE, listSubs().filter((s) => s.endpoint !== endpoint));
 }
 
-function sendPush(payload) {
+// Push options tuned for delivery while the phone is LOCKED:
+// - high urgency: FCM/GCM deliver low-urgency pushes only during maintenance
+//   windows, sometimes hours later or never on dozed devices.
+// - TTL 12h: default TTL is days; a stale "task due" alert is worthless.
+const PUSH_OPTIONS = { TTL: 43200, headers: { Urgency: "high" } };
+
+async function sendPush(payload) {
   const push = getWebPush();
   if (!push) return;
   const body = JSON.stringify(payload);
-  for (const sub of listSubs()) {
-    push
-      .sendNotification(sub, body, { TTL: 3600 })
-      .catch((error) => {
-        // 404/410: the subscription expired on this device — drop it.
-        if (error?.statusCode === 404 || error?.statusCode === 410) {
-          try {
-            removeSub(sub.endpoint);
-          } catch {}
-        } else {
-          console.error("[reminders] push failed:", error.message);
+  await Promise.all(
+    listSubs().map(async (sub) => {
+      // One quick retry covers transient radio/gateway hiccups (429/5xx),
+      // which otherwise silently swallow the reminder on locked phones.
+      for (let attempt = 1; attempt <= 2; attempt += 1) {
+        try {
+          await push.sendNotification(sub, body, PUSH_OPTIONS);
+          return;
+        } catch (error) {
+          const status = error?.statusCode;
+          // 404/410: the subscription expired on this device — drop it.
+          if (status === 404 || status === 410) {
+            try {
+              removeSub(sub.endpoint);
+            } catch {}
+            return;
+          }
+          const retryable = attempt === 1 && (status == null || status === 429 || status >= 500);
+          if (!retryable) {
+            console.error("[reminders] push failed:", error?.message || error);
+            return;
+          }
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
-      });
-  }
+      }
+    })
+  );
 }
 
 // ---------- due-item scan ----------
@@ -256,7 +275,7 @@ function collectDue() {
 }
 
 function startScheduler(broadcast) {
-  const scan = () => {
+  const scan = async () => {
     let result = { fresh: [], rescheduled: false };
     try {
       result = collectDue();
@@ -264,8 +283,10 @@ function startScheduler(broadcast) {
       console.error("[reminders] scan failed:", error.message);
       return;
     }
+    // Await delivery so a push that is still mid-flight when the process gets
+    // recycled still resolves instead of being cut off.
     for (const notification of result.fresh) {
-      sendPush({
+      await sendPush({
         title: "WorkflowY — task due",
         body: notification.text,
         tag: notification.id,

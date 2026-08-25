@@ -203,7 +203,7 @@ function showSystemNotification(notification) {
       body: notification.text,
       tag: notification.id,
       icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
-      badge: `${process.env.PUBLIC_URL || "."}/workflowy-notif-icon.png`,
+      badge: `${process.env.PUBLIC_URL || "."}/workflowy-badge-v2.png?v=2`,
     });
     note.onclick = () => window.focus();
   } catch {}
@@ -961,10 +961,15 @@ export default function App() {
       if (!cancelled) subscribeToPush();
     }
     run();
+    // Re-arm on both focus and tab visibility: phones often resume straight
+    // into a visible-but-unfocused PWA, and a subscription that expired while
+    // the phone was locked only gets renewed when this runs again.
     window.addEventListener("focus", run);
+    document.addEventListener("visibilitychange", run);
     return () => {
       cancelled = true;
       window.removeEventListener("focus", run);
+      document.removeEventListener("visibilitychange", run);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

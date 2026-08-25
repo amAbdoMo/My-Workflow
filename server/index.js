@@ -186,16 +186,21 @@ app.post("/api/notifications/read", (req, res) => {
 });
 
 // Temporary: fires a test reminder through the real pipeline (record + push + SSE).
-app.post("/api/notifications/test", (req, res) => {
+app.post("/api/notifications/test", async (req, res) => {
   if (!auth.requireAuth(req, res)) return;
-  const notification = reminders.sendTestNotification((name, payload) => {
-    for (const client of sseClients) {
-      try {
-        client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
-      } catch {}
-    }
-  });
-  res.json({ ok: true, notification });
+  try {
+    const notification = await reminders.sendTestNotification((name, payload) => {
+      for (const client of sseClients) {
+        try {
+          client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
+        } catch {}
+      }
+    });
+    res.json({ ok: true, notification });
+  } catch (error) {
+    console.error("[server] test notification failed:", error.message);
+    res.status(500).json({ error: "Test notification failed." });
+  }
 });
 
 app.delete("/api/notifications/:id", (req, res) => {
