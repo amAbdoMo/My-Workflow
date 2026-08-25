@@ -114,7 +114,9 @@ async function sendTestNotification(broadcast) {
     test: true,
   };
   addNotification(notification);
-  await sendPush({
+  // Capture per-device delivery outcomes so the response can prove whether a
+  // missed alert stopped at the server->Google hop or on the phone itself.
+  const deliveries = await sendPush({
     title: "WorkflowY — task due",
     body: notification.text,
     tag: notification.id,
@@ -123,7 +125,7 @@ async function sendTestNotification(broadcast) {
   try {
     broadcast?.("notification", notification);
   } catch {}
-  return notification;
+  return { ...notification, deliveries };
 }
 
 // ---------- push subscriptions ----------
@@ -153,16 +155,19 @@ const PUSH_OPTIONS = { TTL: 43200, headers: { Urgency: "high" } };
 
 async function sendPush(payload) {
   const push = getWebPush();
-  if (!push) return;
+  if (!push) return [];
   const body = JSON.stringify(payload);
-  await Promise.all(
+  // Per-subscription outcomes so the test pipeline can prove where a reminder
+  // stopped: server -> FCM hop status for every registered device.
+  const deliveries = await Promise.all(
     listSubs().map(async (sub) => {
+      const short = sub.endpoint.slice(-10);
       // One quick retry covers transient radio/gateway hiccups (429/5xx),
       // which otherwise silently swallow the reminder on locked phones.
       for (let attempt = 1; attempt <= 2; attempt += 1) {
         try {
           await push.sendNotification(sub, body, PUSH_OPTIONS);
-          return;
+          return { endpoint: short, ok: true, status: 201 };
         } catch (error) {
           const status = error?.statusCode;
           // 404/410: the subscription expired on this device — drop it.
@@ -170,18 +175,19 @@ async function sendPush(payload) {
             try {
               removeSub(sub.endpoint);
             } catch {}
-            return;
+            return { endpoint: short, ok: false, status: status || 0, expired: true };
           }
           const retryable = attempt === 1 && (status == null || status === 429 || status >= 500);
           if (!retryable) {
             console.error("[reminders] push failed:", error?.message || error);
-            return;
+            return { endpoint: short, ok: false, status: status || 0 };
           }
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     })
   );
+  return deliveries;
 }
 
 // ---------- due-item scan ----------

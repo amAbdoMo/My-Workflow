@@ -1644,6 +1644,8 @@ export default function App() {
 
   // Temporary helper for trying the reminder pipeline end to end: asks the
   // server to record a test notification, then shows it locally right away.
+  // Reports the per-device server->Google push outcomes inline so a missed
+  // locked-phone alert can be told apart from a failed FCM hop.
   async function sendTestNotification() {
     if (!isElectron() && typeof Notification !== "undefined" && Notification.permission === "default") {
       try {
@@ -1656,6 +1658,13 @@ export default function App() {
       if (!notification?.id) return;
       setNotifications((current) => (current.some((item) => item.id === notification.id) ? current : [notification, ...current]));
       showSystemNotification(notification);
+      const deliveries = Array.isArray(notification?.deliveries) ? notification.deliveries : [];
+      if (deliveries.length === 0) {
+        window.alert("Test alert sent. No push devices are currently registered.");
+      } else {
+        const lines = deliveries.map((d) => `device …${d.endpoint}: ${d.ok ? "accepted by Google (will show unless the phone suppresses it)" : `FAILED at Google hop (status ${d.status}${d.expired ? ", subscription expired — reopen the app on that device to re-register" : ""})`}`);
+        window.alert(`Test alert sent.\n\n${lines.join("\n")}`);
+      }
     } catch {}
   }
 
