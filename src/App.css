@@ -4476,4 +4476,10 @@ html[data-web="1"] .app-scroll {
   .notifications-enable-row .primary-action {
     width: 100%;
   }
+
+  /* Remove lives in the presets grid now; without this the leftover spacer
+     pushes Cancel/Save off their 50/50 row. */
+  .modal-actions-spacer {
+    display: none;
+  }
 }
