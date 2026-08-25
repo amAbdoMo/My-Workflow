@@ -203,7 +203,7 @@ function showSystemNotification(notification) {
       body: notification.text,
       tag: notification.id,
       icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
-      badge: `${process.env.PUBLIC_URL || "."}/workflowy-badge-v3.png?v=2`,
+      badge: `${process.env.PUBLIC_URL || "."}/workflowy-badge-v4.png?v=2`,
     });
     note.onclick = () => window.focus();
   } catch {}
