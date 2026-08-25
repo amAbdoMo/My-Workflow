@@ -3,7 +3,7 @@
 // API requests: never cached.
 
 const CACHE = "workflowy-shell-v7";
-const BADGE = "/workflowy-badge-v2.png?v=2"; // white glyph versioned so old caches never stick
+const BADGE = "/workflowy-badge-v3.png?v=2"; // white logo-silhouette glyph, versioned so old caches never stick
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -12,7 +12,7 @@ const NETWORK_FIRST_ASSETS = new Set([
   "/workflowy-maskable-192.png",
   "/workflowy-maskable-512.png",
   "/workflowy-notif-icon.png",
-  "/workflowy-badge-v2.png",
+  "/workflowy-badge-v3.png",
 ]);
 
 self.addEventListener("install", () => {
