@@ -4482,4 +4482,44 @@ html[data-web="1"] .app-scroll {
   .modal-actions-spacer {
     display: none;
   }
+
+  /* Phone entry order: input + clock, category, Add Item, then the filter —
+     the rows unwrap so every control can be ordered in one sequence. */
+  .todo-entry {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .todo-entry-row {
+    display: contents;
+  }
+
+  .todo-entry .todo-input {
+    order: 1;
+    flex: 1 1 160px;
+  }
+
+  .todo-entry .todo-new-due-action {
+    order: 2;
+  }
+
+  .todo-entry .todo-category-select {
+    order: 3;
+    flex: 1 1 100%;
+  }
+
+  .todo-entry .todo-new-category-input {
+    order: 4;
+    flex: 1 1 100%;
+  }
+
+  .todo-entry .primary-action {
+    order: 5;
+    flex: 1 1 100%;
+  }
+
+  .todo-entry .todo-filter-inline {
+    order: 6;
+    flex: 1 1 100%;
+  }
 }

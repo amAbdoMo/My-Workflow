@@ -203,7 +203,7 @@ function showSystemNotification(notification) {
       body: notification.text,
       tag: notification.id,
       icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
-      badge: `${process.env.PUBLIC_URL || "."}/workflowy-notif-192.png`,
+      badge: `${process.env.PUBLIC_URL || "."}/workflowy-notif-icon.png`,
     });
     note.onclick = () => window.focus();
   } catch {}
@@ -4044,7 +4044,7 @@ export default function App() {
                     <div className="notification-main">
                       <p className="notification-title" dir={getTextDirection(notification.text)}>{notification.text}</p>
                       <p className="notification-meta">
-                        Due {formatDueLabel(notification.dueAt)} · Sent {formatDueLabel(notification.sentAt)} · {notification.category || "General"}
+                        Sent {formatDueLabel(notification.sentAt)} · {notification.category || "General"}
                       </p>
                     </div>
                     <button className="icon-action danger-action notification-delete-action" type="button" aria-label="Delete notification" onClick={() => deleteNotificationById(notification.id)}>

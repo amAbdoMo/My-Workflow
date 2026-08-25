@@ -2,7 +2,7 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v5";
+const CACHE = "workflowy-shell-v6";
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -10,7 +10,7 @@ const NETWORK_FIRST_ASSETS = new Set([
   "/workflowy-icon-512.png",
   "/workflowy-maskable-192.png",
   "/workflowy-maskable-512.png",
-  "/workflowy-notif-192.png",
+  "/workflowy-notif-icon.png",
 ]);
 
 self.addEventListener("install", () => {
@@ -40,7 +40,7 @@ self.addEventListener("push", (event) => {
       icon: "/workflowy-icon-192.png",
       // Android's status bar needs a white-on-transparent glyph; a full-color
       // icon renders as a plain white square there.
-      badge: "/workflowy-notif-192.png",
+      badge: "/workflowy-notif-icon.png",
       tag: payload.tag,
       data: { url: "/" },
     })
