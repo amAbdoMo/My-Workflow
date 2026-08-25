@@ -3944,13 +3944,18 @@ export default function App() {
                 X
               </button>
             </div>
-            {!isElectron() && notifPermission !== "granted" && (
+            {!isElectron() && notifPermission === "default" && (
               <div className="notifications-enable-row">
                 <span>Get reminder alerts on this device.</span>
                 <button className="primary-action" type="button" onClick={enableNotifications}>
                   Enable notifications
                 </button>
               </div>
+            )}
+            {!isElectron() && notifPermission === "denied" && (
+              <p className="notifications-blocked-note">
+                Notifications are blocked for this site — allow them in your browser settings to get reminder alerts.
+              </p>
             )}
             <div className="notifications-toolbar">
               <button className="secondary-action" type="button" onClick={markAllNotificationsRead} disabled={unreadNotificationCount === 0}>

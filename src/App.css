@@ -4314,6 +4314,15 @@ html[data-web="1"] .app-scroll {
   padding: 0 14px;
 }
 
+.notifications-blocked-note {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.84rem;
+}
+
 .topbar-bell-action:hover {
   color: var(--accent-strong);
   border-color: color-mix(in srgb, var(--accent), transparent 45%);
@@ -4452,5 +4461,19 @@ html[data-web="1"] .app-scroll {
 
   .notif-enable-banner .primary-action {
     flex: 1;
+  }
+
+  /* Enable row stacks so the text never squeezes into a sliver. */
+  .notifications-enable-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .notifications-enable-row span {
+    flex: 1 1 auto;
+  }
+
+  .notifications-enable-row .primary-action {
+    width: 100%;
   }
 }
