@@ -36,12 +36,14 @@ self.addEventListener("push", (event) => {
   // from showing (an empty waitUntil here is what makes pushes vanish while
   // the phone is locked).
   let title = "WorkflowY";
+  // No `badge` on purpose: Chrome then promotes the full-color `icon`
+  // (workflowy-icon-192.png, the logo tile) to be the notification icon, and
+  // several Android skins draw that IN COLOR in the status bar — matching
+  // apps that show their full logo there. On devices that force-white it,
+  // restoring `badge: BADGE` brings back the monochrome glyph.
   let options = {
     body: "A to-do item is due.",
     icon: "/workflowy-icon-192.png",
-    // Android's status bar needs a white-on-transparent glyph; a full-color
-    // icon renders as a plain white square there.
-    badge: BADGE,
     data: { url: "/" },
   };
   try {
