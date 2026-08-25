@@ -233,8 +233,19 @@ function collectDue() {
     const dueMs = Date.parse(todo.dueAt);
     if (!Number.isFinite(dueMs) || dueMs > now) continue;
     // Re-arm when the due time was edited after a reminder already fired.
+    // Repeating exception: a past-due match can also be a STALE CLIENT ECHO
+    // (a device saved its old copy over the server's rolled-forward deadline).
+    // Re-advance instead of going dormant so repeats self-heal.
     if (sent[todo.id]?.dueAt === todo.dueAt) {
-      sentNext[todo.id] = sent[todo.id];
+      if (REPEAT_STEPS.has(todo.repeat) && dueMs <= now) {
+        const healed = advanceRepeat(todo.dueAt, todo.repeat, now);
+        if (healed.getTime() > dueMs) {
+          todo.dueAt = healed.toISOString();
+          todosChanged = true;
+        }
+      } else {
+        sentNext[todo.id] = sent[todo.id];
+      }
       continue;
     }
     // Hard guard against repeat alerts: if a notification for this exact
@@ -281,36 +292,50 @@ function collectDue() {
 }
 
 function startScheduler(broadcast) {
+  let scanning = false;
   const scan = async () => {
-    let result = { fresh: [], rescheduled: false };
+    // Overlap guard: a slow push batch (retries sleep 1s) must never let two
+    // scans run at once — the second would re-read the un-rolled store and
+    // double-fire repeating reminders.
+    if (scanning) return;
+    scanning = true;
     try {
-      result = collectDue();
-    } catch (error) {
-      console.error("[reminders] scan failed:", error.message);
-      return;
-    }
-    // Await delivery so a push that is still mid-flight when the process gets
-    // recycled still resolves instead of being cut off.
-    for (const notification of result.fresh) {
-      await sendPush({
-        title: "WorkflowY — task due",
-        body: notification.text,
-        tag: notification.id,
-        notification,
-      });
-      try {
-        broadcast("notification", notification);
-      } catch {}
-    }
-    // Nudge open devices to pull the rolled-forward repeating deadlines.
-    if (result.rescheduled) {
-      try {
-        broadcast("data-changed", {});
-      } catch {}
+      await runScan(broadcast);
+    } finally {
+      scanning = false;
     }
   };
   setInterval(scan, 15_000).unref?.();
   setImmediate(scan);
+}
+
+async function runScan(broadcast) {
+  let result = { fresh: [], rescheduled: false };
+  try {
+    result = collectDue();
+  } catch (error) {
+    console.error("[reminders] scan failed:", error.message);
+    return;
+  }
+  // Await delivery so a push that is still mid-flight when the process gets
+  // recycled still resolves instead of being cut off.
+  for (const notification of result.fresh) {
+    await sendPush({
+      title: "WorkflowY — task due",
+      body: notification.text,
+      tag: notification.id,
+      notification,
+    });
+    try {
+      broadcast("notification", notification);
+    } catch {}
+  }
+  // Nudge open devices to pull the rolled-forward repeating deadlines.
+  if (result.rescheduled) {
+    try {
+      broadcast("data-changed", {});
+    } catch {}
+  }
 }
 
 module.exports = {
@@ -323,4 +348,6 @@ module.exports = {
   addSub,
   removeSub,
   startScheduler,
+  // Exposed for logic tests only — not used by the API surface.
+  _collectDue: collectDue,
 };
