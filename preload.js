@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("wizardStorage", {
 contextBridge.exposeInMainWorld("wizardApp", {
   backup: (data) => ipcRenderer.invoke("wizard-app:backup", data),
   restore: () => ipcRenderer.invoke("wizard-app:restore"),
+  notify: (payload) => ipcRenderer.invoke("wizard-app:notify", payload),
 });
 
 contextBridge.exposeInMainWorld("wizardImap", {

@@ -194,10 +194,16 @@ function formatDueLabel(iso) {
   return `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
 }
 
-// Fires a native OS notification: a Windows toast in Electron, a browser
-// notification on the web. Silent no-op without permission.
+// Fires a native OS notification: a Windows toast via the Electron main
+// process (reliable + lands in the Action Center), a browser notification on
+// the web. Silent no-op without permission.
 function showSystemNotification(notification) {
   try {
+    // Desktop: hand off to the main process for a real native toast.
+    if (window.wizardApp?.notify) {
+      window.wizardApp.notify({ title: "WorkflowY — task due", body: notification.text });
+      return;
+    }
     if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
     const note = new Notification("WorkflowY — task due", {
       body: notification.text,

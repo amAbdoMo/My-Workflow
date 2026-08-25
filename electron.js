@@ -6,7 +6,7 @@ if (!(process.versions && process.versions.electron)) {
   return;
 }
 
-const { app, BrowserWindow, Menu, Tray, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, Menu, Tray, ipcMain, dialog, Notification } = require("electron");
 const { ImapFlow } = require("imapflow");
 const fs = require("fs");
 const path = require("path");
@@ -841,6 +841,27 @@ if (!gotSingleInstanceLock) {
   ipcMain.handle("wizard-project-notes:read", () => readProjectNotesFile());
   ipcMain.handle("wizard-project-notes:write", (_event, notesStore) => writeProjectNotesFile(notesStore));
   ipcMain.handle("wizard-imap:test", async (_event, account) => testImapConnection(account));
+
+  // Native Windows toast from the main process — unlike the renderer's HTML5
+  // Notification (flaky for file:// Electron apps), this lands in the Action
+  // Center like every other app's alerts. Clicking focuses the window.
+  ipcMain.handle("wizard-app:notify", (_event, payload) => {
+    try {
+      if (!Notification.isSupported()) return { ok: false, reason: "unsupported" };
+      const note = new Notification({
+        title: String(payload?.title || APP_NAME),
+        body: String(payload?.body || ""),
+        icon: iconPath,
+        silent: false,
+      });
+      note.on("click", showMainWindow);
+      note.show();
+      return { ok: true };
+    } catch (error) {
+      console.error("[notify]", error.message);
+      return { ok: false, reason: error.message };
+    }
+  });
 
   ipcMain.handle("wizard-app:backup", async (_event, serializedData) => {
     const { canceled, filePath } = await dialog.showSaveDialog(mainWindow, {
