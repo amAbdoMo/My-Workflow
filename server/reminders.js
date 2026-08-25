@@ -181,6 +181,7 @@ function collectDue() {
   const now = Date.now();
   const todos = parseTodos();
   const sent = readJson(SENT_FILE, {});
+  const recorded = listNotifications();
   const sentNext = {};
   const fresh = [];
 
@@ -191,6 +192,13 @@ function collectDue() {
     // Re-arm when the due time was edited after a reminder already fired.
     if (sent[todo.id]?.dueAt === todo.dueAt) {
       sentNext[todo.id] = sent[todo.id];
+      continue;
+    }
+    // Hard guard against repeat alerts: if a notification for this exact
+    // deadline was already recorded, never fire it again (protects against
+    // sent-file hiccups spamming devices every scan).
+    if (recorded.some((n) => n.todoId === todo.id && n.dueAt === todo.dueAt)) {
+      sentNext[todo.id] = { dueAt: todo.dueAt, sentAt: sent[todo.id]?.sentAt || new Date().toISOString() };
       continue;
     }
     const notification = {

@@ -194,6 +194,7 @@ function showSystemNotification(notification) {
       body: notification.text,
       tag: notification.id,
       icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
+      badge: `${process.env.PUBLIC_URL || "."}/workflowy-notif-192.png`,
     });
     note.onclick = () => window.focus();
   } catch {}

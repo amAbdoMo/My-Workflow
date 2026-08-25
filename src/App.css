@@ -3563,6 +3563,12 @@ input[type="checkbox"]:focus-visible {
     flex: 1 1 100%;
   }
 
+  /* The desktop right-push spacer would wrap into an empty line between the
+     two full-width dropdowns — hide it. */
+  .todo-entry .todo-entry-spacer {
+    display: none;
+  }
+
   .todo-entry .todo-filter-inline {
     flex: 1 1 100%;
     flex-wrap: wrap;

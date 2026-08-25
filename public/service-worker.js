@@ -10,6 +10,7 @@ const NETWORK_FIRST_ASSETS = new Set([
   "/workflowy-icon-512.png",
   "/workflowy-maskable-192.png",
   "/workflowy-maskable-512.png",
+  "/workflowy-notif-192.png",
 ]);
 
 self.addEventListener("install", () => {
@@ -37,7 +38,9 @@ self.addEventListener("push", (event) => {
     self.registration.showNotification(payload.title || "WorkflowY", {
       body: payload.body || "A to-do item is due.",
       icon: "/workflowy-icon-192.png",
-      badge: "/workflowy-icon-192.png",
+      // Android's status bar needs a white-on-transparent glyph; a full-color
+      // icon renders as a plain white square there.
+      badge: "/workflowy-notif-192.png",
       tag: payload.tag,
       data: { url: "/" },
     })
