@@ -2,8 +2,8 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v7";
-const BADGE = "/workflowy-badge-v4.png?v=2"; // solid logo-tile glyph (knocked-out check + sparkle), versioned so old caches never stick
+const CACHE = "workflowy-shell-v8";
+const BADGE = "/workflowy-badge-v4.png?v=2"; // solid logo-tile glyph (knocked-out check + sparkle); omitting it makes Android show a generic bell
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -36,14 +36,13 @@ self.addEventListener("push", (event) => {
   // from showing (an empty waitUntil here is what makes pushes vanish while
   // the phone is locked).
   let title = "WorkflowY";
-  // No `badge` on purpose: Chrome then promotes the full-color `icon`
-  // (workflowy-icon-192.png, the logo tile) to be the notification icon, and
-  // several Android skins draw that IN COLOR in the status bar — matching
-  // apps that show their full logo there. On devices that force-white it,
-  // restoring `badge: BADGE` brings back the monochrome glyph.
+  // Monochrome badge is REQUIRED: without it Android shows a generic bell
+  // icon in the status bar (tested on Samsung A56 / Chrome — the color-logo
+  // promotion trick does not work for web push there).
   let options = {
     body: "A to-do item is due.",
     icon: "/workflowy-icon-192.png",
+    badge: BADGE,
     data: { url: "/" },
   };
   try {

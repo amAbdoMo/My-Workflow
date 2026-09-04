@@ -35,7 +35,7 @@ const CURRENCIES = {
   USD: { code: "USD", label: "USD", symbol: "$" },
   EGP: { code: "EGP", label: "EGP", symbol: "E£" },
 };
-const EMPTY_FORM_FIELDS = { name: "", url: "", clientId: "", price: "", currency: "USD", paid: false, start: "", deadlineDays: "", deadline: "" };
+const EMPTY_FORM_FIELDS = { name: "", url: "", clientId: "", price: "", currency: "USD", paid: false, payments: [], start: "", deadlineDays: "", deadline: "" };
 const EMPTY_SNIPPET = { title: "", category: "WooCommerce", content: "" };
 const EMPTY_IMAP_SHARED = { host: "", port: "993", secure: true, rejectUnauthorized: true };
 const EMPTY_IMAP_ACCOUNT = { user: "", pass: "" };
@@ -291,6 +291,7 @@ function hasProjectFormDraft(form, editId) {
     Boolean(form.price.trim()) ||
     normalizeCurrency(form.currency, form.price) !== EMPTY_FORM_FIELDS.currency ||
     form.paid ||
+    normalizePayments(form.payments).length > 0 ||
     Boolean(form.start.trim()) ||
     Boolean(form.deadlineDays.trim()) ||
     Boolean(form.deadline.trim()) ||
@@ -309,6 +310,7 @@ function loadProjectFormDraft() {
         ...EMPTY_FORM_FIELDS,
         ...draft.form,
         currency: normalizeCurrency(draft.form.currency, draft.form.price),
+        payments: normalizePayments(draft.form.payments),
         notes: getFormNotes(draft.form.notes),
       },
     };
@@ -499,6 +501,35 @@ function convertMoney(value, fromCurrency, toCurrency, usdEgpRate) {
   if (from === "USD" && to === "EGP") return value * rate;
   if (from === "EGP" && to === "USD") return value / rate;
   return value;
+}
+
+// ----- installment payments (partial client payments, EGP + USD) -----
+function normalizePayments(payments) {
+  if (!Array.isArray(payments)) return [];
+  return payments
+    .map((payment, index) => ({
+      id: payment?.id || `pay-${index}`,
+      amount: Number(payment?.amount),
+      currency: normalizeCurrency(payment?.currency),
+      label: String(payment?.label || ""),
+      date: String(payment?.date || ""),
+    }))
+    .filter((payment) => Number.isFinite(payment.amount) && payment.amount > 0);
+}
+
+function getPaymentSummary(site, usdEgpRate) {
+  const currency = normalizeCurrency(site?.currency, site?.price);
+  const priceValue = parsePrice(site?.price);
+  const payments = normalizePayments(site?.payments);
+  const paidTotal = payments.reduce(
+    (sum, payment) => sum + convertMoney(payment.amount, payment.currency, currency, usdEgpRate),
+    0
+  );
+  const remaining = Math.max(0, priceValue - paidTotal);
+  const percentPaid = priceValue > 0 ? Math.min(100, Math.max(0, (paidTotal / priceValue) * 100)) : 0;
+  const effectivePaid = Boolean(site?.paid) || (priceValue > 0 && remaining <= 0.005);
+  const status = effectivePaid ? "paid" : paidTotal > 0 ? "partial" : "unpaid";
+  return { currency, priceValue, payments, paidTotal, remaining, percentPaid, effectivePaid, status };
 }
 
 function getInitialTheme() {
@@ -847,6 +878,12 @@ export default function App() {
   const editIdRef = useRef(editId);
   const [snippetEditId, setSnippetEditId] = useState(null);
   const [selectedSnippetId, setSelectedSnippetId] = useState(null);
+  const [notesProjectId, setNotesProjectId] = useState(null);
+  const [formPayAmount, setFormPayAmount] = useState("");
+  const [formPayLabel, setFormPayLabel] = useState("");
+  const [modalPayAmount, setModalPayAmount] = useState("");
+  const [modalPayCurrency, setModalPayCurrency] = useState("USD");
+  const [modalPayLabel, setModalPayLabel] = useState("");
   const [copyState, setCopyState] = useState("");
   const [theme, setTheme] = useState(getInitialTheme);
   const [draggingNoteId, setDraggingNoteId] = useState(null);
@@ -1334,28 +1371,58 @@ export default function App() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [closePrompt]);
 
+  useEffect(() => {
+    if (!notesProjectId) return undefined;
+
+    function handleKeyDown(event) {
+      if (event.key === "Escape") setNotesProjectId(null);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [notesProjectId]);
+
+  // Reset the modal payment draft whenever a different project's notes open.
+  useEffect(() => {
+    if (!notesProjectId) return;
+    const project = sitesRef.current.find((site) => String(site.id) === String(notesProjectId));
+    setModalPayAmount("");
+    setModalPayCurrency(normalizeCurrency(project?.currency, project?.price));
+    setModalPayLabel("");
+  }, [notesProjectId]);
+
   const enrichedSites = useMemo(
     () =>
       sites
-        .map((site) => ({
-          ...site,
-          clientName: clients.find((client) => String(client.id) === String(site.clientId))?.name || "",
-          currency: normalizeCurrency(site.currency, site.price),
-          priceValue: parsePrice(site.price),
-          daysLeft: getDaysLeft(site.deadline),
-          progress: getProgress(site.start, site.deadline),
-          notesList: getSavedNotes(projectNotes[String(site.id)] || site.notes),
-        }))
+        .map((site) => {
+          const summary = getPaymentSummary(site, usdEgpRate);
+          return {
+            ...site,
+            clientName: clients.find((client) => String(client.id) === String(site.clientId))?.name || "",
+            currency: summary.currency,
+            priceValue: summary.priceValue,
+            paymentsList: summary.payments,
+            paidTotal: summary.paidTotal,
+            remainingValue: summary.remaining,
+            paymentPercent: summary.percentPaid,
+            paymentStatus: summary.status,
+            effectivePaid: summary.effectivePaid,
+            daysLeft: getDaysLeft(site.deadline),
+            progress: getProgress(site.start, site.deadline),
+            notesList: getSavedNotes(projectNotes[String(site.id)] || site.notes),
+          };
+        })
         .sort((a, b) => a.daysLeft - b.daysLeft),
-    [sites, clients, projectNotes]
+    [sites, clients, projectNotes, usdEgpRate]
   );
+  const notesProject = enrichedSites.find((site) => String(site.id) === String(notesProjectId)) || null;
 
   const scheduleSearchQuery = search.toLowerCase().trim();
   const searchMatchedSites = enrichedSites.filter((site) => {
     if (!scheduleSearchQuery) return true;
-    return `${site.name} ${site.url} ${site.clientName} ${site.price || ""} ${site.paid ? "paid" : "unpaid"} ${site.notesList
+    return `${site.name} ${site.url} ${site.clientName} ${site.price || ""} ${site.effectivePaid ? "paid" : "unpaid"} ${site.paymentStatus} ${site.notesList
       .map((note) => note.text)
-      .join(" ")}`
+      .join(" ")} ${site.paymentsList.map((payment) => payment.label).join(" ")}`
       .toLowerCase()
       .includes(scheduleSearchQuery);
   });
@@ -1374,8 +1441,8 @@ export default function App() {
 
   const urgent = enrichedSites.filter((site) => site.daysLeft >= 0 && site.daysLeft <= 4);
   const overdue = enrichedSites.filter((site) => site.daysLeft < 0);
-  const unpaidProjects = enrichedSites.filter((site) => !site.paid && site.priceValue > 0);
-  const unpaidTotal = unpaidProjects.reduce((sum, site) => sum + convertMoney(site.priceValue, site.currency, unpaidCurrency, usdEgpRate), 0);
+  const unpaidProjects = enrichedSites.filter((site) => !site.effectivePaid && site.priceValue > 0 && site.remainingValue > 0.005);
+  const unpaidTotal = unpaidProjects.reduce((sum, site) => sum + convertMoney(site.remainingValue, site.currency, unpaidCurrency, usdEgpRate), 0);
   const nextProject = enrichedSites.find((site) => site.daysLeft >= 0);
   const selectedClient = clients.find((client) => String(client.id) === String(form.clientId));
   const selectedClientFilterLabel =
@@ -1429,6 +1496,8 @@ export default function App() {
     setForm(nextForm);
     setEditId(null);
     setClientMenuOpen(false);
+    setFormPayAmount("");
+    setFormPayLabel("");
   }
 
   function openCreateForm() {
@@ -1867,8 +1936,73 @@ export default function App() {
       price: currentForm.price.trim(),
       currency: normalizeCurrency(currentForm.currency, currentForm.price),
       paid: Boolean(currentForm.paid),
+      payments: normalizePayments(currentForm.payments),
       notes: getSavedNotes(currentForm.notes),
     };
+  }
+
+  function handleAddSitePayment(siteId, draft, projectCurrency) {
+    const amount = Number(draft?.amount);
+    if (!Number.isFinite(amount) || amount <= 0) return false;
+    const payment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      amount,
+      currency: normalizeCurrency(draft?.currency || projectCurrency),
+      label: String(draft?.label || "").trim(),
+      date: String(draft?.date || "").trim() || formatDate(new Date()),
+    };
+    commitSites((current) =>
+      current.map((site) =>
+        String(site.id) === String(siteId)
+          ? { ...site, payments: [...normalizePayments(site.payments), payment] }
+          : site
+      )
+    );
+    return true;
+  }
+
+  function handleDeleteSitePayment(siteId, paymentId) {
+    commitSites((current) =>
+      current.map((site) =>
+        String(site.id) === String(siteId)
+          ? { ...site, payments: normalizePayments(site.payments).filter((payment) => String(payment.id) !== String(paymentId)) }
+          : site
+      )
+    );
+  }
+
+  function handleAddFormPayment() {
+    const amount = Number(String(formPayAmount).replace(/[^0-9.-]/g, ""));
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    const currentForm = formRef.current;
+    const payment = {
+      id: `pay-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      amount,
+      currency: normalizeCurrency(currentForm.currency, currentForm.price),
+      label: formPayLabel.trim(),
+      date: formatDate(new Date()),
+    };
+    const nextForm = { ...currentForm, payments: [...normalizePayments(currentForm.payments), payment] };
+    formRef.current = nextForm;
+    setForm(nextForm);
+    setFormPayAmount("");
+    setFormPayLabel("");
+    if (showFormRef.current && hasProjectFormDraft(nextForm, editIdRef.current)) saveProjectFormDraft(nextForm, editIdRef.current);
+  }
+
+  function handleDeleteFormPayment(paymentId) {
+    const currentForm = formRef.current;
+    const nextForm = {
+      ...currentForm,
+      payments: normalizePayments(currentForm.payments).filter((payment) => String(payment.id) !== String(paymentId)),
+    };
+    formRef.current = nextForm;
+    setForm(nextForm);
+    if (showFormRef.current && hasProjectFormDraft(nextForm, editIdRef.current)) {
+      saveProjectFormDraft(nextForm, editIdRef.current);
+    } else if (showFormRef.current) {
+      clearProjectFormDraft();
+    }
   }
 
   function saveProjectForm() {
@@ -1963,6 +2097,7 @@ export default function App() {
   }
 
   function handleDeleteSite(siteId) {
+    if (String(notesProjectId) === String(siteId)) setNotesProjectId(null);
     commitSites((current) => current.filter((item) => item.id !== siteId));
     commitProjectNotes((current) => {
       const next = { ...current };
@@ -1983,6 +2118,7 @@ export default function App() {
       price: site.price || "",
       currency: normalizeCurrency(site.currency, site.price),
       paid: Boolean(site.paid),
+      payments: normalizePayments(site.payments),
       start: site.start,
       deadlineDays: site.deadlineDays || "",
       deadline: site.deadline,
@@ -1995,6 +2131,8 @@ export default function App() {
     setForm(nextForm);
     setEditId(site.id);
     setShowForm(true);
+    setFormPayAmount("");
+    setFormPayLabel("");
   }
 
   function closeForm() {
@@ -2512,13 +2650,18 @@ export default function App() {
               <p className="muted">No unpaid project prices yet.</p>
             ) : (
               unpaidProjects.map((site) => (
-                <div className="unpaid-row" key={site.id}>
+                <button className="unpaid-row unpaid-row-action" key={site.id} type="button" onClick={() => setNotesProjectId(site.id)} title={`Manage payments for ${site.name}`}>
                   <span>
                     <strong>{site.name}</strong>
                     {site.clientName ? <small>{site.clientName}</small> : null}
+                    {site.paymentsList.length > 0 ? (
+                      <small className="unpaid-row-detail">
+                        {`${site.paymentsList.length} payment${site.paymentsList.length === 1 ? "" : "s"} • ${moneyVisible ? `${formatMoney(site.paidTotal, site.currency)} of ${formatMoney(site.priceValue, site.currency)}` : "Tap to manage"}`}
+                      </small>
+                    ) : null}
                   </span>
-                  <b>{moneyVisible ? formatMoney(convertMoney(site.priceValue, site.currency, unpaidCurrency, usdEgpRate), unpaidCurrency) : maskMoney(unpaidCurrency)}</b>
-                </div>
+                  <b>{moneyVisible ? formatMoney(convertMoney(site.remainingValue, site.currency, unpaidCurrency, usdEgpRate), unpaidCurrency) : maskMoney(unpaidCurrency)}</b>
+                </button>
               ))
             )}
           </div>
@@ -2644,7 +2787,7 @@ export default function App() {
                   <div className="project-identity-row">
                     {site.clientName ? <div className="project-client"><span className="badge-text">{site.clientName}</span></div> : null}
                     {site.url ? (
-                      <a href={site.url} target="_blank" rel="noreferrer">
+                      <a href={site.url} target="_blank" rel="noreferrer" title={site.url}>
                         {site.url}
                       </a>
                     ) : (
@@ -2658,13 +2801,15 @@ export default function App() {
               {(site.price || site.paid !== undefined) && (
                 <div className="project-meta-row">
                   {site.price ? (
-                    <span className="project-price"><span className="badge-text">{moneyVisible ? formatMoney(site.priceValue, site.currency) : maskMoney(site.currency)}</span></span>
+                    <span className="project-price" title={site.paymentStatus === "partial" ? `${formatMoney(site.paidTotal, site.currency)} paid of ${formatMoney(site.priceValue, site.currency)}` : formatMoney(site.priceValue, site.currency)}><span className="badge-text">{moneyVisible ? (site.paymentStatus === "partial" ? `${formatMoney(site.remainingValue, site.currency)} left` : formatMoney(site.priceValue, site.currency)) : maskMoney(site.currency)}</span></span>
                   ) : (
                     <span className="project-price project-price-empty"><span className="badge-text">No price</span></span>
                   )}
-                  <span className={`payment-badge ${site.paid ? "payment-paid" : "payment-unpaid"}`}>
-                    <span className="badge-text">{site.paid ? "Paid" : "Unpaid"}</span>
-                  </span>
+                  {site.paymentStatus === "partial" ? null : (
+                    <span className={`payment-badge ${site.paymentStatus === "paid" ? "payment-paid" : "payment-unpaid"}`}>
+                      <span className="badge-text">{site.paymentStatus === "paid" ? "Paid" : "Unpaid"}</span>
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -2683,27 +2828,25 @@ export default function App() {
                 </div>
               </dl>
 
-              {site.notesList.length > 0 ? (
-                <div className="project-notes">
-                  <span>Notes</span>
-                  <ol className="project-note-list">
-                    {site.notesList.map((note, index) => (
-                      <li className={note.done ? "project-note-done" : ""} key={note.id}>
-                        <input
-                          type="checkbox"
-                          checked={note.done}
-                          aria-label={`Mark note ${index + 1} ${note.done ? "not done" : "done"}`}
-                          onChange={(event) => handleSavedNoteDoneChange(site.id, note.id, event.target.checked)}
-                        />
-                        <b>{index + 1}</b>
-                        <p dir={getTextDirection(note.text)}>{note.text}</p>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              ) : null}
-
               <div className="project-actions">
+                {site.notesList.length > 0 ? (
+                  <button
+                    className="project-notes-action"
+                    type="button"
+                    aria-label={`Open ${site.notesList.length} note${site.notesList.length === 1 ? "" : "s"} for ${site.name}`}
+                    title="Open notes"
+                    onClick={() => setNotesProjectId(site.id)}
+                  >
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="5" y="3" width="14" height="18" rx="2" />
+                      <path d="M9 3.5h6" />
+                      <path d="M9 9h6" />
+                      <path d="M9 13h6" />
+                      <path d="M9 17h3" />
+                    </svg>
+                    <span className="project-notes-count" aria-hidden="true">{site.notesList.length}</span>
+                  </button>
+                ) : null}
                 <button type="button" onClick={() => handleEdit(site)}>
                   Edit
                 </button>
@@ -3530,6 +3673,163 @@ export default function App() {
 
       </div>
 
+      {notesProject && (
+        <div className="modal-backdrop" onClick={() => setNotesProjectId(null)}>
+          <section
+            className="modal project-notes-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="project-notes-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="modal-header">
+              <div>
+                <p className="card-kicker">Project Notes &amp; Pricing</p>
+                <h2 id="project-notes-title">{notesProject.name}</h2>
+              </div>
+              <button className="icon-action" type="button" aria-label="Close notes" onClick={() => setNotesProjectId(null)}>
+                X
+              </button>
+            </div>
+
+            {notesProject.priceValue > 0 ? (
+              <div className="payment-panel" aria-label={`Payments for ${notesProject.name}`}>
+                <div className="payment-panel-head">
+                  <span>Payments</span>
+                </div>
+                <div className="payment-totals">
+                  <div>
+                    <small>Paid</small>
+                    <strong>{moneyVisible ? formatMoney(notesProject.paidTotal, notesProject.currency) : maskMoney(notesProject.currency)}</strong>
+                  </div>
+                  <div>
+                    <small>Remaining</small>
+                    <strong>{moneyVisible ? formatMoney(notesProject.remainingValue, notesProject.currency) : maskMoney(notesProject.currency)}</strong>
+                  </div>
+                  <div>
+                    <small>Total</small>
+                    <strong>{moneyVisible ? formatMoney(notesProject.priceValue, notesProject.currency) : maskMoney(notesProject.currency)}</strong>
+                  </div>
+                </div>
+                <div className="progress-track payment-progress" aria-label={`${Math.round(notesProject.paymentPercent)} percent paid`}>
+                  <span style={{ width: `${notesProject.paymentPercent}%` }} />
+                </div>
+                {notesProject.paymentsList.length > 0 ? (
+                  <ol className="payment-list">
+                    {notesProject.paymentsList.map((payment, index) => (
+                      <li key={payment.id}>
+                        <span className="payment-part-num" aria-hidden="true">{index + 1}</span>
+                        <span className="payment-info">
+                          <strong>{moneyVisible ? formatMoney(payment.amount, payment.currency) : maskMoney(payment.currency)}</strong>
+                          {(payment.label || payment.date) ? (
+                            <small>{[payment.label, payment.date].filter(Boolean).join(" • ")}</small>
+                          ) : null}
+                        </span>
+                        <button
+                          className="icon-action danger-action payment-delete"
+                          type="button"
+                          aria-label={`Delete payment ${index + 1}`}
+                          title={`Delete payment ${index + 1}`}
+                          onClick={() => handleDeleteSitePayment(notesProject.id, payment.id)}
+                        >
+                          X
+                        </button>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="muted payment-empty">No payments yet — add the first one below.</p>
+                )}
+                <div className="payment-add-row">
+                  <input
+                    className="payment-amount-input"
+                    value={modalPayAmount}
+                    placeholder={`Amount (${modalPayCurrency === "EGP" ? "E£" : "$"})`}
+                    inputMode="decimal"
+                    aria-label="Payment amount"
+                    onChange={(event) => setModalPayAmount(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter") return;
+                      event.preventDefault();
+                      const ok = handleAddSitePayment(notesProject.id, { amount: modalPayAmount, currency: modalPayCurrency, label: modalPayLabel }, notesProject.currency);
+                      if (ok) {
+                        setModalPayAmount("");
+                        setModalPayLabel("");
+                      }
+                    }}
+                  />
+                  <div className="currency-toggle payment-mini-toggle" role="group" aria-label="Payment currency">
+                    {Object.values(CURRENCIES).map((currency) => (
+                      <button
+                        className={modalPayCurrency === currency.code ? "currency-toggle-button currency-toggle-active" : "currency-toggle-button"}
+                        type="button"
+                        key={currency.code}
+                        aria-pressed={modalPayCurrency === currency.code}
+                        onClick={() => setModalPayCurrency(currency.code)}
+                      >
+                        <span className="currency-toggle-label">{currency.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="payment-add-row">
+                  <input
+                    className="payment-label-input"
+                    value={modalPayLabel}
+                    placeholder="Note — e.g. deposit, 2nd payment… (optional)"
+                    aria-label="Payment note"
+                    onChange={(event) => setModalPayLabel(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter") return;
+                      event.preventDefault();
+                      const ok = handleAddSitePayment(notesProject.id, { amount: modalPayAmount, currency: modalPayCurrency, label: modalPayLabel }, notesProject.currency);
+                      if (ok) {
+                        setModalPayAmount("");
+                        setModalPayLabel("");
+                      }
+                    }}
+                  />
+                  <button
+                    className="secondary-action payment-add-action"
+                    type="button"
+                    disabled={!Number(String(modalPayAmount).replace(/[^0-9.-]/g, "")) || Number(String(modalPayAmount).replace(/[^0-9.-]/g, "")) <= 0}
+                    onClick={() => {
+                      const ok = handleAddSitePayment(notesProject.id, { amount: modalPayAmount, currency: modalPayCurrency, label: modalPayLabel }, notesProject.currency);
+                      if (ok) {
+                        setModalPayAmount("");
+                        setModalPayLabel("");
+                      }
+                    }}
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="project-notes">
+              <span>Notes</span>
+              <ol className="project-note-list">
+                {notesProject.notesList.map((note, index) => (
+                  <li className={note.done ? "project-note-done" : ""} key={note.id}>
+                    <button
+                      className={`project-note-number ${note.done ? "project-note-number-done" : ""}`}
+                      type="button"
+                      aria-pressed={note.done}
+                      aria-label={`Mark note ${index + 1} ${note.done ? "not done" : "done"}`}
+                      onClick={() => handleSavedNoteDoneChange(notesProject.id, note.id, !note.done)}
+                    >
+                      {index + 1}
+                    </button>
+                    <p dir={getTextDirection(note.text)}>{note.text}</p>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </section>
+        </div>
+      )}
+
       {showForm && (
         <div className="modal-backdrop" onClick={closeForm}>
           <section
@@ -3657,6 +3957,70 @@ export default function App() {
               </span>
             </label>
 
+            <div className="payment-panel payment-panel-form" aria-label="Installment payments">
+              <div className="payment-panel-head">
+                <span>Payments</span>
+                <span className="muted payment-count">
+                  {normalizePayments(form.payments).length > 0
+                    ? `${normalizePayments(form.payments).length} payment${normalizePayments(form.payments).length === 1 ? "" : "s"}`
+                    : "No payments yet"}
+                </span>
+              </div>
+              {normalizePayments(form.payments).length > 0 ? (
+                <ol className="payment-list">
+                  {normalizePayments(form.payments).map((payment, index) => (
+                    <li key={payment.id}>
+                      <span className="payment-part-num" aria-hidden="true">{index + 1}</span>
+                      <span className="payment-info">
+                        <strong>{formatMoney(payment.amount, payment.currency)}</strong>
+                        {payment.label ? <small>{payment.label}</small> : null}
+                      </span>
+                      <button
+                        className="icon-action danger-action payment-delete"
+                        type="button"
+                        aria-label={`Delete payment ${index + 1}`}
+                        title={`Delete payment ${index + 1}`}
+                        onClick={() => handleDeleteFormPayment(payment.id)}
+                      >
+                        X
+                      </button>
+                    </li>
+                  ))}
+                </ol>
+              ) : null}
+              <div className="payment-add-row">
+                <input
+                  className="payment-amount-input"
+                  value={formPayAmount}
+                  placeholder={`Amount (${normalizeCurrency(form.currency, form.price) === "EGP" ? "E£" : "$"})`}
+                  inputMode="decimal"
+                  aria-label="Payment amount"
+                  onChange={(event) => setFormPayAmount(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    handleAddFormPayment();
+                  }}
+                />
+                <input
+                  className="payment-label-input"
+                  value={formPayLabel}
+                  placeholder="Note — e.g. deposit (optional)"
+                  aria-label="Payment note"
+                  onChange={(event) => setFormPayLabel(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter") return;
+                    event.preventDefault();
+                    handleAddFormPayment();
+                  }}
+                />
+                <button className="secondary-action payment-add-action" type="button" onClick={handleAddFormPayment}>
+                  Add
+                </button>
+              </div>
+              <p className="muted payment-hint">Payments use the project currency above. Need a different currency? Save, then add it from the notes panel.</p>
+            </div>
+
             <label>
               Start date
               <input
@@ -3712,14 +4076,15 @@ export default function App() {
                     >
                       ::
                     </button>
-                    <input
-                      className="note-done-check"
-                      type="checkbox"
-                      checked={note.done}
+                    <button
+                      className={`note-editor-number ${note.done ? "note-editor-number-done" : ""}`}
+                      type="button"
+                      aria-pressed={note.done}
                       aria-label={`Mark note ${index + 1} ${note.done ? "not done" : "done"}`}
-                      onChange={(event) => handleNoteChange(note.id, { done: event.target.checked })}
-                    />
-                    <span className="note-editor-number">{index + 1}</span>
+                      onClick={() => handleNoteChange(note.id, { done: !note.done })}
+                    >
+                      {index + 1}
+                    </button>
                     <input
                       className="note-text-input"
                       dir={getTextDirection(note.text)}

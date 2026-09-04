@@ -203,6 +203,23 @@ function parseTodos() {
   return Array.isArray(todos) ? todos : [];
 }
 
+// Server-side memory of each repeating todo's rule. A device that saves a
+// stale copy of a task WITHOUT the repeat field must not silently turn a
+// repeating reminder into a one-shot — the server remembers.
+const REPEAT_RULES_FILE = path.join(DATA_DIR, "repeat-rules.json");
+
+function readRepeatRules() {
+  const rules = readJson(REPEAT_RULES_FILE, {});
+  return rules && typeof rules === "object" && !Array.isArray(rules) ? rules : {};
+}
+
+function rememberRepeatRule(todo) {
+  if (REPEAT_STEPS.has(todo?.repeat)) {
+    return { todoId: String(todo.id), repeat: todo.repeat };
+  }
+  return null;
+}
+
 // Pushes a repeating deadline forward until it lands in the future.
 function advanceRepeat(iso, repeat, now) {
   const next = new Date(iso);
@@ -224,14 +241,41 @@ function collectDue() {
   const todos = parseTodos();
   const sent = readJson(SENT_FILE, {});
   const recorded = listNotifications();
+  const rules = readRepeatRules();
+  let rulesChanged = false;
   const sentNext = {};
   const fresh = [];
   let todosChanged = false;
 
   for (const todo of todos) {
     if (!todo || todo.done || !todo.dueAt || !todo.text) continue;
+
+    const todoId = String(todo.id);
+    const hasRepeatField = Object.prototype.hasOwnProperty.call(todo, "repeat");
+    const learned = rememberRepeatRule(todo);
+    if (learned && rules[learned.todoId] !== learned.repeat) {
+      rules[learned.todoId] = learned.repeat;
+      rulesChanged = true;
+    } else if (hasRepeatField && !learned && rules[todoId]) {
+      // A present-but-empty repeat field is an intentional "No repeat" choice.
+      delete rules[todoId];
+      rulesChanged = true;
+    }
+
     const dueMs = Date.parse(todo.dueAt);
     if (!Number.isFinite(dueMs) || dueMs > now) continue;
+
+    // Only legacy/stale payloads that omit the field may inherit the remembered
+    // rule. Current clients send repeat: "" when the user disables repeating.
+    const repeat = REPEAT_STEPS.has(todo.repeat)
+      ? todo.repeat
+      : !hasRepeatField
+        ? rules[todoId] || null
+        : null;
+    if (repeat) {
+      todo.repeat = repeat; // heal the synced store too
+      todosChanged = true;
+    }
     // Re-arm when the due time was edited after a reminder already fired.
     // Repeating exception: a past-due match can also be a STALE CLIENT ECHO
     // (a device saved its old copy over the server's rolled-forward deadline).
@@ -287,6 +331,7 @@ function collectDue() {
       todosChanged = false;
     }
   }
+  if (rulesChanged) writeJson(REPEAT_RULES_FILE, rules);
   if (JSON.stringify(sent) !== JSON.stringify(sentNext)) writeJson(SENT_FILE, sentNext);
   return { fresh, rescheduled: todosChanged };
 }

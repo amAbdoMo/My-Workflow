@@ -478,7 +478,7 @@ button:disabled {
 .project-currency-toggle {
   width: 100%;
   min-height: 48px;
-  border-radius: var(--radius);
+  border-radius: 999px;
 }
 
 .project-currency-toggle .currency-toggle-button {
@@ -1298,6 +1298,20 @@ button:disabled {
   width: 220px;
 }
 
+@media (min-width: 901px) {
+  .todo-category-select .client-select-menu,
+  .todo-filter-select .client-select-menu {
+    width: 320px;
+    right: auto;
+  }
+
+  .todo-category-select .client-option span,
+  .todo-filter-select .client-option span {
+    white-space: nowrap;
+    overflow-wrap: normal;
+  }
+}
+
 .todo-delete-category-action {
   flex: 0 0 46px;
   width: 46px;
@@ -1863,10 +1877,11 @@ button:disabled {
 
 .project-card {
   display: flex;
-  min-height: 250px;
+  height: auto;
+  min-height: 0;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 18px;
+  gap: 14px;
 }
 
 .project-card-hot {
@@ -1890,15 +1905,14 @@ button:disabled {
   min-height: 26px;
   color: var(--muted);
   text-decoration: none;
-  overflow-wrap: anywhere;
   vertical-align: middle;
 }
 
 .project-identity-row {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   min-height: 26px;
   min-width: 0;
 }
@@ -1910,8 +1924,14 @@ button:disabled {
 }
 
 .project-identity-row a {
-  flex: 1 1 170px;
-  min-width: min(100%, 170px);
+  flex: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 
 .project-card a:hover {
@@ -2097,7 +2117,7 @@ button:disabled {
 
 .project-notes span {
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
   color: var(--accent);
   font-size: 0.72rem;
   font-weight: 800;
@@ -2114,21 +2134,13 @@ button:disabled {
 
 .project-note-list li {
   display: grid;
-  grid-template-columns: auto 24px minmax(0, 1fr);
+  grid-template-columns: 24px minmax(0, 1fr);
   align-items: center;
   gap: 8px;
   color: var(--muted);
 }
 
-.project-note-list input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
-.project-note-list b {
+.project-note-number {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2139,6 +2151,8 @@ button:disabled {
   border: 1px solid color-mix(in srgb, var(--accent), transparent 62%);
   border-radius: 50%;
   color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent), transparent 90%);
+  cursor: pointer;
   font-family: "Segoe UI", sans-serif;
   font-size: 0.7rem;
   font-weight: 700;
@@ -2146,9 +2160,19 @@ button:disabled {
   text-align: center;
 }
 
+.project-note-number:hover,
+.project-note-number:focus-visible,
+.project-note-number-done {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  outline: none;
+}
+
 .project-note-list p {
   margin: 0;
   line-height: 1.45;
+  transform: translateY(2px);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
   unicode-bidi: plaintext;
@@ -2169,13 +2193,57 @@ button:disabled {
 
 .project-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
-  margin-top: auto;
+  margin-top: 2px;
+}
+
+.project-actions .project-notes-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-width: 42px;
+  order: 3;
+  margin-inline-start: auto;
+  padding: 0 10px;
+  color: var(--accent-strong);
+}
+
+.project-notes-action svg {
+  flex: 0 0 auto;
+}
+
+.project-notes-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 62%);
+  border-radius: 999px;
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .project-actions button,
 .modal-actions button {
   padding: 0 14px;
+}
+
+.project-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 2px 12px 0;
+  font-size: 0.86rem;
+  line-height: 1;
 }
 
 .danger-action {
@@ -2213,6 +2281,255 @@ button:disabled {
   background: var(--panel-strong);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.project-notes-modal {
+  width: min(480px, 100%);
+}
+
+.project-notes-modal .project-notes {
+  margin-top: 4px;
+}
+
+.project-notes-modal .project-note-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-notes-modal .project-note-list p {
+  line-height: 1.25;
+}
+
+/* Installment payments — same card language as notes (accent kicker,
+   soft panel, pill badges, progress track). */
+.payment-panel {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+
+.project-notes-modal .payment-panel {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+
+.payment-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.payment-count {
+  letter-spacing: 0;
+  text-transform: none;
+  font-size: 0.78rem;
+}
+
+.payment-totals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.payment-totals > div {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.payment-totals small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.payment-totals strong {
+  color: var(--accent-strong);
+  font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payment-progress {
+  width: 100%;
+}
+
+.payment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.payment-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--muted);
+}
+
+.payment-part-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  margin: 0;
+  border: 1px solid var(--accent);
+  border-radius: 50%;
+  color: #fff;
+  background: var(--accent);
+  font-family: "Segoe UI", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+}
+
+.payment-info {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.payment-info strong {
+  color: var(--text);
+  font-size: 0.9rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payment-info small {
+  color: var(--muted);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.payment-list .payment-delete {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  min-height: 28px;
+  padding: 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.payment-empty {
+  margin: 0;
+}
+
+.payment-add-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.payment-add-row:has(.payment-mini-toggle) {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.payment-amount-input,
+.payment-label-input {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  background: var(--input);
+  font-size: 0.9rem;
+}
+
+.payment-amount-input:focus,
+.payment-label-input:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.payment-mini-toggle .currency-toggle-button {
+  min-width: 44px;
+  height: 40px;
+}
+
+.payment-add-action {
+  min-height: 42px;
+  white-space: nowrap;
+}
+
+.payment-panel-form .payment-add-row {
+  grid-template-columns: minmax(0, 110px) minmax(0, 1fr) auto;
+}
+
+.payment-hint {
+  margin: 0;
+  font-size: 0.76rem;
+  text-transform: none;
+}
+
+.payment-partial {
+  color: var(--accent-strong);
+  border-color: color-mix(in srgb, var(--accent), transparent 45%);
+  background: color-mix(in srgb, var(--accent), transparent 88%);
+}
+
+.unpaid-row-action {
+  width: 100%;
+  color: var(--text);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.unpaid-row-action:hover {
+  border-color: color-mix(in srgb, var(--accent), var(--line) 45%);
+}
+
+.unpaid-row-detail {
+  color: var(--accent-strong) !important;
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.modal-header > .icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  min-width: 36px;
+  height: 36px;
+  min-height: 36px;
+  padding: 0;
+  line-height: 1;
 }
 
 /* Scrollbars keep the global 10px track inset so the thumb starts below the
@@ -2281,7 +2598,7 @@ button:disabled {
 
 .note-editor-row {
   display: grid;
-  grid-template-columns: auto auto 28px minmax(0, 1fr) auto;
+  grid-template-columns: auto 28px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
   padding: 8px;
@@ -2323,29 +2640,37 @@ button:disabled {
   outline: none;
 }
 
-.note-done-check {
-  width: 20px !important;
-  height: 20px;
-  min-height: 20px !important;
-  padding: 0 !important;
-  accent-color: var(--accent);
-  cursor: pointer;
-}
-
 .note-editor-number {
-  display: grid;
+  display: inline-grid;
   place-items: center;
+  width: 28px;
   height: 28px;
+  min-height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--accent), transparent 62%);
   border-radius: var(--radius);
   color: var(--accent-strong);
   background: color-mix(in srgb, var(--accent), transparent 88%);
+  cursor: pointer;
   font-size: 0.78rem;
   font-weight: 800;
+  line-height: 1;
+  transform: translateY(2px);
+}
+
+.note-editor-number:hover,
+.note-editor-number:focus-visible,
+.note-editor-number-done {
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  outline: none;
 }
 
 .note-text-input {
   min-height: 42px !important;
   unicode-bidi: plaintext;
+  transform: translateY(2px);
 }
 
 .note-text-input[dir="rtl"] {
@@ -2803,6 +3128,26 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .payment-totals {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+
+  .payment-panel-form .payment-add-row {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-add-row:has(.payment-mini-toggle) {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-mini-toggle {
+    justify-self: stretch;
+  }
+
+  .payment-mini-toggle .currency-toggle-button {
+    flex: 1 1 50%;
+  }
+
   .todo-delete-action {
     justify-self: stretch;
   }
@@ -2847,11 +3192,11 @@ button:disabled {
   }
 
   .note-editor-row {
-    grid-template-columns: auto auto 28px minmax(0, 1fr);
+    grid-template-columns: auto 28px minmax(0, 1fr);
   }
 
   .note-delete-action {
-    grid-column: 4;
+    grid-column: 3;
     justify-self: stretch;
   }
 
@@ -3386,22 +3731,6 @@ html[data-web="1"] * {
   box-shadow: var(--shadow);
 }
 
-.overview-card,
-.unpaid-card,
-.snippets-hero,
-.todo-hero-card,
-.email-hero-card {
-  border-inline-start: 3px solid var(--accent);
-}
-
-.metric-card,
-.todo-stats-card,
-.email-account-card,
-.email-summary-card,
-.email-log-card {
-  border-inline-start: 2px solid color-mix(in srgb, var(--accent), transparent 38%);
-}
-
 /* Keyboard feedback stays visible without a browser outline or focus ring. */
 button:focus,
 input:focus,
@@ -3884,17 +4213,16 @@ input[type="checkbox"]:focus-visible {
     flex: 1 1 100%;
   }
 
-  /* Project modal notes: compact drag/check/number/Delete metadata row,
+  /* Project modal notes: compact drag/number/Delete metadata row,
      then the note text on its own full-width row. */
   .note-editor-row {
-    grid-template-columns: auto auto 28px minmax(0, 1fr);
+    grid-template-columns: auto 28px minmax(0, 1fr);
     grid-template-areas:
-      "note-drag note-check note-number note-delete"
-      "note-text note-text note-text note-text";
+      "note-drag note-number note-delete"
+      "note-text note-text note-text";
   }
 
   .note-editor-row > .note-drag-handle { grid-area: note-drag; }
-  .note-editor-row > .note-done-check { grid-area: note-check; }
   .note-editor-row > .note-editor-number { grid-area: note-number; }
   .note-editor-row > .note-text-input { grid-area: note-text; }
 
