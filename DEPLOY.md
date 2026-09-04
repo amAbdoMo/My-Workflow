@@ -18,9 +18,33 @@ The same React app you run in Electron, served from a small Node.js backend:
    - Domain: `workflow.abdom.me`
 3. Set environment variables:
    - `WIZARD_DATA_DIR` — a persistent path outside deploys if possible (defaults to `server/data`, which holds your login hash, store, and secret key).
+   - `WIZARD_CRON_SECRET` — a private random value used only by the reminder cron request. Never commit it.
    - `PORT` — usually injected by Hostinger automatically.
 4. First deploy: build happens locally or in CI (`node ./node_modules/react-scripts/bin/react-scripts.js build`) — commit the built `build/` folder or add a build step. The server serves `build/` (falls back to `app-build/`).
 5. Enable SSL (Let's Encrypt) so cookies are marked Secure.
+
+### Required reminder cron
+
+The in-process scheduler handles reminders while the Node process is awake. Configure a Hostinger cron job to wake it and scan once per minute so reminders are not postponed until somebody opens the app.
+
+1. Generate a secret locally in Windows PowerShell:
+
+   ```powershell
+   $bytes = New-Object byte[] 32
+   $generator = [Security.Cryptography.RandomNumberGenerator]::Create()
+   $generator.GetBytes($bytes)
+   $generator.Dispose()
+   ([BitConverter]::ToString($bytes) -replace '-', '').ToLower()
+   ```
+
+2. Save that value as the app environment variable `WIZARD_CRON_SECRET`.
+3. Create a cron job with schedule `* * * * *` and replace `<same-secret>` below with the same value:
+
+   ```bash
+   curl --fail --silent --show-error --request POST --header "Authorization: Bearer <same-secret>" https://workflow.abdom.me/api/internal/reminders/scan
+   ```
+
+A successful manual run returns JSON containing `"ok":true`. A wrong secret returns HTTP 401, and an unset app secret returns HTTP 503.
 
 ### Updating code
 

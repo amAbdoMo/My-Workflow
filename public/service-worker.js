@@ -2,8 +2,9 @@
 // Static shell: cache-first. Navigations: network-first with cache fallback (offline).
 // API requests: never cached.
 
-const CACHE = "workflowy-shell-v8";
+const CACHE = "workflowy-shell-v9";
 const BADGE = "/workflowy-badge-v4.png?v=2"; // solid logo-tile glyph (knocked-out check + sparkle); omitting it makes Android show a generic bell
+const LATE_THRESHOLD_MS = 90_000;
 const NETWORK_FIRST_ASSETS = new Set([
   "/manifest.json",
   "/favicon.ico",
@@ -31,6 +32,13 @@ self.addEventListener("activate", (event) => {
 
 // ---------- deadline reminders (Web Push) ----------
 
+function formatDelay(milliseconds) {
+  const minutes = Math.max(1, Math.round(milliseconds / 60_000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  return hours < 24 ? `${hours}h` : `${Math.round(hours / 24)}d`;
+}
+
 self.addEventListener("push", (event) => {
   // Parse defensively: a malformed payload must never stop the notification
   // from showing (an empty waitUntil here is what makes pushes vanish while
@@ -57,15 +65,30 @@ self.addEventListener("push", (event) => {
       if (payload && typeof payload === "object") {
         title = String(payload.title || title);
         if (payload.body) options.body = String(payload.body);
-        if (payload.tag) {
-          options.tag = String(payload.tag);
-          options.renotify = true; // repeat alerts replace the previous one audibly
+        if (payload.tag) options.tag = String(payload.tag);
+
+        const notification = payload.notification;
+        const dueMs = Date.parse(notification?.dueAt);
+        const deliveryDelay = Number.isFinite(dueMs) ? Math.max(0, Date.now() - dueMs) : 0;
+        const lateByMs = Math.max(Number(notification?.lateByMs) || 0, deliveryDelay);
+        if (notification?.late || lateByMs >= LATE_THRESHOLD_MS) {
+          title = "WorkflowY — late reminder";
+          options.body = `Late by ${formatDelay(lateByMs)} — ${options.body}`;
         }
+        if (Number.isFinite(dueMs)) options.timestamp = dueMs;
+        options.data = {
+          url: "/",
+          notificationId: String(notification?.id || payload.tag || ""),
+          todoId: String(notification?.todoId || ""),
+          dueAt: String(notification?.dueAt || ""),
+        };
       }
     }
   } catch {}
   event.waitUntil(
-    self.registration.showNotification(title, options).catch(() => {})
+    self.registration.showNotification(title, options).catch((error) => {
+      console.error("[notifications] could not display push notification:", error);
+    })
   );
 });
 

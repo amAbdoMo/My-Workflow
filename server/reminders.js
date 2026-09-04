@@ -13,8 +13,11 @@ const TODOS_KEY = "wizard-schedules-todo-items";
 const NOTIFICATIONS_FILE = path.join(DATA_DIR, "notifications.json");
 const SENT_FILE = path.join(DATA_DIR, "reminders-sent.json");
 const SUBS_FILE = path.join(DATA_DIR, "push-subscriptions.json");
+const EXPIRED_SUBS_FILE = path.join(DATA_DIR, "expired-push-subscriptions.json");
 const VAPID_FILE = path.join(DATA_DIR, "vapid.json");
 const MAX_NOTIFICATIONS = 200;
+const MAX_EXPIRED_SUBSCRIPTIONS = 200;
+const LATE_THRESHOLD_MS = 90_000;
 
 // web-push is loaded lazily so the server still boots if the dependency is
 // missing; only actual push delivery degrades.
@@ -135,16 +138,36 @@ function listSubs() {
   return Array.isArray(subs) ? subs : [];
 }
 
+function subscriptionFingerprint(endpoint) {
+  return crypto.createHash("sha256").update(String(endpoint)).digest("hex");
+}
+
+function listExpiredSubFingerprints() {
+  const fingerprints = readJson(EXPIRED_SUBS_FILE, []);
+  return Array.isArray(fingerprints) ? fingerprints : [];
+}
+
+function markSubExpired(endpoint) {
+  const fingerprint = subscriptionFingerprint(endpoint);
+  const fingerprints = listExpiredSubFingerprints().filter((item) => item !== fingerprint);
+  fingerprints.unshift(fingerprint);
+  writeJson(EXPIRED_SUBS_FILE, fingerprints.slice(0, MAX_EXPIRED_SUBSCRIPTIONS));
+}
+
 function addSub(sub) {
   const endpoint = String(sub?.endpoint || "");
   if (!endpoint) throw new Error("Subscription endpoint required.");
-  const subs = listSubs().filter((s) => s.endpoint !== endpoint);
+  if (listExpiredSubFingerprints().includes(subscriptionFingerprint(endpoint))) {
+    return { ok: false, renewRequired: true };
+  }
+  const subs = listSubs().filter((item) => item.endpoint !== endpoint);
   subs.push(sub);
   writeJson(SUBS_FILE, subs);
+  return { ok: true, renewRequired: false };
 }
 
 function removeSub(endpoint) {
-  writeJson(SUBS_FILE, listSubs().filter((s) => s.endpoint !== endpoint));
+  writeJson(SUBS_FILE, listSubs().filter((sub) => sub.endpoint !== endpoint));
 }
 
 // Push options tuned for delivery while the phone is LOCKED:
@@ -174,6 +197,7 @@ async function sendPush(payload) {
           if (status === 404 || status === 410) {
             try {
               removeSub(sub.endpoint);
+              markSubExpired(sub.endpoint);
             } catch {}
             return { endpoint: short, ok: false, status: status || 0, expired: true };
           }
@@ -218,6 +242,11 @@ function rememberRepeatRule(todo) {
     return { todoId: String(todo.id), repeat: todo.repeat };
   }
   return null;
+}
+
+function createOccurrenceId(todoId, dueAt) {
+  const fingerprint = crypto.createHash("sha256").update(`${todoId}\0${dueAt}`).digest("hex").slice(0, 20);
+  return `ntf-${fingerprint}`;
 }
 
 // Pushes a repeating deadline forward until it lands in the future.
@@ -300,12 +329,14 @@ function collectDue() {
       continue;
     }
     const notification = {
-      id: `ntf-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
+      id: createOccurrenceId(todo.id, todo.dueAt),
       todoId: String(todo.id),
       text: String(todo.text),
       category: String(todo.category || "General"),
       dueAt: todo.dueAt,
       sentAt: new Date().toISOString(),
+      lateByMs: Math.max(0, now - dueMs),
+      late: now - dueMs >= LATE_THRESHOLD_MS,
       read: false,
     };
     sentNext[todo.id] = { dueAt: todo.dueAt, sentAt: notification.sentAt };
@@ -325,7 +356,13 @@ function collectDue() {
 
   if (todosChanged) {
     try {
-      store.mergeEntries([{ key: TODOS_KEY, value: JSON.stringify(todos), updatedAt: Date.now() }]);
+      const currentUpdatedAt = Number(store.getAll()[TODOS_KEY]?.updatedAt) || 0;
+      const results = store.mergeEntries([{
+        key: TODOS_KEY,
+        value: JSON.stringify(todos),
+        updatedAt: Math.max(Date.now(), currentUpdatedAt + 1),
+      }]);
+      todosChanged = results[TODOS_KEY]?.accepted !== false;
     } catch (error) {
       console.error("[reminders] failed to reschedule repeating todo:", error.message);
       todosChanged = false;
@@ -336,51 +373,55 @@ function collectDue() {
   return { fresh, rescheduled: todosChanged };
 }
 
+let activeScan = null;
+
 function startScheduler(broadcast) {
-  let scanning = false;
-  const scan = async () => {
-    // Overlap guard: a slow push batch (retries sleep 1s) must never let two
-    // scans run at once — the second would re-read the un-rolled store and
-    // double-fire repeating reminders.
-    if (scanning) return;
-    scanning = true;
-    try {
-      await runScan(broadcast);
-    } finally {
-      scanning = false;
-    }
+  const scan = () => {
+    scanNow(broadcast).catch((error) => {
+      console.error("[reminders] scan failed:", error.message);
+    });
   };
   setInterval(scan, 15_000).unref?.();
   setImmediate(scan);
 }
 
+function scanNow(broadcast) {
+  if (activeScan) return activeScan;
+  activeScan = runScan(broadcast).finally(() => {
+    activeScan = null;
+  });
+  return activeScan;
+}
+
 async function runScan(broadcast) {
-  let result = { fresh: [], rescheduled: false };
-  try {
-    result = collectDue();
-  } catch (error) {
-    console.error("[reminders] scan failed:", error.message);
-    return;
-  }
+  const result = collectDue();
+  const deliveries = [];
+
   // Await delivery so a push that is still mid-flight when the process gets
   // recycled still resolves instead of being cut off.
   for (const notification of result.fresh) {
-    await sendPush({
-      title: "WorkflowY — task due",
+    deliveries.push(...await sendPush({
+      title: notification.late ? "WorkflowY — late reminder" : "WorkflowY — task due",
       body: notification.text,
       tag: notification.id,
       notification,
-    });
+    }));
     try {
-      broadcast("notification", notification);
+      broadcast?.("notification", notification);
     } catch {}
   }
   // Nudge open devices to pull the rolled-forward repeating deadlines.
   if (result.rescheduled) {
     try {
-      broadcast("data-changed", {});
+      broadcast?.("data-changed", {});
     } catch {}
   }
+
+  return {
+    notificationsCreated: result.fresh.length,
+    rescheduled: result.rescheduled,
+    deliveries,
+  };
 }
 
 module.exports = {
@@ -393,6 +434,8 @@ module.exports = {
   addSub,
   removeSub,
   startScheduler,
+  scanNow,
   // Exposed for logic tests only — not used by the API surface.
   _collectDue: collectDue,
+  _createOccurrenceId: createOccurrenceId,
 };

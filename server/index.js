@@ -111,12 +111,16 @@ app.put("/api/data", (req, res) => {
 
 const sseClients = new Set();
 
-function broadcastDataChanged() {
+function broadcastEvent(name, payload) {
   for (const res of sseClients) {
     try {
-      res.write("event: data-changed\ndata: {}\n\n");
+      res.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
     } catch {}
   }
+}
+
+function broadcastDataChanged() {
+  broadcastEvent("data-changed", {});
 }
 
 // EventSource cannot send an Authorization header, so the Electron desktop app
@@ -160,8 +164,7 @@ app.get("/api/push/config", (req, res) => {
 app.post("/api/push/subscribe", (req, res) => {
   if (!auth.requireAuth(req, res)) return;
   try {
-    reminders.addSub(req.body);
-    res.json({ ok: true });
+    res.json(reminders.addSub(req.body));
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
@@ -189,13 +192,7 @@ app.post("/api/notifications/read", (req, res) => {
 app.post("/api/notifications/test", async (req, res) => {
   if (!auth.requireAuth(req, res)) return;
   try {
-    const notification = await reminders.sendTestNotification((name, payload) => {
-      for (const client of sseClients) {
-        try {
-          client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
-        } catch {}
-      }
-    });
+    const notification = await reminders.sendTestNotification(broadcastEvent);
     res.json({ ok: true, notification });
   } catch (error) {
     console.error("[server] test notification failed:", error.message);
@@ -215,13 +212,34 @@ app.delete("/api/notifications", (req, res) => {
   res.json({ ok: true });
 });
 
-reminders.startScheduler((name, payload) => {
-  for (const client of sseClients) {
-    try {
-      client.write(`event: ${name}\ndata: ${JSON.stringify(payload)}\n\n`);
-    } catch {}
+function cronSecretMatches(req) {
+  const configured = String(process.env.WIZARD_CRON_SECRET || "");
+  const authorization = String(req.headers.authorization || "");
+  const supplied = authorization.startsWith("Bearer ") ? authorization.slice(7) : "";
+  const configuredBytes = Buffer.from(configured);
+  const suppliedBytes = Buffer.from(supplied);
+  if (!configured || configuredBytes.length !== suppliedBytes.length) return false;
+  return crypto.timingSafeEqual(configuredBytes, suppliedBytes);
+}
+
+app.post("/api/internal/reminders/scan", async (req, res) => {
+  if (!process.env.WIZARD_CRON_SECRET) {
+    return res.status(503).json({ error: "Reminder cron is not configured." });
+  }
+  if (!cronSecretMatches(req)) {
+    return res.status(401).json({ error: "Invalid cron credentials." });
+  }
+
+  try {
+    const scan = await reminders.scanNow(broadcastEvent);
+    res.json({ ok: true, ...scan });
+  } catch (error) {
+    console.error("[server] cron reminder scan failed:", error.message);
+    res.status(500).json({ error: "Reminder scan failed." });
   }
 });
+
+reminders.startScheduler(broadcastEvent);
 
 app.get("/api/data/export", (req, res) => {
   if (!auth.requireAuth(req, res)) return;

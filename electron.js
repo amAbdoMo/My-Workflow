@@ -27,6 +27,7 @@ let tray = null;
 let isQuitting = false;
 let isConfirmingClose = false;
 let loadedRendererStamp = 0;
+const shownNotificationIds = new Set();
 let imapMigrationRunning = false;
 let imapPaused = false;
 let imapResumeResolver = null;
@@ -808,6 +809,7 @@ function createWindow() {
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      backgroundThrottling: false,
       preload: path.join(__dirname, "preload.js"),
     },
   });
@@ -846,8 +848,12 @@ if (!gotSingleInstanceLock) {
   // Notification (flaky for file:// Electron apps), this lands in the Action
   // Center like every other app's alerts. Clicking focuses the window.
   ipcMain.handle("wizard-app:notify", (_event, payload) => {
+    const notificationId = String(payload?.id || "");
     try {
       if (!Notification.isSupported()) return { ok: false, reason: "unsupported" };
+      if (notificationId && shownNotificationIds.has(notificationId)) {
+        return { ok: true, duplicate: true };
+      }
       const note = new Notification({
         title: String(payload?.title || APP_NAME),
         body: String(payload?.body || ""),
@@ -856,6 +862,12 @@ if (!gotSingleInstanceLock) {
       });
       note.on("click", showMainWindow);
       note.show();
+      if (notificationId) {
+        shownNotificationIds.add(notificationId);
+        if (shownNotificationIds.size > 500) {
+          shownNotificationIds.delete(shownNotificationIds.values().next().value);
+        }
+      }
       return { ok: true };
     } catch (error) {
       console.error("[notify]", error.message);

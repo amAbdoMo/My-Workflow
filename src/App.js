@@ -26,6 +26,7 @@ const SNIPPET_CONTENT_REPAIR_KEY = "wizard-schedule-snippets-content-repaired-v2
 const THEME_KEY = "wizard-schedules-theme";
 const LEGACY_THEME_KEY = "deadline-os-theme";
 const NOTIF_PROMPT_DISMISSED_KEY = "wizard-schedules-notif-prompt-dismissed";
+const NOTIFICATION_LATE_THRESHOLD_MS = 90_000;
 const ACTIVE_TAB_KEY = "wizard-schedules-active-tab";
 const UNPAID_CURRENCY_KEY = "wizard-schedules-unpaid-currency";
 const MONEY_VISIBILITY_KEY = "wizard-schedules-money-visible";
@@ -194,25 +195,49 @@ function formatDueLabel(iso) {
   return `${date.toLocaleDateString([], { month: "short", day: "numeric" })}, ${time}`;
 }
 
-// Fires a native OS notification: a Windows toast via the Electron main
-// process (reliable + lands in the Action Center), a browser notification on
-// the web. Silent no-op without permission.
-function showSystemNotification(notification) {
+function formatNotificationDelay(milliseconds) {
+  const minutes = Math.max(1, Math.round(milliseconds / 60_000));
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.round(minutes / 60);
+  return hours < 24 ? `${hours}h` : `${Math.round(hours / 24)}d`;
+}
+
+function getNotificationPresentation(notification) {
+  const dueMs = Date.parse(notification?.dueAt);
+  const deliveryDelay = Number.isFinite(dueMs) ? Math.max(0, Date.now() - dueMs) : 0;
+  const lateByMs = Math.max(Number(notification?.lateByMs) || 0, deliveryDelay);
+  const late = Boolean(notification?.late) || lateByMs >= NOTIFICATION_LATE_THRESHOLD_MS;
+  return {
+    title: late ? "WorkflowY — late reminder" : "WorkflowY — task due",
+    body: late ? `Late by ${formatNotificationDelay(lateByMs)} — ${notification.text}` : notification.text,
+  };
+}
+
+// Electron has no service worker, so live server events become native Windows
+// toasts. Web/PWA notifications are displayed only by the service worker.
+function showDesktopNotification(notification) {
   try {
-    // Desktop: hand off to the main process for a real native toast.
-    if (window.wizardApp?.notify) {
-      window.wizardApp.notify({ title: "WorkflowY — task due", body: notification.text });
-      return;
-    }
-    if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
-    const note = new Notification("WorkflowY — task due", {
-      body: notification.text,
-      tag: notification.id,
-      icon: `${process.env.PUBLIC_URL || "."}/workflowy-icon-192.png`,
-      badge: `${process.env.PUBLIC_URL || "."}/workflowy-badge-v4.png?v=2`,
+    if (!window.wizardApp?.notify) return;
+    const presentation = getNotificationPresentation(notification);
+    Promise.resolve(window.wizardApp.notify({ ...presentation, id: notification.id })).catch((error) => {
+      console.warn("[notifications] desktop notification request failed:", error);
     });
-    note.onclick = () => window.focus();
-  } catch {}
+  } catch (error) {
+    console.warn("[notifications] could not display desktop notification:", error);
+  }
+}
+
+function decodeVapidKey(value) {
+  const padding = "=".repeat((4 - (value.length % 4)) % 4);
+  const bytes = atob((value + padding).replace(/-/g, "+").replace(/_/g, "/"));
+  return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
+}
+
+function pushKeysMatch(subscription, expectedKey) {
+  const currentKey = subscription?.options?.applicationServerKey;
+  if (!currentKey) return true;
+  const currentBytes = new Uint8Array(currentKey);
+  return currentBytes.length === expectedKey.length && currentBytes.every((byte, index) => byte === expectedKey[index]);
 }
 
 function createEmptyForm() {
@@ -917,6 +942,7 @@ export default function App() {
   const topbarActionsRef = useRef(null);
   const topbarMenuButtonRef = useRef(null);
   const appScrollRef = useRef(null);
+  const pushSubscriptionBusyRef = useRef(false);
   const ptr = usePullToRefresh(appScrollRef);
 
   sitesRef.current = sites;
@@ -955,7 +981,7 @@ export default function App() {
       const notification = event?.detail;
       if (!notification?.id) return;
       setNotifications((current) => (current.some((item) => item.id === notification.id) ? current : [notification, ...current]));
-      showSystemNotification(notification);
+      if (isElectron()) showDesktopNotification(notification);
     };
     window.addEventListener("wizard-notification", onNotification);
     return () => {
@@ -971,22 +997,38 @@ export default function App() {
   // enables it through the banner or the notifications panel.
   async function subscribeToPush() {
     if (isElectron() || !("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (pushSubscriptionBusyRef.current) return;
+    pushSubscriptionBusyRef.current = true;
     try {
       if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
       const registration = await navigator.serviceWorker.ready;
+      const config = await apiFetch("/api/push/config");
+      if (!config?.publicKey) return;
+      const applicationServerKey = decodeVapidKey(config.publicKey);
       let subscription = await registration.pushManager.getSubscription();
+
+      if (subscription && !pushKeysMatch(subscription, applicationServerKey)) {
+        await subscription.unsubscribe();
+        subscription = null;
+      }
       if (!subscription) {
-        const config = await apiFetch("/api/push/config");
-        if (!config?.publicKey) return;
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: config.publicKey,
-        });
+        subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
       }
-      if (subscription) {
-        await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
+
+      let registrationResult = await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
+      if (registrationResult?.renewRequired) {
+        await subscription.unsubscribe();
+        subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey });
+        registrationResult = await apiFetch("/api/push/subscribe", { method: "POST", body: subscription.toJSON() });
       }
-    } catch {}
+      if (registrationResult?.renewRequired) {
+        throw new Error("The browser returned an expired push subscription twice.");
+      }
+    } catch (error) {
+      console.warn("[notifications] push subscription failed:", error);
+    } finally {
+      pushSubscriptionBusyRef.current = false;
+    }
   }
 
   async function enableNotifications() {
@@ -1001,7 +1043,7 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     function run() {
-      if (!cancelled) subscribeToPush();
+      if (!cancelled && document.visibilityState !== "hidden") subscribeToPush();
     }
     run();
     // Re-arm on both focus and tab visibility: phones often resume straight
@@ -1717,8 +1759,8 @@ export default function App() {
     await apiFetch("/api/notifications", { method: "DELETE" }).catch(() => {});
   }
 
-  // Temporary helper for trying the reminder pipeline end to end: asks the
-  // server to record a test notification, then shows it locally right away.
+  // Temporary helper for trying the reminder pipeline end to end. Web/PWA
+  // display comes from Web Push; Electron uses the native desktop bridge.
   // Reports the per-device server->Google push outcomes inline so a missed
   // locked-phone alert can be told apart from a failed FCM hop.
   async function sendTestNotification() {
@@ -1732,7 +1774,7 @@ export default function App() {
       const notification = data?.notification;
       if (!notification?.id) return;
       setNotifications((current) => (current.some((item) => item.id === notification.id) ? current : [notification, ...current]));
-      showSystemNotification(notification);
+      if (isElectron()) showDesktopNotification(notification);
       const deliveries = Array.isArray(notification?.deliveries) ? notification.deliveries : [];
       if (deliveries.length === 0) {
         window.alert("Test alert sent. No push devices are currently registered.");
@@ -1740,7 +1782,9 @@ export default function App() {
         const lines = deliveries.map((d) => `device …${d.endpoint}: ${d.ok ? "accepted by Google (will show unless the phone suppresses it)" : `FAILED at Google hop (status ${d.status}${d.expired ? ", subscription expired — reopen the app on that device to re-register" : ""})`}`);
         window.alert(`Test alert sent.\n\n${lines.join("\n")}`);
       }
-    } catch {}
+    } catch (error) {
+      window.alert(error?.message || "Could not send the test notification.");
+    }
   }
 
   function reorderTodoItem(todoId, targetTodoId) {
