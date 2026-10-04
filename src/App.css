@@ -2951,6 +2951,34 @@ button:disabled {
   width: min(560px, 100%);
 }
 
+.project-delete-modal {
+  width: min(520px, calc(100% - 36px));
+  margin: auto;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.project-delete-modal::backdrop {
+  background: rgba(0, 0, 0, 0.68);
+}
+
+.delete-project-name {
+  overflow-wrap: anywhere;
+}
+
+.project-delete-modal .delete-project-confirm {
+  color: var(--bg);
+  background: var(--danger);
+  border-color: var(--danger);
+}
+
+.project-delete-modal button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
 .unsaved-modal-body {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);

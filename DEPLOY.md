@@ -52,6 +52,14 @@ Push to GitHub → Hostinger redeploys (code sync: local → hosting). Data live
 
 Project owner preference: deploy completed, tested WorkflowY changes by default so they can be checked live. For frontend changes, rebuild and include the updated `build/` assets (new files require `git add -f` because that directory is ignored), then verify the hosted page serves the new bundle before reporting it as live.
 
+### Updating the Windows renderer
+
+GitHub/Hostinger deployment does not update the Windows app's local renderer. Its project-deletion dialog shares the React source with the website/PWA, but the portable app loads `dist/WorkflowY/resources/app/app-build/index.html`.
+
+For a full desktop package update, quit the app before running `npm run build:desktop`. For a renderer-only update while it remains running, build with `npm run build:renderer`, check the build succeeded, copy the generated `app-build/` assets into the packaged `app-build/` directory first, and replace `index.html` last. Keep old hashed assets for already-open sessions; do not rebuild the portable dependencies underneath a running app.
+
+Save unfinished edits before restarting or choosing **tray → Reload**. Opening the app from its tray also reloads when its bundled HTML has changed; these reload paths do not prompt for unsaved changes. Refresh the website/PWA online to load its newly deployed bundle without clearing site data.
+
 ### Background notification checks
 
 - Reminder pushes use `web-push`'s top-level `urgency: "high"` option and a 12-hour TTL. Setting only `headers.Urgency` does not work: the library overwrites that header with its default normal urgency.
