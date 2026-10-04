@@ -50,6 +50,14 @@ A successful manual run returns JSON containing `"ok":true`. A wrong secret retu
 
 Push to GitHub → Hostinger redeploys (code sync: local → hosting). Data lives in `WIZARD_DATA_DIR` and survives deploys.
 
+### Background notification checks
+
+- Reminder pushes use `web-push`'s top-level `urgency: "high"` option and a 12-hour TTL. Setting only `headers.Urgency` does not work: the library overwrites that header with its default normal urgency.
+- The priority fix is server-side. Redeploy/restart the Node backend; no React rebuild or phone resubscription is required for this change alone.
+- Run `npm run test:notifications` to check the actual outgoing HTTP headers for scheduled and test reminders without sending real pushes.
+- After deployment, schedule a future reminder, leave Chrome in the background, and lock the phone. Check whether the notification appears without reopening Chrome. Repeat after the phone has been idle for several minutes.
+- Push-service acceptance is not confirmation of phone receipt or display. If alerts remain delayed, check Chrome's notification/background battery permissions and the required reminder cron above. High urgency cannot override a force-stopped browser, disabled notifications, or an offline phone.
+
 ## Desktop ↔ hosting data sync (enabled)
 
 The desktop app now syncs too:

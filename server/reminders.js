@@ -174,7 +174,8 @@ function removeSub(endpoint) {
 // - high urgency: FCM/GCM deliver low-urgency pushes only during maintenance
 //   windows, sometimes hours later or never on dozed devices.
 // - TTL 12h: default TTL is days; a stale "task due" alert is worthless.
-const PUSH_OPTIONS = { TTL: 43200, headers: { Urgency: "high" } };
+// web-push overwrites a raw Urgency header with its own urgency option.
+const PUSH_OPTIONS = { TTL: 43200, urgency: "high" };
 
 async function sendPush(payload) {
   const push = getWebPush();
