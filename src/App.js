@@ -2141,6 +2141,10 @@ export default function App() {
   }
 
   function handleDeleteSite(siteId) {
+    const site = sitesRef.current.find((item) => item.id === siteId);
+    if (!site) return;
+    if (!window.confirm(`Delete project "${site.name}"?\n\nIts notes and payment records will also be deleted. This cannot be undone.`)) return;
+
     if (String(notesProjectId) === String(siteId)) setNotesProjectId(null);
     commitSites((current) => current.filter((item) => item.id !== siteId));
     commitProjectNotes((current) => {

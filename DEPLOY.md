@@ -50,6 +50,8 @@ A successful manual run returns JSON containing `"ok":true`. A wrong secret retu
 
 Push to GitHub → Hostinger redeploys (code sync: local → hosting). Data lives in `WIZARD_DATA_DIR` and survives deploys.
 
+Project owner preference: deploy completed, tested WorkflowY changes by default so they can be checked live. For frontend changes, rebuild and include the updated `build/` assets (new files require `git add -f` because that directory is ignored), then verify the hosted page serves the new bundle before reporting it as live.
+
 ### Background notification checks
 
 - Reminder pushes use `web-push`'s top-level `urgency: "high"` option and a 12-hour TTL. Setting only `headers.Urgency` does not work: the library overwrites that header with its default normal urgency.
