@@ -44,6 +44,8 @@ test.each(['Cancel', 'Close', 'Escape', 'Delete project'])('in-app project delet
   render(<StrictMode><App /></StrictMode>);
 
   const projectCard = screen.getByRole('heading', { name: 'Alrudhaa' }).closest('article');
+  const actions = within(projectCard).getByLabelText('More actions for Alrudhaa');
+  fireEvent.click(actions);
   fireEvent.click(within(projectCard).getByRole('button', { name: 'Delete' }));
 
   const dialog = screen.getByRole('dialog', { name: 'Delete project?' });

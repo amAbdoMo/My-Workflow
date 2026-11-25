@@ -1,0 +1,1668 @@
+/* Responsive work surfaces layered over the existing form and editor controls. */
+.app {
+  --font-main: "Segoe UI", system-ui, sans-serif;
+  --radius: 9px;
+  --shadow: none;
+  --rail-width: 222px;
+  --header-height: 64px;
+  --control-height: 42px;
+  background: var(--bg);
+  height: 100dvh;
+  font-size: 14px;
+}
+
+.app-dark {
+  color-scheme: dark;
+  --bg: #0e1620;
+  --bg-soft: #111c27;
+  --panel: #162330;
+  --panel-strong: #172533;
+  --panel-soft: #1b2b39;
+  --text: #edf4f6;
+  --muted: #acbfcc;
+  --text-dim: #96aab9;
+  --line: #2d4151;
+  --accent: #82e8c3;
+  --accent-strong: #a3f1d4;
+  --accent-ink: #102a24;
+  --warning: #f4cd8b;
+  --danger: #ffaea4;
+  --input: #101c28;
+}
+
+.app-light {
+  color-scheme: light;
+  --bg: #f4f7f8;
+  --bg-soft: #ebf2f2;
+  --panel: #ffffff;
+  --panel-strong: #ffffff;
+  --panel-soft: #e9f1f1;
+  --text: #152735;
+  --muted: #4f6472;
+  --text-dim: #586e7b;
+  --line: #c7d6dc;
+  --accent: #176d56;
+  --accent-strong: #155b49;
+  --accent-ink: #ffffff;
+  --warning: #7b4d12;
+  --danger: #9d3540;
+  --input: #f7fafb;
+}
+
+.app :is(button, input, textarea, select, summary, a):focus-visible {
+  outline: 2px solid var(--accent-strong);
+  outline-offset: 2px;
+  box-shadow: none;
+  transform: none;
+}
+
+.workspace-layout {
+  flex: 1 1 0;
+  display: grid;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  min-height: 0;
+  position: relative;
+}
+
+.workspace-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-height: 0;
+  overflow: auto;
+  padding: 21px 14px 15px;
+  border-right: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+
+.workspace-brand {
+  gap: 8px;
+  padding: 0 5px;
+}
+.workspace-brand img {
+  width: 39px;
+  height: 39px;
+}
+.workspace-brand h1 {
+  font-size: 1.31rem;
+  font-weight: 750;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+}
+.workspace-icon {
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+.workspace-nav {
+  display: grid;
+  gap: 5px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  scrollbar-width: none;
+}
+
+.workspace-nav-label {
+  padding: 0 11px 4px;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.workspace-utilities {
+  display: grid;
+  gap: 5px;
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.workspace-rail :is(.tab-button, .theme-toggle) {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 43px;
+  padding: 0 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 630;
+  text-align: left;
+}
+
+.workspace-rail :is(.tab-button, .theme-toggle):hover {
+  background: var(--panel-soft);
+}
+.workspace-rail .tab-button-active,
+.workspace-rail .tab-button-active:hover,
+.workspace-rail .tab-button-active:focus-visible {
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 13%, var(--bg-soft));
+  border-color: color-mix(in srgb, var(--accent) 29%, var(--line));
+  box-shadow: inset 3px 0 var(--accent);
+}
+
+.workspace-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.workspace-main .topbar {
+  position: relative;
+  z-index: 5;
+  flex: 0 0 var(--header-height);
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0 31px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.workspace-main .topbar-actions {
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+  gap: 7px;
+}
+.workspace-main .topbar-menu {
+  display: none;
+}
+.workspace-main .topbar-bell-action {
+  margin: 0;
+  order: -1;
+}
+.workspace-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.workspace-breadcrumb strong {
+  color: var(--text);
+  font-weight: 650;
+}
+.workspace-breadcrumb .workspace-icon {
+  width: 13px;
+}
+.workspace-main .app-scroll {
+  padding: 27px 31px 40px;
+  scrollbar-color: var(--line) transparent;
+}
+.workspace-content {
+  width: min(100%, 1240px);
+  margin-inline: auto;
+}
+.workspace-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 21px;
+}
+.workspace-heading h2 {
+  margin: 0;
+  font-size: clamp(1.9rem, 3.05vw, 2.35rem);
+  letter-spacing: -0.04em;
+  line-height: 1.12;
+}
+.workspace-heading p {
+  margin: 6px 0 0;
+  font-size: 0.89rem;
+  line-height: 1.4;
+}
+.workspace-heading .primary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  width: auto;
+}
+.workspace-heading .workspace-icon {
+  width: 16px;
+}
+.app :is(.primary-action, .secondary-action, .icon-action, .client-select-button, .search-input) {
+  font-weight: 640;
+  letter-spacing: 0;
+}
+.workspace-content :is(.search-input, .client-select-button, .primary-action, .secondary-action),
+.workspace-main .topbar :is(.icon-action, .topbar-menu-button) {
+  min-height: var(--control-height);
+}
+.app .card-kicker {
+  color: var(--muted);
+  margin-bottom: 5px;
+  font-size: 0.71rem;
+  letter-spacing: 0.075em;
+}
+.workspace-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 2px 0;
+  color: var(--accent-strong);
+  background: transparent;
+  cursor: pointer;
+  font-weight: 660;
+}
+.workspace-back:hover {
+  text-decoration: underline;
+}
+.workspace-actions {
+  position: relative;
+  justify-self: end;
+}
+.workspace-actions > summary {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  min-height: 37px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  color: var(--muted);
+  background: var(--panel-soft);
+  cursor: pointer;
+  list-style: none;
+}
+.workspace-actions > summary::-webkit-details-marker {
+  display: none;
+}
+.workspace-actions[open] > summary,
+.workspace-actions > summary:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.workspace-actions-list {
+  position: absolute;
+  z-index: 4;
+  inset-inline-end: 0;
+  top: calc(100% + 5px);
+  min-width: 150px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--panel-strong);
+  box-shadow: 0 8px 18px rgb(0 0 0 / 28%);
+}
+.workspace-content .workspace-actions-list button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: var(--control-height);
+  gap: 7px;
+  padding: 4px 7px;
+  background: transparent;
+  color: var(--danger);
+  border: 0;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.workspace-content .workspace-actions-list button:hover {
+  background: var(--panel-soft);
+}
+
+/* Schedule summary and projects */
+.workspace-content .bento-grid {
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 10px;
+}
+.workspace-content .bento-card {
+  min-height: 0;
+  padding: 14px 16px;
+}
+.workspace-content .bento-card-large {
+  grid-column: span 5;
+}
+.workspace-content .overview-card {
+  grid-column: span 7;
+  gap: 12px;
+  text-align: start;
+  align-items: stretch;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--accent) 17%, var(--panel)), var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--line));
+}
+.overview-card h2 {
+  font-size: clamp(1.28rem, 2vw, 1.62rem);
+  overflow-wrap: anywhere;
+  margin: 3px 0 4px;
+}
+.overview-card .muted {
+  font-size: 0.82rem;
+  margin: 0;
+}
+.deadline-timeline {
+  display: grid;
+  gap: 6px;
+}
+.deadline-timeline .progress-track {
+  height: 6px;
+}
+.deadline-timeline-labels {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.73rem;
+}
+.deadline-timeline-labels strong {
+  color: var(--accent-strong);
+  font-weight: 660;
+}
+.workspace-content .unpaid-card {
+  justify-content: center;
+}
+.unpaid-card .unpaid-card-head {
+  flex-direction: row;
+  align-items: center;
+  gap: 5px 10px;
+  flex-wrap: wrap;
+  text-align: start;
+}
+.unpaid-card .unpaid-card-head > div {
+  width: auto;
+}
+.unpaid-card .unpaid-card-head h2 {
+  font-size: 1.46rem;
+}
+.unpaid-card .unpaid-card-head small {
+  margin: 5px 0 0;
+  font-weight: 500;
+  font-size: 0.73rem;
+}
+.unpaid-card .unpaid-card-tools {
+  gap: 5px;
+}
+.unpaid-card-tools > span {
+  order: -1;
+  border-radius: 5px;
+  padding: 3px 7px;
+}
+.unpaid-card .money-visibility-toggle,
+.unpaid-card .unpaid-open {
+  width: 36px;
+  min-height: 36px;
+  border-radius: 6px;
+}
+.app .currency-toggle {
+  border-radius: 7px;
+}
+.app .currency-toggle-button {
+  border-radius: 5px;
+}
+.workspace-content .metric-card {
+  grid-column: span 3;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+}
+.metric-card p {
+  order: 1;
+  margin: 0 !important;
+  color: var(--muted);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 550;
+  font-size: 0.8rem;
+}
+.metric-card strong {
+  color: var(--text);
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.25;
+}
+.metric-card:nth-child(5) strong {
+  color: var(--danger);
+}
+.metric-card > span {
+  display: none;
+}
+.workspace-content .toolbar {
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 225px) auto;
+  max-width: none;
+  gap: 8px;
+  margin: 16px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--panel);
+}
+.workspace-content .project-grid {
+  --project-columns: minmax(0, 1.75fr) minmax(92px, 0.9fr) minmax(68px, 0.63fr) minmax(68px, 0.8fr) minmax(82px, 0.86fr) auto;
+  display: block;
+  gap: 0;
+  margin: 0;
+  max-width: none;
+  border: 1px solid var(--line);
+  border-radius: 0 0 var(--radius) var(--radius);
+  background: var(--panel);
+}
+.project-list-heading,
+.workspace-content .project-card {
+  display: grid;
+  grid-template-columns: var(--project-columns);
+  grid-template-areas: "project date status progress payment actions";
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px;
+}
+.project-list-heading {
+  color: var(--muted);
+  background: var(--bg-soft);
+  font-size: 0.68rem;
+  font-weight: 680;
+  letter-spacing: 0.065em;
+  text-transform: uppercase;
+}
+.project-list-heading > span:last-child {
+  width: 120px;
+  text-align: end;
+}
+.workspace-content .project-card {
+  min-width: 0;
+  min-height: 61px;
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.workspace-content .project-card:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.workspace-content .empty-state {
+  margin: 0;
+  border: 0;
+}
+.project-card .project-card-top {
+  grid-area: project;
+  min-width: 0;
+  display: block;
+}
+.project-card h2 {
+  margin: 0 0 3px;
+  color: var(--text);
+  font-size: 0.94rem;
+  overflow-wrap: anywhere;
+}
+.project-card .project-identity-row {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+}
+.project-card .project-identity-row > :is(a, .muted) {
+  width: auto;
+  max-width: 100%;
+  font-size: 0.74rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.project-card .project-client {
+  display: inline-flex;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 630;
+}
+.project-card .project-status {
+  grid-area: status;
+}
+.project-card :is(.status-badge, .payment-badge, .project-price) {
+  width: fit-content;
+  min-height: 22px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-size: 0.66rem;
+  line-height: 1.2;
+}
+.project-card .project-meta-row {
+  grid-area: payment;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 2px;
+}
+.project-card .project-price {
+  max-width: 100%;
+  color: var(--muted);
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  background: transparent;
+  overflow-wrap: anywhere;
+}
+.project-card .project-price .badge-text {
+  white-space: normal;
+}
+.project-card .project-progress {
+  grid-area: progress;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+.project-card .project-progress .progress-track {
+  flex: 1 1 30px;
+  max-width: 68px;
+  height: 5px;
+}
+.project-card .date-list {
+  grid-area: date;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 2px;
+  margin: 0;
+}
+.project-card .date-list div {
+  display: flex;
+  align-items: baseline;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 2px 4px;
+  border: 0;
+  padding: 0;
+  background: none;
+}
+.project-card .date-list dt {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.63rem;
+  text-transform: none;
+}
+.project-card .date-list dd {
+  margin: 0;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+.project-card .date-list div:last-child {
+  grid-row: 1;
+}
+.project-card .date-list div:last-child dt {
+  display: none;
+}
+.project-card .date-list div:last-child dd {
+  font-size: 0.8rem;
+}
+.project-card .project-actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+.project-card .project-actions > button {
+  flex: 0 0 37px;
+  order: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 37px;
+  width: 37px;
+  min-height: 37px;
+  padding: 0;
+  gap: 2px;
+}
+.project-card .project-notes-action svg {
+  width: 15px;
+}
+.project-card .project-notes-count {
+  font-size: 0.68rem;
+}
+.unpaid-panel-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+.unpaid-panel-total > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+.unpaid-panel-total strong {
+  color: var(--accent-strong);
+  font-size: 1.4rem;
+}
+
+/* Snippet library, preview and editor */
+.workspace-content .snippet-toolbar {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) minmax(125px, 0.45fr) auto;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 11px;
+}
+.workspace-content .snippet-category-filter-mobile {
+  display: block;
+  width: auto;
+  min-width: 0;
+}
+.workspace-content .snippet-export-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+}
+.workspace-content .snippet-workspace {
+  grid-template-columns: minmax(215px, 0.65fr) minmax(0, 1.35fr);
+  height: clamp(400px, calc(100dvh - 190px), 735px);
+  margin: 0;
+  gap: 11px;
+}
+.workspace-content .snippet-list {
+  display: block;
+  padding: 0;
+}
+.snippet-list-label {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 10px 12px;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+  background: var(--bg-soft);
+  font-size: 0.77rem;
+}
+.workspace-content .snippet-list-item {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 58px;
+  gap: 7px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.workspace-content .snippet-list-item:last-child {
+  border-bottom: 0;
+}
+.workspace-content .snippet-list-item strong {
+  font-size: 0.86rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.workspace-content .snippet-list-item span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.74rem;
+}
+.snippet-list-item > .workspace-icon {
+  color: var(--muted);
+  width: 14px;
+  height: 14px;
+}
+.workspace-content .snippet-list-item:is(:hover, .snippet-list-item-active) {
+  background: color-mix(in srgb, var(--accent) 11%, var(--panel));
+  box-shadow: inset 3px 0 var(--accent);
+}
+.workspace-content :is(.snippet-detail, .snippet-editor) {
+  min-width: 0;
+  padding: 15px;
+}
+.snippet-detail-head > div:first-child {
+  min-width: 0;
+}
+.snippet-detail-head h2 {
+  overflow-wrap: anywhere;
+}
+.workspace-content .snippet-actions button {
+  min-height: 40px;
+  font-weight: 650;
+}
+.snippet-actions .workspace-actions > summary {
+  min-height: 40px;
+}
+.workspace-content .snippet-mobile-back {
+  display: none;
+}
+.workspace-content .snippet-editor-row {
+  max-width: 900px;
+  margin: 0;
+}
+.workspace-content .snippet-editor-fields {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.snippets-editor :is(.snippet-library-heading, .snippet-toolbar, .snippet-workspace) {
+  display: none;
+}
+.workspace-content .snippet-editor-actions {
+  margin-top: 13px;
+}
+.workspace-content .editor-chrome {
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.workspace-content .editor-titlebar {
+  background: #182534;
+}
+.workspace-content .editor-titlebar [class^="editor-dot"] {
+  display: none;
+}
+.workspace-content :is(.code-preview, .editor-input-wrap) {
+  background: #101b27;
+}
+.workspace-content .code-preview {
+  white-space: pre;
+}
+.workspace-content .code-preview code {
+  display: block;
+  white-space: pre;
+  overflow-wrap: normal;
+  width: max-content;
+  min-width: 100%;
+}
+.workspace-content .code-line {
+  display: block;
+}
+.workspace-content .code-line-number {
+  display: inline-block;
+  width: 3ch;
+  margin-right: 1.4ch;
+  color: #8ca6b9;
+  text-align: end;
+  user-select: none;
+}
+.snippet-scroll-hint {
+  margin: 8px 0 0;
+  font-size: 0.75rem;
+}
+
+/* To-do workspace */
+.todo-summary-strip {
+  display: flex;
+  align-items: center;
+  gap: 17px;
+  min-height: 45px;
+  margin: 0 0 11px;
+  padding: 8px 13px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--muted);
+}
+.todo-summary-strip strong {
+  color: var(--text);
+  font-size: 1rem;
+}
+.todo-summary-strip .progress-track {
+  width: min(38%, 260px);
+  height: 6px;
+}
+.workspace-content .todo-entry-card {
+  padding: 9px;
+  background: var(--panel);
+}
+.workspace-content .todo-entry {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(100px, 170px) 43px auto;
+  grid-template-areas: "task category due submit";
+  align-items: center;
+  gap: 7px;
+}
+.workspace-content .todo-entry-new-category {
+  grid-template-areas: "task category due submit" "new-category new-category new-category new-category";
+}
+.workspace-content .todo-entry .todo-input {
+  grid-area: task;
+  min-width: 0;
+}
+.workspace-content .todo-entry .todo-category-select {
+  grid-area: category;
+  width: 100%;
+  min-width: 0;
+}
+.workspace-content .todo-entry .todo-new-category-input {
+  grid-area: new-category;
+}
+.workspace-content .todo-entry .todo-new-due-action {
+  grid-area: due;
+  width: 100%;
+}
+.workspace-content .todo-entry .primary-action {
+  grid-area: submit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  width: auto;
+  white-space: nowrap;
+}
+.workspace-content .todo-list-card {
+  padding: 0;
+  margin-top: 0;
+}
+.todo-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 5px;
+  margin: 0;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.todo-list-heading h3 {
+  margin: 0;
+  font-size: 0.96rem;
+  white-space: nowrap;
+}
+.todo-list-heading .todo-filter-inline {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  min-width: 0;
+  gap: 5px;
+}
+.todo-list-heading .todo-filter-select {
+  min-width: 0;
+  width: min(155px, 34vw);
+}
+.todo-list-heading .client-select-button {
+  min-height: 38px;
+  padding: 0 6px;
+}
+.todo-list-heading .todo-delete-category-action {
+  flex: none;
+  width: 40px;
+  min-height: 40px;
+}
+.todo-list-heading .project-count {
+  margin: 0;
+  white-space: nowrap;
+}
+.workspace-content .todo-list {
+  gap: 0;
+}
+.workspace-content .todo-row {
+  grid-template-columns: 20px minmax(0, 1fr) minmax(60px, 140px) repeat(3, 38px);
+  grid-template-areas: "todo-check todo-text todo-category todo-clock todo-edit todo-delete";
+  gap: 7px;
+  min-height: 56px;
+  padding: 7px 11px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.workspace-content .todo-row + .todo-row {
+  border-top: 1px solid var(--line);
+}
+.workspace-content .todo-check {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+}
+.workspace-content .todo-text-display {
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-weight: 580;
+}
+.workspace-content .todo-category-badge {
+  font-size: 0.7rem;
+  border-radius: 5px;
+}
+.workspace-content :is(.todo-due-action, .todo-edit-action, .todo-save-action, .todo-delete-action) {
+  min-height: 36px;
+  min-width: 36px;
+  width: 36px;
+}
+.todo-row-menu {
+  grid-area: todo-delete;
+}
+.workspace-content .todo-row-done {
+  opacity: 1;
+}
+.workspace-content .todo-row-done .todo-text-display {
+  color: var(--muted);
+}
+
+/* Email Migration and Settings */
+.migration-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px 15px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.migration-steps ol {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  list-style: none;
+  counter-reset: transfer-step;
+  padding: 0;
+  margin: 0;
+}
+.migration-steps li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  counter-increment: transfer-step;
+  white-space: nowrap;
+}
+.migration-steps li::before {
+  content: counter(transfer-step);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  font-size: 0.72rem;
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+}
+.migration-steps > span {
+  font-size: 0.78rem;
+}
+.workspace-content .email-account-grid {
+  gap: 11px;
+  margin: 0 0 11px;
+}
+.workspace-content :is(.email-account-card, .email-summary-card, .email-log-card) {
+  padding: 15px;
+}
+.workspace-content .email-account-head .muted {
+  margin: 4px 0 0;
+  font-size: 0.79rem;
+}
+.workspace-content .email-account-head h2 {
+  margin: 0;
+}
+.workspace-content .email-fields {
+  gap: 8px;
+}
+.workspace-content .email-fields-shared {
+  grid-template-columns: minmax(0, 1fr) 80px;
+}
+.workspace-content .email-fields-shared .email-checkbox-row {
+  grid-column: 1 / -1;
+}
+.workspace-content .email-fields label {
+  font-weight: 630;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.workspace-content .email-account-row {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+.workspace-content .migration-controls {
+  display: flex;
+  gap: 10px 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin: 0 0 11px;
+}
+.migration-controls :is(.email-date-filters, .email-hero-actions) {
+  margin: 0;
+  gap: 7px;
+}
+.migration-controls .email-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+.workspace-content .email-progress-grid {
+  gap: 11px;
+  margin-bottom: 11px;
+}
+.workspace-content .email-log-list {
+  height: clamp(140px, 20vh, 240px);
+}
+.workspace-content .migration-guidance {
+  padding-block: 8px;
+  margin-top: 10px;
+}
+.migration-guidance summary {
+  padding: 4px;
+  font-weight: 640;
+  cursor: pointer;
+}
+.migration-guidance ul {
+  padding-left: 25px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.settings-sections {
+  display: grid;
+  max-width: 910px;
+  gap: 10px;
+}
+.settings-sections h3 {
+  margin: 6px 0 0;
+  font-size: 1.02rem;
+}
+.settings-sections h4 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+}
+.settings-sections p {
+  margin: 0;
+  line-height: 1.35;
+}
+.settings-row {
+  display: grid;
+  grid-template-columns: 37px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+}
+.settings-icon {
+  display: grid;
+  place-items: center;
+  width: 37px;
+  height: 37px;
+  border-radius: 7px;
+  color: var(--accent-strong);
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+.settings-warning {
+  color: var(--warning);
+  background: color-mix(in srgb, var(--warning) 12%, var(--panel));
+}
+
+/* Forms and utility panels */
+.app .modal-backdrop {
+  background: rgb(6 13 22 / 65%);
+}
+.app .workspace-drawer {
+  align-items: stretch;
+  justify-content: flex-end;
+  padding: 11px;
+  overflow: hidden;
+  scrollbar-gutter: auto;
+}
+.workspace-drawer .modal {
+  width: min(535px, 100%);
+  max-height: 100%;
+  padding: 16px 17px;
+  margin: 0;
+  box-shadow: 0 18px 52px rgb(0 0 0 / 38%);
+}
+.workspace-drawer .project-form-modal {
+  width: min(575px, 100%);
+}
+.app .modal-header {
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.027em;
+  overflow-wrap: anywhere;
+}
+.modal-header .muted {
+  margin: 4px 0 0;
+  font-size: 0.81rem;
+}
+.app .modal label {
+  color: var(--text);
+  gap: 4px;
+  margin-top: 8px;
+  font-size: 0.77rem;
+  font-weight: 640;
+  text-transform: none;
+}
+.app .modal :is(input, select, textarea):not([type="checkbox"]) {
+  min-height: var(--control-height);
+}
+.app .modal-actions button {
+  min-height: var(--control-height);
+}
+.app .modal-actions button.primary-action {
+  color: var(--accent-ink);
+  background: var(--accent);
+  border-color: transparent;
+}
+.app .modal-actions button.primary-action:not(:disabled):hover {
+  background: var(--accent-strong);
+}
+.project-form-modal h3 {
+  margin: 0;
+  font-size: 0.96rem;
+}
+.form-name-fields, .form-date-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 9px;
+}
+.form-name-fields > label:last-child {
+  grid-column: 1 / -1;
+}
+.project-form-modal .form-section {
+  margin: 11px 0;
+  padding: 9px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+.project-form-modal .deadline-preview {
+  margin: 7px 0 0;
+  padding: 6px 8px;
+}
+.project-form-modal .modal-actions {
+  position: sticky;
+  z-index: 2;
+  bottom: -17px;
+  margin: 12px -17px -16px;
+  padding: 8px 17px 10px;
+  border-top: 1px solid var(--line);
+  background: var(--panel-strong);
+}
+.notifications-empty {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  padding: 14px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  background: var(--input);
+}
+.notifications-empty > .workspace-icon {
+  color: var(--accent-strong);
+}
+.notifications-empty p {
+  margin: 0;
+}
+.project-notes-empty {
+  margin: 5px 0;
+}
+
+@media (max-width: 1050px) {
+  .app {
+    --rail-width: 185px;
+  }
+  .workspace-main :is(.topbar, .app-scroll) {
+    padding-inline: 18px;
+  }
+  .workspace-content .project-grid {
+    --project-columns: minmax(0, 1.45fr) minmax(77px, 0.75fr) minmax(58px, 0.55fr) minmax(50px, 0.65fr) minmax(58px, 0.75fr) auto;
+  }
+  .project-list-heading > span:last-child {
+    width: 105px;
+  }
+  .project-card .project-actions > button, .project-card .workspace-actions > summary {
+    width: 33px;
+    min-width: 33px;
+    flex-basis: 33px;
+  }
+  .workspace-content .snippet-export-actions button {
+    padding-inline: 9px;
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    --header-height: 58px;
+    --control-height: 44px;
+  }
+  .workspace-layout {
+    grid-template-columns: 1fr;
+  }
+  .workspace-rail {
+    display: contents;
+  }
+  .workspace-brand {
+    position: absolute;
+    z-index: 6;
+    top: 0;
+    inset-inline-start: 13px;
+    min-height: var(--header-height);
+    padding: 0;
+  }
+  .workspace-brand h1 {
+    font-size: 1.19rem;
+  }
+  .workspace-brand img {
+    width: 34px;
+    height: 34px;
+  }
+  .workspace-utilities, .workspace-nav-label, .workspace-breadcrumb {
+    display: none;
+  }
+  .workspace-main .topbar {
+    justify-content: flex-end;
+    padding-inline: 12px;
+    background: var(--bg-soft);
+  }
+  .workspace-main .topbar-menu-button {
+    display: inline-flex;
+    min-width: 44px;
+    width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    color: var(--text);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel-soft);
+    cursor: pointer;
+  }
+  .workspace-main .topbar-menu.topbar-menu-open {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    top: calc(100% + 8px);
+    left: auto;
+    right: 0;
+    width: min(220px, calc(100vw - 24px));
+    padding: 7px;
+    gap: 5px;
+    transform: none;
+    overflow: visible;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel-strong);
+    box-shadow: 0 12px 24px rgb(0 0 0 / 25%);
+  }
+  .workspace-main .topbar-menu > :is(.secondary-action, .topbar-settings-action, .topbar-theme-row) {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 44px;
+    border-radius: 6px;
+  }
+  .workspace-main .topbar-settings-label {
+    display: inline;
+  }
+  .workspace-main .topbar-theme-row > button {
+    width: 100%;
+    min-height: 44px;
+  }
+  .workspace-main .app-scroll {
+    padding: 17px 12px 18px;
+    scrollbar-gutter: auto;
+  }
+  .workspace-main {
+    padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace-nav {
+    position: absolute;
+    z-index: 5;
+    inset-inline: 0;
+    bottom: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+    padding: 4px 4px calc(4px + env(safe-area-inset-bottom, 0px));
+    border-top: 1px solid var(--line);
+    background: var(--bg-soft);
+  }
+  .workspace-nav .tab-button {
+    display: grid;
+    align-content: center;
+    justify-content: stretch;
+    justify-items: center;
+    gap: 3px;
+    min-height: 53px;
+    padding: 0 1px;
+    font-size: 0.69rem;
+    text-align: center;
+    white-space: nowrap;
+  }
+  .workspace-nav .tab-button-active {
+    box-shadow: none;
+  }
+  .workspace-nav .workspace-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .workspace-heading {
+    align-items: flex-start;
+    gap: 5px;
+    margin-bottom: 13px;
+  }
+  .workspace-heading h2 {
+    font-size: 1.81rem;
+  }
+  .workspace-heading p {
+    font-size: 0.81rem;
+    margin-top: 4px;
+  }
+  .workspace-heading .primary-action {
+    padding-inline: 8px;
+    font-size: 0.76rem;
+  }
+  .workspace-heading .workspace-icon {
+    width: 14px;
+  }
+  .workspace-content .bento-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .workspace-content :is(.bento-card-large, .overview-card) {
+    grid-column: 1 / -1;
+  }
+  .workspace-content .bento-card {
+    padding: 10px;
+  }
+  .workspace-content .overview-card {
+    gap: 9px;
+  }
+  .unpaid-card .unpaid-card-head {
+    justify-content: space-between;
+  }
+  .unpaid-card .unpaid-card-head h2 {
+    font-size: 1.16rem;
+  }
+  .unpaid-card .unpaid-card-head small {
+    display: none;
+  }
+  .unpaid-card-tools > span {
+    display: none;
+  }
+  .unpaid-card .unpaid-card-tools .currency-toggle-button {
+    padding-inline: 5px;
+    min-width: 33px;
+    min-height: 36px;
+  }
+  .unpaid-card .money-visibility-toggle, .unpaid-card .unpaid-open {
+    min-width: 44px;
+    width: 44px;
+    min-height: 44px;
+  }
+  .workspace-content .metric-card {
+    grid-column: auto;
+    display: grid;
+    justify-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 6px 2px;
+    text-align: center;
+  }
+  .metric-card p {
+    font-size: 0.66rem !important;
+    white-space: nowrap;
+  }
+  .metric-card strong {
+    font-size: 1rem;
+  }
+  .workspace-content .toolbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(97px, 0.67fr);
+    margin-top: 11px;
+    padding: 7px;
+    gap: 5px;
+  }
+  .workspace-content .toolbar .project-count {
+    display: none;
+  }
+  .workspace-content .toolbar .search-input {
+    min-width: 0;
+    padding-inline: 8px;
+  }
+  .workspace-content .toolbar .client-select-button {
+    min-width: 0;
+    padding-inline: 7px;
+  }
+  .project-list-heading {
+    display: none;
+  }
+  .workspace-content .project-card {
+    grid-template-columns: minmax(0, 1fr) auto minmax(104px, auto);
+    grid-template-areas: "project project date" "status payment actions" "progress progress actions";
+    align-items: center;
+    gap: 4px;
+    min-height: 86px;
+    padding: 8px 8px 9px;
+  }
+  .project-card:first-of-type {
+    border-top: 0;
+  }
+  .project-card .date-list {
+    justify-items: end;
+  }
+  .project-card .date-list div:first-child {
+    display: none;
+  }
+  .project-card .project-meta-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .project-card .project-actions {
+    gap: 2px;
+  }
+  .project-card .project-actions > button,
+  .workspace-content .workspace-actions > summary {
+    min-height: 44px;
+    flex-basis: 44px;
+    width: 44px;
+    min-width: 44px;
+  }
+  .project-card .project-progress {
+    grid-column: 1 / 3;
+  }
+  .workspace-content .snippet-toolbar {
+    grid-template-columns: minmax(120px, 1fr) minmax(100px, 0.78fr);
+    gap: 6px;
+  }
+  .workspace-content .snippet-export-actions {
+    grid-column: 1 / -1;
+    justify-content: stretch;
+  }
+  .workspace-content .snippet-export-actions button {
+    flex: 1 1 auto;
+  }
+  .workspace-content .snippet-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+  }
+  .workspace-content .snippet-list {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+  .workspace-content .snippet-detail {
+    display: none;
+    min-height: 0;
+  }
+  .workspace-content .snippet-list-label {
+    position: static;
+  }
+  .snippets-preview :is(.snippet-library-heading, .snippet-toolbar, .snippet-list) {
+    display: none;
+  }
+  .snippets-preview .snippet-detail {
+    display: flex;
+  }
+  .snippets-preview .snippet-mobile-back {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-bottom: 6px;
+  }
+  .workspace-content .snippet-detail-head {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .workspace-content .snippet-actions {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+  }
+  .workspace-content .snippet-actions button {
+    min-height: 44px;
+  }
+  .workspace-content .snippet-editor-fields {
+    grid-template-columns: 1fr;
+  }
+  .workspace-content .code-preview {
+    min-height: 130px;
+  }
+  .todo-summary-strip {
+    margin-bottom: 8px;
+    gap: 11px;
+  }
+  .workspace-content .todo-entry-card {
+    padding: 7px;
+  }
+  .workspace-content .todo-entry {
+    grid-template-columns: minmax(90px, 1fr) 44px auto;
+    grid-template-areas: "task task task" "category due submit";
+  }
+  .workspace-content .todo-entry-new-category {
+    grid-template-areas: "task task task" "category due submit" "new-category new-category new-category";
+  }
+  .todo-list-heading .project-count {
+    display: none;
+  }
+  .workspace-content .todo-row {
+    grid-template-columns: 19px minmax(0, 1fr) repeat(3, 44px);
+    grid-template-areas: "todo-check todo-text todo-clock todo-edit todo-delete" ". todo-category todo-clock todo-edit todo-delete";
+    gap: 2px 4px;
+    min-height: 58px;
+    padding: 7px 5px;
+  }
+  .workspace-content .todo-category-badge {
+    display: inline-flex;
+    justify-self: start;
+    max-width: 100%;
+    width: auto;
+  }
+  .workspace-content .todo-row :is(.todo-due-action, .todo-edit-action, .todo-save-action, .todo-delete-action) {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .workspace-content .todo-text-display {
+    font-size: 0.82rem;
+    line-height: 1.35;
+  }
+  .migration-steps ol {
+    gap: 10px;
+  }
+  .workspace-content :is(.email-account-grid, .email-progress-grid) {
+    grid-template-columns: 1fr;
+  }
+  .workspace-content :is(.email-account-card, .email-summary-card, .email-log-card) {
+    padding: 11px;
+  }
+  .workspace-content .email-account-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .workspace-content .email-account-fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .workspace-content .email-account-row > .secondary-action {
+    justify-self: start;
+    width: auto;
+  }
+  .workspace-content .migration-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .migration-controls .email-date-filters {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .migration-controls .email-date-filters label {
+    flex-wrap: wrap;
+  }
+  .migration-controls .email-date-filters input {
+    width: 100%;
+  }
+  .migration-controls .email-hero-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .migration-controls .email-hero-actions .primary-action {
+    grid-column: 1 / -1;
+  }
+  .settings-row {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: 6px 8px;
+  }
+  .settings-row .settings-icon {
+    width: 31px;
+    height: 31px;
+  }
+  .settings-row > button {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .app .modal-backdrop {
+    padding: 5px 5px 0;
+  }
+  .app .workspace-drawer {
+    justify-content: center;
+    align-items: flex-end;
+  }
+  .app .modal-backdrop > .modal {
+    width: 100%;
+    max-height: calc(100dvh - 12px);
+    padding: 12px;
+  }
+  .workspace-drawer .modal {
+    border-radius: 12px 12px 0 0;
+  }
+  .app .modal-header > .icon-action {
+    min-width: 44px;
+    min-height: 44px;
+    width: 44px;
+  }
+  .project-form-modal .modal-actions {
+    bottom: -12px;
+    margin: 10px -12px -12px;
+    padding: 7px 12px max(8px, env(safe-area-inset-bottom, 0px));
+  }
+  .project-form-modal .price-field-row {
+    grid-template-columns: minmax(0, 1fr) minmax(91px, 0.7fr);
+  }
+  .app .todo-due-modal {
+    border-radius: 12px;
+  }
+  .app .todo-due-modal .modal-actions {
+    gap: 6px;
+  }
+}
+
+@media (max-width: 359px) {
+  .workspace-main .app-scroll {
+    padding-inline: 8px;
+  }
+  .workspace-content .project-card {
+    grid-template-columns: minmax(0, 1fr) auto minmax(91px, auto);
+  }
+  .workspace-content .project-card .project-actions > button, .workspace-content .project-card .workspace-actions > summary {
+    min-width: 40px;
+    width: 40px;
+    flex-basis: 40px;
+  }
+  .workspace-content .todo-row {
+    gap: 2px 3px;
+  }
+}

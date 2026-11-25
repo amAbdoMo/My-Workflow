@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import "./App.css";
+import "./Workspace.css";
+import { WorkspaceActions, WorkspaceBreadcrumb, WorkspaceDialog, WorkspaceHeading, WorkspaceIcon, WorkspaceNavigation } from "./WorkspaceNavigation";
 import seedSnippets from "./seedSnippets.json";
 import generalSnippets from "./generalSnippets.json";
 import { createZip, snippetFileName } from "./zipTools";
@@ -26,7 +28,6 @@ const SNIPPET_ENCODING_REPAIR_KEY = "wizard-schedule-snippets-encoding-repaired"
 const SNIPPET_CONTENT_REPAIR_KEY = "wizard-schedule-snippets-content-repaired-v2";
 const THEME_KEY = "wizard-schedules-theme";
 const LEGACY_THEME_KEY = "deadline-os-theme";
-const NOTIF_PROMPT_DISMISSED_KEY = "wizard-schedules-notif-prompt-dismissed";
 const NOTIFICATION_LATE_THRESHOLD_MS = 90_000;
 const ACTIVE_TAB_KEY = "wizard-schedules-active-tab";
 const UNPAID_CURRENCY_KEY = "wizard-schedules-unpaid-currency";
@@ -604,10 +605,13 @@ function EditorChrome({ title, children }) {
 }
 
 function CodePreview({ title, content }) {
+  const lines = String(content || " ").split(/\r?\n/);
   return (
     <EditorChrome title={title}>
-      <pre className="code-preview" role="region" aria-label={`${title} code preview`}>
-        <code dir="auto">{String(content || " ")}</code>
+      <pre className="code-preview" role="region" tabIndex={0} aria-label={`${title} code preview`}>
+        <code>{lines.map((line, index) => (
+          <span className="code-line" key={index}><span className="code-line-number" aria-hidden="true">{index + 1}</span>{line}</span>
+        ))}</code>
       </pre>
     </EditorChrome>
   );
@@ -862,13 +866,6 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [notifPermission, setNotifPermission] = useState(() => (typeof Notification !== "undefined" ? Notification.permission : "denied"));
-  const [notifPromptDismissed, setNotifPromptDismissed] = useState(() => {
-    try {
-      return localStorage.getItem(NOTIF_PROMPT_DISMISSED_KEY) === "1";
-    } catch {
-      return false;
-    }
-  });
   const [clients, setClients] = useState(() => {
     try {
       return JSON.parse(localStorage.getItem(CLIENTS_KEY)) || [];
@@ -904,6 +901,8 @@ export default function App() {
   const editIdRef = useRef(editId);
   const [snippetEditId, setSnippetEditId] = useState(null);
   const [selectedSnippetId, setSelectedSnippetId] = useState(null);
+  const [snippetView, setSnippetView] = useState("browse");
+  const [showUnpaid, setShowUnpaid] = useState(false);
   const [notesProjectId, setNotesProjectId] = useState(null);
   const [projectToDelete, setProjectToDelete] = useState(null);
   const [formPayAmount, setFormPayAmount] = useState("");
@@ -964,6 +963,7 @@ export default function App() {
 
   // Reopening/refreshing the app lands back on the section you left.
   useEffect(() => {
+    appScrollRef.current?.scrollTo?.(0, 0);
     try {
       localStorage.setItem(ACTIVE_TAB_KEY, activeTab);
     } catch {}
@@ -2203,6 +2203,11 @@ export default function App() {
     setSnippetCategoryMenuOpen(false);
   }
 
+  function openSnippetEditor() {
+    setSnippetView("editor");
+    appScrollRef.current?.scrollTo?.(0, 0);
+  }
+
   function handleEditSnippet(snippet) {
     setSnippetForm({
       title: snippet.title || "",
@@ -2212,6 +2217,7 @@ export default function App() {
     setSnippetEditId(snippet.id);
     setSelectedSnippetId(snippet.id);
     setSnippetCategoryMenuOpen(false);
+    openSnippetEditor();
   }
 
   function handleSaveSnippet() {
@@ -2236,6 +2242,8 @@ export default function App() {
     }
 
     resetSnippetForm();
+    setSnippetView("preview");
+    appScrollRef.current?.scrollTo?.(0, 0);
   }
 
   function handleSnippetEditorScroll(event) {
@@ -2251,6 +2259,7 @@ export default function App() {
       setSelectedSnippetId(next?.id || null);
     }
     if (snippetEditId === snippetId) resetSnippetForm();
+    if (snippets.length === 1) setSnippetView("browse");
   }
 
   async function handleCopySnippet(snippet) {
@@ -2519,41 +2528,49 @@ export default function App() {
     }
   }
 
+  const unpaidCurrencyControls = (
+    <div className="currency-toggle" role="group" aria-label="Unpaid total currency">
+      {Object.values(CURRENCIES).map((currency) => (
+        <button
+          className={unpaidCurrency === currency.code ? "currency-toggle-button currency-toggle-active" : "currency-toggle-button"}
+          type="button"
+          key={currency.code}
+          aria-pressed={unpaidCurrency === currency.code}
+          onClick={() => setUnpaidCurrency(currency.code)}
+        >
+          <span className="currency-toggle-label">{currency.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <main className={`app app-${theme}`}>
       <PtrIndicator pull={ptr.pull} refreshing={ptr.refreshing} returning={ptr.returning} />
-      <div className="ambient-stars" aria-hidden="true">
-        <span className="ambient-star ambient-star-1" />
-        <span className="ambient-star ambient-star-2" />
-        <span className="ambient-star ambient-star-3" />
-        <span className="ambient-star ambient-star-4" />
-        <span className="ambient-star ambient-star-5" />
-        <span className="ambient-star ambient-star-6" />
-        <span className="ambient-star ambient-star-7" />
-        <span className="ambient-star ambient-star-8" />
-        <span className="ambient-star ambient-star-9" />
-        <span className="ambient-star ambient-star-10" />
-        <span className="ambient-star ambient-star-11" />
-        <span className="ambient-star ambient-star-12" />
-        <span className="ambient-star ambient-star-13" />
-        <span className="ambient-star ambient-star-14" />
-      </div>
-
       <div className="window-titlebar" aria-hidden="true">
         <img src="./wizard-schedules-transparent.ico" alt="" />
         <span>{APP_NAME}</span>
       </div>
 
-      <div className="app-scroll" ref={appScrollRef}>
-      <header className="topbar">
-        <div className="brand-lockup">
+      <div className="workspace-layout">
+        <aside className="workspace-rail">
+        <div className="brand-lockup workspace-brand">
           <img src={`${process.env.PUBLIC_URL}/wizard-schedules-logo.png`} alt="" />
           <div>
-            <p className="eyebrow">Project command center</p>
             <h1><BrandName /></h1>
           </div>
         </div>
 
+          <WorkspaceNavigation activeTab={activeTab} onSelect={setActiveTab} />
+          <div className="workspace-utilities" aria-label="Workspace utilities">
+            <button className="tab-button" type="button" onClick={() => setShowClients(true)}><WorkspaceIcon name="clients" />Clients</button>
+            <button className={`tab-button${activeTab === "settings" ? " tab-button-active" : ""}`} type="button" aria-current={activeTab === "settings" ? "page" : undefined} onClick={() => setActiveTab("settings")}><WorkspaceIcon name="settings" />Settings</button>
+            <ThemeToggle theme={theme} onToggle={() => setTheme((value) => value === "dark" ? "light" : "dark")} />
+          </div>
+        </aside>
+        <div className="workspace-main">
+      <header className="topbar">
+        <WorkspaceBreadcrumb activeTab={activeTab} />
         <div className="topbar-actions" ref={topbarActionsRef}>
           <button
             className="topbar-menu-button"
@@ -2597,52 +2614,16 @@ export default function App() {
             </svg>
             {unreadNotificationCount > 0 && <span className="bell-badge">{unreadNotificationCount > 9 ? "9+" : unreadNotificationCount}</span>}
           </button>
-          <button className="primary-action" type="button" onClick={openCreateForm}>
-            Add Project
-          </button>
         </div>
       </header>
 
-      {!isElectron() && notifPermission === "default" && !notifPromptDismissed && (
-        <div className="notif-enable-banner" role="status">
-          <span>Turn on notifications to get reminder alerts on this device.</span>
-          <button className="primary-action" type="button" onClick={enableNotifications}>
-            Enable
-          </button>
-          <button
-            className="icon-action"
-            type="button"
-            aria-label="Dismiss notification prompt"
-            title="Dismiss"
-            onClick={() => {
-              setNotifPromptDismissed(true);
-              try {
-                localStorage.setItem(NOTIF_PROMPT_DISMISSED_KEY, "1");
-              } catch {}
-            }}
-          >
-            X
-          </button>
-        </div>
-      )}
-
-      <nav className="app-tabs" aria-label="Main sections">
-        <button className={activeTab === "schedule" ? "tab-button tab-button-active" : "tab-button"} type="button" onClick={() => setActiveTab("schedule")}>
-          Schedule
-        </button>
-        <button className={activeTab === "snippets" ? "tab-button tab-button-active" : "tab-button"} type="button" onClick={() => setActiveTab("snippets")}>
-          Snippets
-        </button>
-        <button className={activeTab === "email" ? "tab-button tab-button-active" : "tab-button"} type="button" onClick={() => setActiveTab("email")}>
-          Email Migration
-        </button>
-        <button className={activeTab === "todos" ? "tab-button tab-button-active" : "tab-button"} type="button" onClick={() => setActiveTab("todos")}>
-          To-Do
-        </button>
-      </nav>
-
+      <div className="app-scroll" ref={appScrollRef}>
+      <div className="workspace-content">
       {activeTab === "schedule" ? (
       <>
+      <WorkspaceHeading title="Schedule" description="Track project deadlines, progress, and payments.">
+        <button className="primary-action" type="button" onClick={openCreateForm}><WorkspaceIcon name="plus" />Add project</button>
+      </WorkspaceHeading>
       <section className="bento-grid" aria-label="Project overview">
         <article className="bento-card bento-card-large overview-card">
           <div>
@@ -2654,13 +2635,12 @@ export default function App() {
                 : "Add a project to start tracking delivery dates."}
             </p>
           </div>
-          <div
-            className="overview-meter"
-            aria-hidden="true"
-            style={{ "--meter": `${nextProject ? nextProject.progress * 3.6 : 0}deg` }}
-          >
-            <span>{nextProject ? Math.round(nextProject.progress) : 0}%</span>
-          </div>
+          {nextProject && (
+            <div className="deadline-timeline">
+              <div className="progress-track" aria-label={`${Math.round(nextProject.progress)} percent complete`}><span style={{ width: `${nextProject.progress}%` }} /></div>
+              <div className="deadline-timeline-labels"><span>Started {nextProject.start}</span><strong>{Math.round(nextProject.progress)}% complete</strong></div>
+            </div>
+          )}
         </article>
 
         <article className="bento-card bento-card-large unpaid-card">
@@ -2671,18 +2651,7 @@ export default function App() {
               <small>{currencyRateStatus}: 1 USD = {formatMoney(usdEgpRate, "EGP")}</small>
             </div>
             <div className="unpaid-card-tools">
-              <div className="currency-toggle" role="group" aria-label="Unpaid total currency">
-                {Object.values(CURRENCIES).map((currency) => (
-                  <button
-                    className={unpaidCurrency === currency.code ? "currency-toggle-button currency-toggle-active" : "currency-toggle-button"}
-                    type="button"
-                    key={currency.code}
-                    onClick={() => setUnpaidCurrency(currency.code)}
-                  >
-                    <span className="currency-toggle-label">{currency.label}</span>
-                  </button>
-                ))}
-              </div>
+              {unpaidCurrencyControls}
               <button
                 className="money-visibility-toggle"
                 type="button"
@@ -2697,29 +2666,10 @@ export default function App() {
                 </svg>
               </button>
               <span>{unpaidProjects.length} open</span>
+              <button className="icon-action unpaid-open" type="button" aria-label="View unpaid projects" title="View unpaid projects" onClick={() => setShowUnpaid(true)}><WorkspaceIcon name="arrow" /></button>
             </div>
           </div>
 
-          <div className="unpaid-list">
-            {unpaidProjects.length === 0 ? (
-              <p className="muted">No unpaid project prices yet.</p>
-            ) : (
-              unpaidProjects.map((site) => (
-                <button className="unpaid-row unpaid-row-action" key={site.id} type="button" onClick={() => setNotesProjectId(site.id)} title={`Manage payments for ${site.name}`}>
-                  <span>
-                    <strong>{site.name}</strong>
-                    {site.clientName ? <small>{site.clientName}</small> : null}
-                    {site.paymentsList.length > 0 ? (
-                      <small className="unpaid-row-detail">
-                        {`${site.paymentsList.length} payment${site.paymentsList.length === 1 ? "" : "s"} • ${moneyVisible ? `${formatMoney(site.paidTotal, site.currency)} of ${formatMoney(site.priceValue, site.currency)}` : "Tap to manage"}`}
-                      </small>
-                    ) : null}
-                  </span>
-                  <b>{moneyVisible ? formatMoney(convertMoney(site.remainingValue, site.currency, unpaidCurrency, usdEgpRate), unpaidCurrency) : maskMoney(unpaidCurrency)}</b>
-                </button>
-              ))
-            )}
-          </div>
         </article>
 
         <article className="bento-card metric-card">
@@ -2750,7 +2700,8 @@ export default function App() {
       <section className="toolbar" aria-label="Project filters">
         <input
           className="search-input"
-          placeholder="Search projects or URLs"
+          placeholder="Search projects"
+          aria-label="Search projects or URLs"
           value={search}
           onFocus={() => setClientFilterMenuOpen(false)}
           onChange={(event) => setSearch(event.target.value)}
@@ -2825,6 +2776,7 @@ export default function App() {
       </section>
 
       <section ref={projectGridRef} className="project-grid" aria-label="Projects" tabIndex={-1}>
+        {filtered.length > 0 && <div className="project-list-heading" aria-hidden="true"><span>Project</span><span>Deadline</span><span>Status</span><span>Progress</span><span>Payments</span><span>Actions</span></div>}
         {filtered.length === 0 ? (
           <article className="empty-state">
             <h2>No projects found</h2>
@@ -2850,13 +2802,13 @@ export default function App() {
                     )}
                   </div>
                 </div>
-                <StatusBadge daysLeft={site.daysLeft} />
               </div>
+              <div className="project-status"><StatusBadge daysLeft={site.daysLeft} /></div>
 
               {(site.price || site.paid !== undefined) && (
                 <div className="project-meta-row">
                   {site.price ? (
-                    <span className="project-price" title={site.paymentStatus === "partial" ? `${formatMoney(site.paidTotal, site.currency)} paid of ${formatMoney(site.priceValue, site.currency)}` : formatMoney(site.priceValue, site.currency)}><span className="badge-text">{moneyVisible ? (site.paymentStatus === "partial" ? `${formatMoney(site.remainingValue, site.currency)} left` : formatMoney(site.priceValue, site.currency)) : maskMoney(site.currency)}</span></span>
+                    <span className="project-price" title={moneyVisible ? (site.paymentStatus === "partial" ? `${formatMoney(site.paidTotal, site.currency)} paid of ${formatMoney(site.priceValue, site.currency)}` : formatMoney(site.priceValue, site.currency)) : undefined}><span className="badge-text">{moneyVisible ? (site.paymentStatus === "partial" ? `${formatMoney(site.remainingValue, site.currency)} left` : formatMoney(site.priceValue, site.currency)) : maskMoney(site.currency)}</span></span>
                   ) : (
                     <span className="project-price project-price-empty"><span className="badge-text">No price</span></span>
                   )}
@@ -2868,8 +2820,9 @@ export default function App() {
                 </div>
               )}
 
-              <div className="progress-track" aria-label={`${Math.round(site.progress)} percent complete`}>
-                <span style={{ width: `${site.progress}%` }} />
+              <div className="project-progress">
+                <div className="progress-track" aria-label={`${Math.round(site.progress)} percent complete`}><span style={{ width: `${site.progress}%` }} /></div>
+                <span aria-hidden="true">{Math.round(site.progress)}%</span>
               </div>
 
               <dl className="date-list">
@@ -2884,12 +2837,11 @@ export default function App() {
               </dl>
 
               <div className="project-actions">
-                {site.notesList.length > 0 ? (
-                  <button
+                <button
                     className="project-notes-action"
                     type="button"
-                    aria-label={`Open ${site.notesList.length} note${site.notesList.length === 1 ? "" : "s"} for ${site.name}`}
-                    title="Open notes"
+                    aria-label={`Notes and payments for ${site.name}`}
+                    title="Notes and payments"
                     onClick={() => setNotesProjectId(site.id)}
                   >
                     <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -2899,15 +2851,12 @@ export default function App() {
                       <path d="M9 13h6" />
                       <path d="M9 17h3" />
                     </svg>
-                    <span className="project-notes-count" aria-hidden="true">{site.notesList.length}</span>
+                    {site.notesList.length > 0 && <span className="project-notes-count" aria-hidden="true">{site.notesList.length}</span>}
                   </button>
-                ) : null}
-                <button type="button" onClick={() => handleEdit(site)}>
-                  Edit
-                </button>
-                <button className="danger-action" type="button" onClick={() => handleDeleteSite(site.id)}>
-                  Delete
-                </button>
+                <button type="button" aria-label="Edit" title="Edit project" onClick={() => handleEdit(site)}><WorkspaceIcon name="edit" /></button>
+                <WorkspaceActions label={`More actions for ${site.name}`}>
+                  <button className="danger-action" type="button" aria-label="Delete" onClick={() => handleDeleteSite(site.id)}><WorkspaceIcon name="trash" />Delete project</button>
+                </WorkspaceActions>
               </div>
             </article>
           ))
@@ -2915,48 +2864,20 @@ export default function App() {
       </section>
       </>
       ) : activeTab === "snippets" ? (
-        <section className="snippets-view" aria-label="Code snippets">
-          <section className="snippets-overview">
-            <article className="bento-card snippets-hero">
-              <div className="snippets-hero-copy">
-                <p className="card-kicker">Snippet library</p>
-                <h2>{snippets.length} saved code snippets</h2>
-                <p className="muted">Search, filter, copy, edit, and export your WordPress code library.</p>
-              </div>
-              <div className="snippet-stats" aria-label="Snippet statistics">
-                <div>
-                  <span>Categories</span>
-                  <strong>{Math.max(snippetCategories.length - 1, 0)}</strong>
-                  <small>Groups</small>
-                </div>
-                <div>
-                  <span>Visible</span>
-                  <strong>{filteredSnippets.length}</strong>
-                  <small>After filters</small>
-                </div>
-              </div>
-            </article>
-          </section>
-
+        <section className={`snippets-view snippets-${snippetView}`} aria-label="Code snippets">
+          <div className="snippet-library-heading">
+            <WorkspaceHeading title="Snippets" description={`${snippets.length} saved snippets across ${Math.max(snippetCategories.length - 1, 0)} categories.`}>
+              <button className="primary-action" type="button" onClick={openSnippetEditor}><WorkspaceIcon name="plus" />{snippetEditId || snippetForm.title || snippetForm.content ? "Resume draft" : "Add snippet"}</button>
+            </WorkspaceHeading>
+          </div>
           <section className="snippet-toolbar">
             <input
               className="search-input"
-              placeholder="Search titles, categories, or code"
+              placeholder="Search snippets"
+              aria-label="Search titles, categories, or code"
               value={snippetSearch}
               onChange={(event) => setSnippetSearch(event.target.value)}
             />
-            <div className="category-filter">
-              {snippetCategories.map((category) => (
-                <button
-                  className={snippetCategory === category ? "category-pill category-pill-active" : "category-pill"}
-                  type="button"
-                  key={category}
-                  onClick={() => setSnippetCategory(category)}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
             <div className="client-select snippet-category-filter-mobile" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSnippetFilterMenuOpen(false); }}>
               <button
                 className="client-select-button"
@@ -3001,7 +2922,8 @@ export default function App() {
           {copyState && <div className="snippet-toast">{copyState}</div>}
 
           <section className="snippet-workspace">
-            <aside className="snippet-list">
+            <aside className="snippet-list" aria-label="Snippet library">
+              <div className="snippet-list-label"><strong>Snippet library</strong><span>{filteredSnippets.length} shown</span></div>
               {filteredSnippets.length === 0 ? (
                 <div className="empty-inline">No snippets found.</div>
               ) : (
@@ -3010,16 +2932,17 @@ export default function App() {
                     className={selectedSnippet?.id === snippet.id ? "snippet-list-item snippet-list-item-active" : "snippet-list-item"}
                     type="button"
                     key={snippet.id}
-                    onClick={() => setSelectedSnippetId(snippet.id)}
+                    onClick={() => { setSelectedSnippetId(snippet.id); setSnippetView("preview"); appScrollRef.current?.scrollTo?.(0, 0); }}
                   >
-                    <strong>{snippet.title}</strong>
-                    <span>{snippet.category || "Uncategorized"}</span>
+                    <div><strong>{snippet.title}</strong><span>{snippet.category || "Uncategorized"}</span></div>
+                    <WorkspaceIcon name="chevron" />
                   </button>
                 ))
               )}
             </aside>
 
-            <article className="snippet-detail">
+            <article className="snippet-detail" aria-label="Snippet preview">
+              <button className="workspace-back snippet-mobile-back" type="button" onClick={() => setSnippetView("browse")}><WorkspaceIcon name="back" />Back to snippets</button>
               {selectedSnippet ? (
                 <>
                   <div className="snippet-detail-head">
@@ -3029,17 +2952,18 @@ export default function App() {
                     </div>
                     <div className="snippet-actions">
                       <button className="primary-action" type="button" onClick={() => handleCopySnippet(selectedSnippet)}>
-                        Copy
+                        Copy code
                       </button>
                       <button type="button" onClick={() => handleEditSnippet(selectedSnippet)}>
                         Edit
                       </button>
-                      <button className="danger-action" type="button" onClick={() => handleDeleteSnippet(selectedSnippet.id)}>
-                        Delete
-                      </button>
+                      <WorkspaceActions label="More snippet actions">
+                        <button className="danger-action" type="button" onClick={() => handleDeleteSnippet(selectedSnippet.id)}><WorkspaceIcon name="trash" />Delete snippet</button>
+                      </WorkspaceActions>
                     </div>
                   </div>
                   <CodePreview title={selectedSnippet.title} content={selectedSnippet.content} />
+                  <p className="snippet-scroll-hint muted">Scroll within the code area to view long lines.</p>
                 </>
               ) : (
                 <div className="empty-inline">Choose a snippet to preview.</div>
@@ -3047,9 +2971,10 @@ export default function App() {
             </article>
           </section>
 
-          <section className="snippet-editor-row">
+          {snippetView === "editor" && <section className="snippet-editor-row">
+            <button className="workspace-back" type="button" onClick={() => { setSnippetCategoryMenuOpen(false); setSnippetView(selectedSnippet ? "preview" : "browse"); }}><WorkspaceIcon name="back" />Back to snippets</button>
+            <WorkspaceHeading title={snippetEditId ? "Edit snippet" : "Add snippet"} description="Keep reusable code grouped and easy to find." />
             <article className="snippet-editor" onClick={() => setSnippetCategoryMenuOpen(false)}>
-              <p className="card-kicker">{snippetEditId ? "Update current code" : "Add new code"}</p>
               <div className="snippet-editor-fields">
                 <label>
                   Title
@@ -3120,14 +3045,6 @@ export default function App() {
                     />
                   </label>
                 )}
-                <div className="modal-actions snippet-editor-actions">
-                  <button type="button" onClick={resetSnippetForm}>
-                    Clear
-                  </button>
-                  <button className="primary-action" type="button" onClick={handleSaveSnippet}>
-                    {snippetEditId ? "Update Code" : "Add Code"}
-                  </button>
-                </div>
               </div>
               <label>
                 Code
@@ -3148,36 +3065,21 @@ export default function App() {
                   </div>
                 </EditorChrome>
               </label>
+              <div className="modal-actions snippet-editor-actions">
+                <button type="button" onClick={resetSnippetForm}>Clear</button>
+                <button type="button" onClick={() => { setSnippetCategoryMenuOpen(false); setSnippetView(selectedSnippet ? "preview" : "browse"); }}>Cancel</button>
+                <button className="primary-action" type="button" onClick={handleSaveSnippet}>{snippetEditId ? "Save changes" : "Add snippet"}</button>
+              </div>
             </article>
-          </section>
+          </section>}
         </section>
       ) : activeTab === "todos" ? (
         <section className="todo-view" aria-label="To-do list">
-          <section className="todo-hero-grid">
-            <article className="bento-card todo-hero-card">
-              <div>
-                <p className="card-kicker">Daily checklist</p>
-                <h2>{openTodoCount === 0 ? "No open tasks" : `${openTodoCount} open task${openTodoCount === 1 ? "" : "s"}`}</h2>
-                <p className="muted">Add quick work items, check them off when finished, and keep completed items visible until you clear them.</p>
-              </div>
-              <div
-                className="overview-meter todo-progress-meter"
-                aria-label={`${todoCompletionPercent} percent of visible to-do items complete`}
-                style={{ "--meter": `${todoCompletionPercent * 3.6}deg` }}
-              >
-                <span>{todoCompletionPercent}%</span>
-              </div>
-            </article>
-            <article className="bento-card todo-stats-card">
-              <div>
-                <span>Open</span>
-                <strong>{openTodoCount}</strong>
-              </div>
-              <div>
-                <span>Done</span>
-                <strong>{completedTodoCount}</strong>
-              </div>
-            </article>
+          <WorkspaceHeading title="To-Do" description="Capture tasks and set reminders." />
+          <section className="todo-summary-strip" aria-label="Task summary">
+            <span><strong>{openTodoCount}</strong> open</span>
+            <span><strong>{completedTodoCount}</strong> done</span>
+            <div className="progress-track" aria-label={`${todoCompletionPercent} percent of visible tasks complete`}><span style={{ width: `${todoCompletionPercent}%` }} /></div>
           </section>
 
           <section className="todo-entry-card">
@@ -3188,8 +3090,7 @@ export default function App() {
                 handleAddTodo();
               }}
             >
-              <div className="todo-entry-row todo-entry-main-row">
-                <input
+              <input
                   className="search-input todo-input"
                   dir={getTextDirection(todoDraft)}
                   value={todoDraft}
@@ -3208,11 +3109,7 @@ export default function App() {
                     <path d="M12 7v5l3 2" />
                   </svg>
                 </button>
-                <button className="primary-action" type="submit">
-                  Add Item
-                </button>
-              </div>
-              <div className="todo-entry-row todo-entry-secondary-row">
+                <button className="primary-action" type="submit"><WorkspaceIcon name="plus" />Add task</button>
               <div className="client-select todo-category-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoCategoryMenuOpen(false); }}>
                 <button
                   className="client-select-button"
@@ -3266,79 +3163,80 @@ export default function App() {
                   onChange={(event) => setTodoNewCategory(event.target.value)}
                 />
               ) : null}
-              <span className="todo-entry-spacer" aria-hidden="true" />
-              <div className="todo-filter-inline" aria-label="To-do category filter">
-                <div className="client-select todo-filter-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoFilterMenuOpen(false); }}>
-                  <button
-                    className="client-select-button"
-                    type="button"
-                    aria-haspopup="listbox"
-                    aria-expanded={todoFilterMenuOpen}
-                    onClick={() => setTodoFilterMenuOpen((open) => !open)}
-                  >
-                    <span>{todoFilterLabel}</span>
-                    <b aria-hidden="true">v</b>
-                  </button>
-
-                  {todoFilterMenuOpen && (
-                    <div className="client-select-menu" role="listbox">
-                      <button
-                        className={todoFilter === "all" ? "client-option client-option-active" : "client-option"}
-                        type="button"
-                        role="option"
-                        aria-selected={todoFilter === "all"}
-                        onClick={() => {
-                          setTodoFilter("all");
-                          setTodoFilterMenuOpen(false);
-                        }}
-                      >
-                        <span>All categories</span>
-                        <b className="client-option-count">{todoItems.length}</b>
-                      </button>
-                      {todoCategories.map((category) => (
-                        <button
-                          className={todoFilter === category ? "client-option client-option-active" : "client-option"}
-                          type="button"
-                          role="option"
-                          aria-selected={todoFilter === category}
-                          key={category}
-                          onClick={() => {
-                            setTodoFilter(category);
-                            setTodoFilterMenuOpen(false);
-                          }}
-                        >
-                          <span>{category}</span>
-                          <b className="client-option-count">{todoCategoryCounts[category] || 0}</b>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  className="icon-action danger-action todo-delete-category-action"
-                  type="button"
-                  aria-label={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete selected category and its items"}
-                  onClick={handleDeleteTodoCategory}
-                  disabled={todoFilter === "all" || todoFilter === "General" ? totalCompletedTodoCount === 0 : false}
-                  title={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete this category and its items"}
-                >
-                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                    <path d="M3 6h18" />
-                    <path d="M8 6V4h8v2" />
-                    <path d="M19 6l-1 14H6L5 6" />
-                    <path d="M10 11v5" />
-                    <path d="M14 11v5" />
-                  </svg>
-                </button>
-                <span className="project-count">
-                  {filteredTodoItems.length} item{filteredTodoItems.length === 1 ? "" : "s"}
-                </span>
-              </div>
-              </div>
             </form>
           </section>
 
           <section className="todo-list-card" aria-label="To-do items">
+            <header className="todo-list-heading">
+              <h3>Task list</h3>
+            <div className="todo-filter-inline" aria-label="To-do category filter">
+              <div className="client-select todo-filter-select" onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setTodoFilterMenuOpen(false); }}>
+                <button
+                  className="client-select-button"
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={todoFilterMenuOpen}
+                  onClick={() => setTodoFilterMenuOpen((open) => !open)}
+                >
+                  <span>{todoFilterLabel}</span>
+                  <b aria-hidden="true">v</b>
+                </button>
+
+                {todoFilterMenuOpen && (
+                  <div className="client-select-menu" role="listbox">
+                    <button
+                      className={todoFilter === "all" ? "client-option client-option-active" : "client-option"}
+                      type="button"
+                      role="option"
+                      aria-selected={todoFilter === "all"}
+                      onClick={() => {
+                        setTodoFilter("all");
+                        setTodoFilterMenuOpen(false);
+                      }}
+                    >
+                      <span>All categories</span>
+                      <b className="client-option-count">{todoItems.length}</b>
+                    </button>
+                    {todoCategories.map((category) => (
+                      <button
+                        className={todoFilter === category ? "client-option client-option-active" : "client-option"}
+                        type="button"
+                        role="option"
+                        aria-selected={todoFilter === category}
+                        key={category}
+                        onClick={() => {
+                          setTodoFilter(category);
+                          setTodoFilterMenuOpen(false);
+                        }}
+                      >
+                        <span>{category}</span>
+                        <b className="client-option-count">{todoCategoryCounts[category] || 0}</b>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                className="icon-action danger-action todo-delete-category-action"
+                type="button"
+                aria-label={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete selected category and its items"}
+                onClick={handleDeleteTodoCategory}
+                disabled={todoFilter === "all" || todoFilter === "General" ? totalCompletedTodoCount === 0 : false}
+                title={todoFilter === "all" || todoFilter === "General" ? "Delete all checked items" : "Delete this category and its items"}
+              >
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M3 6h18" />
+                  <path d="M8 6V4h8v2" />
+                  <path d="M19 6l-1 14H6L5 6" />
+                  <path d="M10 11v5" />
+                  <path d="M14 11v5" />
+                </svg>
+              </button>
+              <span className="project-count">
+                {filteredTodoItems.length} item{filteredTodoItems.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            </header>
             {filteredTodoItems.length === 0 ? (
               <article className="empty-state todo-empty-state">
                 <h2>{todoItems.length === 0 ? "No to-do items yet" : "No items in this category"}</h2>
@@ -3366,7 +3264,6 @@ export default function App() {
                       aria-label={`Mark to-do item ${index + 1} ${todo.done ? "not done" : "done"}`}
                       onChange={(event) => handleTodoChange(todo.id, { done: event.target.checked })}
                     />
-                    <span className="todo-number">{index + 1}</span>
                     {todoEditId === todo.id ? (
                       <input
                         className="todo-text-input"
@@ -3377,6 +3274,7 @@ export default function App() {
                         onChange={(event) => setTodoEditText(event.target.value)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter") saveEditingTodo();
+                          if (event.key === "Escape") setTodoEditId(null);
                         }}
                       />
                     ) : (
@@ -3416,15 +3314,9 @@ export default function App() {
                         </svg>
                       </button>
                     )}
-                    <button className="icon-action danger-action todo-delete-action" type="button" aria-label={`Delete to-do item ${index + 1}`} onClick={() => handleDeleteTodo(todo.id)}>
-                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                        <path d="M3 6h18" />
-                        <path d="M8 6V4h8v2" />
-                        <path d="M19 6l-1 14H6L5 6" />
-                        <path d="M10 11v5" />
-                        <path d="M14 11v5" />
-                      </svg>
-                    </button>
+                    <WorkspaceActions className="todo-row-menu" label={`More actions for to-do item ${index + 1}`}>
+                      <button className="danger-action" type="button" aria-label={`Delete to-do item ${index + 1}`} onClick={() => handleDeleteTodo(todo.id)}><WorkspaceIcon name="trash" />Delete task</button>
+                    </WorkspaceActions>
                   </article>
                 ))}
               </div>
@@ -3432,106 +3324,45 @@ export default function App() {
           </section>
         </section>
       ) : activeTab === "settings" ? (
-        <section className="email-migration-view" aria-label="Settings">
-          <section className="email-hero-grid">
-            <article className="bento-card email-hero-card">
-              <p className="card-kicker">Settings</p>
-              <h2>App data</h2>
-              <p className="muted">Create or restore a full backup of your projects, snippets, clients, and preferences.</p>
-              <div className="email-hero-actions">
-                <button className="primary-action" type="button" onClick={handleBackup}>
-                  Backup App Data
-                </button>
-                <button className="secondary-action" type="button" onClick={handleRestore}>
-                  Restore App Data
-                </button>
-              </div>
+        <section className="settings-view" aria-label="Settings">
+          <WorkspaceHeading title="Settings" description="Manage app data and appearance." />
+          <div className="settings-sections">
+            <h3>App data</h3>
+            <article className="bento-card settings-row">
+              <span className="settings-icon"><WorkspaceIcon name="download" /></span>
+              <div><h4>Back up app data</h4><p className="muted">Download one JSON file with your projects, snippets, clients, notes, and preferences.</p></div>
+              <button className="primary-action" type="button" onClick={handleBackup}>Download backup</button>
             </article>
-            <article className="bento-card email-safety-card">
-              <p className="card-kicker">About backups</p>
-              <ul>
-                <li>Backup saves all projects, snippets, clients, notes, theme, and preferences to a single <strong>.json</strong> file.</li>
-                <li>Restore reads a backup file and overwrites all current data, then reloads the app.</li>
-                <li>Backup files are plain JSON — you can inspect them in any text editor.</li>
-              </ul>
+            <article className="bento-card settings-row">
+              <span className="settings-icon settings-warning"><WorkspaceIcon name="warning" /></span>
+              <div><h4>Restore app data</h4><p className="muted">Restoring a backup replaces your current app data and reloads the workspace.</p></div>
+              <button className="secondary-action" type="button" onClick={handleRestore}>Choose backup file</button>
             </article>
-          </section>
+            <h3>Appearance</h3>
+            <article className="bento-card settings-row">
+              <span className="settings-icon"><WorkspaceIcon name="moon" /></span>
+              <div><h4>Color theme</h4><p className="muted">Switch between dark and light appearance.</p></div>
+              <ThemeToggle theme={theme} onToggle={() => setTheme((value) => value === "dark" ? "light" : "dark")} />
+            </article>
+          </div>
         </section>
       ) : (
         <section className="email-migration-view" aria-label="Email migration">
-          <section className="email-hero-grid">
-            <article className="bento-card email-hero-card">
-              <p className="card-kicker">Local IMAP transfer</p>
-              <h2>Copy mailboxes between hosting providers</h2>
-              <p className="muted">Runs on this computer through Electron. Passwords are only sent to the local migration process and are not saved.</p>
-              <div className="email-date-filters">
-                <label>
-                  <span>From</span>
-                  <input type="text" inputMode="numeric" placeholder="Enter the date" value={imapDateFrom} onChange={(e) => setImapDateFrom(e.target.value)} />
-                </label>
-                <label>
-                  <span>To</span>
-                  <input type="text" inputMode="numeric" placeholder="Enter the date" value={imapDateTo} onChange={(e) => setImapDateTo(e.target.value)} />
-                </label>
-              </div>
-              <div className="email-hero-actions">
-                {!imapMigrating ? (
-                  <>
-                    <button className="primary-action" type="button" onClick={handleStartImapMigration} disabled={imapTesting}>
-                      Start Migration
-                    </button>
-                    <button className="secondary-action" type="button" onClick={handleExportBackup} disabled={imapTesting}>
-                      Backup to .eml
-                    </button>
-                    <button className="secondary-action" type="button" onClick={handleImportBackup} disabled={imapTesting}>
-                      Restore from .eml
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {imapPaused ? (
-                      <button className="primary-action" type="button" onClick={handleResumeImapMigration}>
-                        Resume
-                      </button>
-                    ) : (
-                      <button className="secondary-action" type="button" onClick={handlePauseImapMigration}>
-                        Pause
-                      </button>
-                    )}
-                    <button className="secondary-action" type="button" onClick={handleCancelImapMigration}>
-                      Cancel
-                    </button>
-                  </>
-                )}
-                <button className="secondary-action" type="button" onClick={() => setImapLogs([])} disabled={imapLogs.length === 0}>
-                  Clear Logs
-                </button>
-              </div>
-            </article>
-
-            <article className="bento-card email-safety-card">
-              <p className="card-kicker">Safety notes</p>
-              <ul>
-                <li>Use SSL/TLS IMAP whenever possible.</li>
-                <li>Create the destination mailbox before migrating.</li>
-                <li>Run this before changing MX records, then test mail delivery.</li>
-                <li>Duplicate prevention uses Message-ID headers when available.</li>
-                <li><strong>Backup to .eml</strong> downloads all emails as .eml files you can archive or manually upload.</li>
-                <li><strong>Restore from .eml</strong> imports saved .eml files into the destination mailbox.</li>
-              </ul>
-            </article>
-          </section>
-
+          <WorkspaceHeading title="Email Migration" description="Copy IMAP mailboxes between providers." />
+          <div className="bento-card migration-steps" aria-label="Transfer sequence">
+            <ol><li>Connect</li><li>Test</li><li>Transfer</li></ol>
+            <span className="muted">{isElectron() ? "Runs in the desktop app." : "Runs through the WorkflowY server."} Mailbox passwords are not saved.</span>
+          </div>
           <section className="email-account-grid">
             {[
-              ["source", "Old provider", imapSourceShared, imapSourceAccounts, setImapSourceAccounts],
-              ["target", "New provider", imapTargetShared, imapTargetAccounts, setImapTargetAccounts],
+              ["source", "Source mailbox", imapSourceShared, imapSourceAccounts, setImapSourceAccounts],
+              ["target", "Destination mailbox", imapTargetShared, imapTargetAccounts, setImapTargetAccounts],
             ].map(([side, title, shared, accounts, setAccounts]) => (
               <article className="email-account-card" key={side}>
                 <div className="email-account-head">
                   <div>
-                    <p className="card-kicker">{side === "source" ? "Source" : "Destination"}</p>
                     <h2>{title}</h2>
+                    <p className="muted">{side === "source" ? "Copy messages from this provider" : "Copy messages to this provider"}</p>
                   </div>
                 </div>
 
@@ -3586,11 +3417,11 @@ export default function App() {
                     <div className="email-account-row" key={index}>
                       <span className="email-account-number">{index + 1}</span>
                       <div className="email-account-fields">
-                        <input value={acc.user} placeholder="Email / username" onChange={(e) => { updateImapAccount(side, index, "user", e.target.value); }} />
-                        <input value={acc.pass} type="password" placeholder="Password" onChange={(e) => updateImapAccount(side, index, "pass", e.target.value)} />
+                        <input aria-label="Email or username" value={acc.user} placeholder="Email / username" onChange={(e) => { updateImapAccount(side, index, "user", e.target.value); }} />
+                        <input aria-label="Mailbox password" value={acc.pass} type="password" placeholder="Password" onChange={(e) => updateImapAccount(side, index, "pass", e.target.value)} />
                       </div>
                       <button className="secondary-action" type="button" onClick={() => handleTestImap(side, index)} disabled={imapMigrating || Boolean(imapTesting)}>
-                        {imapTesting === `${side}-${index}` ? "..." : "Test"}
+                        {imapTesting === `${side}-${index}` ? "Testing…" : "Test connection"}
                       </button>
                       {side === "source" && accounts.length > 1 && (
                         <button className="icon-action" type="button" onClick={() => removeImapAccountPair(index)} disabled={imapMigrating} title="Remove">
@@ -3607,6 +3438,54 @@ export default function App() {
                 </div>
               </article>
             ))}
+          </section>
+
+          <section className="bento-card migration-controls" aria-label="Transfer controls">
+            <div><p className="card-kicker">Date range (optional)</p>
+              <div className="email-date-filters">
+                <label>
+                  <span>From</span>
+                  <input type="text" inputMode="numeric" placeholder="Enter the date" value={imapDateFrom} onChange={(e) => setImapDateFrom(e.target.value)} />
+                </label>
+                <label>
+                  <span>To</span>
+                  <input type="text" inputMode="numeric" placeholder="Enter the date" value={imapDateTo} onChange={(e) => setImapDateTo(e.target.value)} />
+                </label>
+              </div>
+            </div>
+              <div className="email-hero-actions">
+                {!imapMigrating ? (
+                  <>
+                    <button className="primary-action" type="button" onClick={handleStartImapMigration} disabled={imapTesting}>
+                      Start Migration
+                    </button>
+                    <button className="secondary-action" type="button" onClick={handleExportBackup} disabled={imapTesting}>
+                      Backup to .eml
+                    </button>
+                    <button className="secondary-action" type="button" onClick={handleImportBackup} disabled={imapTesting}>
+                      Restore from .eml
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    {imapPaused ? (
+                      <button className="primary-action" type="button" onClick={handleResumeImapMigration}>
+                        Resume
+                      </button>
+                    ) : (
+                      <button className="secondary-action" type="button" onClick={handlePauseImapMigration}>
+                        Pause
+                      </button>
+                    )}
+                    <button className="secondary-action" type="button" onClick={handleCancelImapMigration}>
+                      Cancel
+                    </button>
+                  </>
+                )}
+                <button className="secondary-action" type="button" onClick={() => setImapLogs([])} disabled={imapLogs.length === 0}>
+                  Clear Logs
+                </button>
+              </div>
           </section>
 
           <section className="email-progress-grid">
@@ -3723,23 +3602,68 @@ export default function App() {
               )}
             </article>
           </section>
+          <details className="bento-card migration-guidance"><summary>Transfer guidance</summary>
+              <ul>
+                <li>Use SSL/TLS IMAP whenever possible.</li>
+                <li>Create the destination mailbox before migrating.</li>
+                <li>Run this before changing MX records, then test mail delivery.</li>
+                <li>Duplicate prevention uses Message-ID headers when available.</li>
+                <li><strong>Backup to .eml</strong> downloads all emails as .eml files you can archive or manually upload.</li>
+                <li><strong>Restore from .eml</strong> imports saved .eml files into the destination mailbox.</li>
+              </ul>
+          </details>
         </section>
       )}
 
       </div>
+      </div>
+      </div>
+      </div>
+
+      {showUnpaid && (
+        <div className="modal-backdrop workspace-drawer" onClick={() => setShowUnpaid(false)}>
+          <WorkspaceDialog className="modal unpaid-projects-modal" onDismiss={() => setShowUnpaid(false)} aria-label="Unpaid projects" onClick={(event) => event.stopPropagation()}>
+            <div className="modal-header"><div><h2>Unpaid projects</h2><p className="muted">Outstanding balances across clients.</p></div>
+              <button className="icon-action" type="button" aria-label="Close unpaid projects" onClick={() => setShowUnpaid(false)}><WorkspaceIcon name="close" /></button>
+            </div>
+            <div className="unpaid-panel-total">
+              <div><strong>{moneyVisible ? formatMoney(unpaidTotal, unpaidCurrency) : maskMoney(unpaidCurrency)}</strong><span className="muted">{currencyRateStatus}: 1 USD = {formatMoney(usdEgpRate, "EGP")}</span></div>
+              {unpaidCurrencyControls}
+            </div>
+          <div className="unpaid-list">
+            {unpaidProjects.length === 0 ? (
+              <p className="muted">No unpaid project prices yet.</p>
+            ) : (
+              unpaidProjects.map((site) => (
+                <button className="unpaid-row unpaid-row-action" key={site.id} type="button" onClick={() => { setShowUnpaid(false); setNotesProjectId(site.id); }} title={`Manage payments for ${site.name}`}>
+                  <span>
+                    <strong>{site.name}</strong>
+                    {site.clientName ? <small>{site.clientName}</small> : null}
+                    {site.paymentsList.length > 0 ? (
+                      <small className="unpaid-row-detail">
+                        {`${site.paymentsList.length} payment${site.paymentsList.length === 1 ? "" : "s"} • ${moneyVisible ? `${formatMoney(site.paidTotal, site.currency)} of ${formatMoney(site.priceValue, site.currency)}` : "Tap to manage"}`}
+                      </small>
+                    ) : null}
+                  </span>
+                  <b>{moneyVisible ? formatMoney(convertMoney(site.remainingValue, site.currency, unpaidCurrency, usdEgpRate), unpaidCurrency) : maskMoney(unpaidCurrency)}</b>
+                </button>
+              ))
+            )}
+          </div>
+          </WorkspaceDialog>
+        </div>
+      )}
 
       {notesProject && (
-        <div className="modal-backdrop" onClick={() => setNotesProjectId(null)}>
-          <section
-            className="modal project-notes-modal"
-            role="dialog"
-            aria-modal="true"
+        <div className="modal-backdrop workspace-drawer" onClick={() => setNotesProjectId(null)}>
+          <WorkspaceDialog
+            className="modal project-notes-modal" onDismiss={() => setNotesProjectId(null)}
             aria-labelledby="project-notes-title"
             onClick={(event) => event.stopPropagation()}
           >
             <div className="modal-header">
               <div>
-                <p className="card-kicker">Project Notes &amp; Pricing</p>
+                <p className="card-kicker">Project notes &amp; payments</p>
                 <h2 id="project-notes-title">{notesProject.name}</h2>
               </div>
               <button className="icon-action" type="button" aria-label="Close notes" onClick={() => setNotesProjectId(null)}>
@@ -3864,6 +3788,7 @@ export default function App() {
 
             <div className="project-notes">
               <span>Notes</span>
+              {notesProject.notesList.length === 0 && <p className="muted project-notes-empty">No notes yet.</p>}
               <ol className="project-note-list">
                 {notesProject.notesList.map((note, index) => (
                   <li className={note.done ? "project-note-done" : ""} key={note.id}>
@@ -3881,30 +3806,32 @@ export default function App() {
                 ))}
               </ol>
             </div>
-          </section>
+          </WorkspaceDialog>
         </div>
       )}
 
       {showForm && (
-        <div className="modal-backdrop" onClick={closeForm}>
-          <section
-            className="modal"
+        <div className="modal-backdrop workspace-drawer" onClick={closeForm}>
+          <WorkspaceDialog
+            className="modal project-form-modal" onDismiss={closeForm}
             onClick={(event) => {
               event.stopPropagation();
               setClientMenuOpen(false);
             }}
-            aria-label={editId ? "Edit project" : "New project"}
+            aria-labelledby="project-form-title"
           >
             <div className="modal-header">
               <div>
-                <p className="card-kicker">{editId ? "Edit project" : "New project"}</p>
-                <h2>{editId ? form.name : "Create deadline"}</h2>
+                <h2 id="project-form-title">{editId ? "Edit project" : "Add project"}</h2>
+                <p className="muted">{editId ? form.name : "Set up a project and its deadline."}</p>
               </div>
               <button className="icon-action" type="button" aria-label="Close modal" onClick={closeForm}>
                 X
               </button>
             </div>
 
+            <h3>Project details</h3>
+            <div className="form-name-fields">
             <label>
               Website name
               <input
@@ -3972,6 +3899,36 @@ export default function App() {
               </div>
             </label>
 
+            </div>
+            <div className="form-section form-schedule"><h3>Schedule</h3><div className="form-date-fields">
+            <label>
+              Start date
+              <input
+                value={form.start}
+                placeholder="dd/mm/yyyy"
+                inputMode="numeric"
+                onChange={(event) => handleDaysChange(form.deadlineDays, event.target.value)}
+              />
+            </label>
+
+            <label>
+              Deadline days
+              <input
+                value={form.deadlineDays}
+                placeholder="7"
+                inputMode="numeric"
+                onChange={(event) => handleDaysChange(event.target.value)}
+              />
+            </label>
+            </div>
+            {form.deadline && (
+              <div className="deadline-preview">
+                Deadline <strong>{form.deadline}</strong>
+              </div>
+            )}
+            </div>
+
+            <h3 className="project-pricing-heading">Pricing &amp; payments</h3>
             <div className="price-field-row">
               <label>
                 Project price
@@ -4076,26 +4033,6 @@ export default function App() {
               <p className="muted payment-hint">Payments use the project currency above. Need a different currency? Save, then add it from the notes panel.</p>
             </div>
 
-            <label>
-              Start date
-              <input
-                value={form.start}
-                placeholder="dd/mm/yyyy"
-                inputMode="numeric"
-                onChange={(event) => handleDaysChange(form.deadlineDays, event.target.value)}
-              />
-            </label>
-
-            <label>
-              Deadline days
-              <input
-                value={form.deadlineDays}
-                placeholder="7"
-                inputMode="numeric"
-                onChange={(event) => handleDaysChange(event.target.value)}
-              />
-            </label>
-
             <div className="notes-editor">
               <div className="notes-editor-head">
                 <span>Notes</span>
@@ -4167,12 +4104,6 @@ export default function App() {
               </div>
             </div>
 
-            {form.deadline && (
-              <div className="deadline-preview">
-                Deadline <strong>{form.deadline}</strong>
-              </div>
-            )}
-
             <div className="modal-actions">
               <button type="button" onClick={closeForm}>
                 Cancel
@@ -4181,21 +4112,19 @@ export default function App() {
                 {editId ? "Save Changes" : "Add Project"}
               </button>
             </div>
-          </section>
+          </WorkspaceDialog>
         </div>
       )}
 
       {showClients && (
-        <div className="modal-backdrop" onClick={() => setShowClients(false)}>
-          <section className="modal" onClick={(event) => event.stopPropagation()} aria-label="Clients">
+        <div className="modal-backdrop workspace-drawer" onClick={() => setShowClients(false)}>
+          <WorkspaceDialog className="modal clients-modal" onDismiss={() => setShowClients(false)} onClick={(event) => event.stopPropagation()} aria-label="Clients">
             <div className="modal-header">
               <div>
-                <p className="card-kicker">Clients</p>
-                <h2>Client list</h2>
+                <h2>Clients</h2>
+                <p className="muted">Manage the clients available in Schedule.</p>
               </div>
-              <button className="icon-action" type="button" aria-label="Close clients" onClick={() => setShowClients(false)}>
-                X
-              </button>
+              <button className="icon-action" type="button" aria-label="Close clients" onClick={() => setShowClients(false)}><WorkspaceIcon name="close" /></button>
             </div>
 
             <div className="client-entry">
@@ -4226,13 +4155,13 @@ export default function App() {
                 ))
               )}
             </div>
-          </section>
+          </WorkspaceDialog>
         </div>
       )}
 
       {todoDueId && (
         <div className="modal-backdrop" onClick={closeTodoDue}>
-          <section className="modal todo-due-modal" onClick={(event) => { event.stopPropagation(); setDueTimeMenu(null); }} aria-label="Set due date and time">
+          <WorkspaceDialog className="modal todo-due-modal" onDismiss={closeTodoDue} onClick={(event) => { event.stopPropagation(); setDueTimeMenu(null); }} aria-label="Set due date and time">
             <div className="modal-header">
               <div>
                 <p className="card-kicker">To-Do Reminder</p>
@@ -4431,24 +4360,21 @@ export default function App() {
                 Cancel
               </button>
               <button className="primary-action" type="button" onClick={saveTodoDue} disabled={!todoDueDraft}>
-                Save
+                Save reminder
               </button>
             </div>
-          </section>
+          </WorkspaceDialog>
         </div>
       )}
 
       {notificationsOpen && (
-        <div className="modal-backdrop" onClick={() => setNotificationsOpen(false)}>
-          <section className="modal notifications-modal" onClick={(event) => event.stopPropagation()} aria-label="Notifications">
+        <div className="modal-backdrop workspace-drawer" onClick={() => setNotificationsOpen(false)}>
+          <WorkspaceDialog className="modal notifications-modal" onDismiss={() => setNotificationsOpen(false)} onClick={(event) => event.stopPropagation()} aria-label="Notifications">
             <div className="modal-header">
               <div>
-                <p className="card-kicker">Activity</p>
                 <h2>Notifications</h2>
               </div>
-              <button className="icon-action" type="button" aria-label="Close notifications" onClick={() => setNotificationsOpen(false)}>
-                X
-              </button>
+              <button className="icon-action" type="button" aria-label="Close notifications" onClick={() => setNotificationsOpen(false)}><WorkspaceIcon name="close" /></button>
             </div>
             {!isElectron() && notifPermission === "default" && (
               <div className="notifications-enable-row">
@@ -4476,7 +4402,7 @@ export default function App() {
             </div>
             <div className="notifications-list">
               {notifications.length === 0 ? (
-                <p className="muted">No notifications yet. Reminders you set on to-do items will appear here.</p>
+                <div className="notifications-empty"><WorkspaceIcon name="bell" /><strong>No notifications yet</strong><p className="muted">Reminders you set on to-do items will appear here.</p><button className="workspace-back" type="button" onClick={() => { setNotificationsOpen(false); setActiveTab("todos"); }}>Go to To-Do <WorkspaceIcon name="arrow" /></button></div>
               ) : (
                 notifications.map((notification) => (
                   <div className={notification.read ? "notification-row" : "notification-row notification-unread"} key={notification.id}>
@@ -4498,7 +4424,7 @@ export default function App() {
                 ))
               )}
             </div>
-          </section>
+          </WorkspaceDialog>
         </div>
       )}
 
